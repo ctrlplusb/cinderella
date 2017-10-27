@@ -19,3 +19,7 @@ A request animation frame friendly animation library.
 ## FAQs
 
 > Do you have any? 😀
+
+## Credits
+
+A big huge awesome thank you goes to Mark O'Connor for donating the npm package name `cinderella` to this project. ⭐️ ❤️  ️
