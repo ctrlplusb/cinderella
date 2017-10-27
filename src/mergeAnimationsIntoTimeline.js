@@ -33,7 +33,10 @@ export default (
   animations,
   timeline = { duration: 0, queue: {}, animationIdx: 0 },
 ) => {
-  return animations.reduce((acc, animation) => {
+  return (Array.isArray(animations)
+    ? animations
+    : [animations]
+  ).reduce((acc, animation) => {
     const processNormalised = normalised => {
       timeline.animationIdx += 1
       acc.queue[timeline.animationIdx] = normalised[0]

@@ -4,6 +4,7 @@ import processAnimation from './processAnimation'
 import mergeAnimationsIntoTimeline from './mergeAnimationsIntoTimeline'
 
 export default () => {
+  let running = false
   let currentFrame = null
   let animationTimelines = {}
   let timelineIdx = 0
@@ -22,6 +23,8 @@ export default () => {
           delete currentTimeline.queue[animationId]
         }
       })
+
+      currentTimeline.runTime = time
     })
   }
 
@@ -57,6 +60,10 @@ export default () => {
   }
 
   const run = () => {
+    if (running) {
+      return
+    }
+    running = true
     const interval = 1000 / constants.fps
     let frame = 0
     let start = new Date().getTime()
@@ -82,6 +89,7 @@ export default () => {
     if (currentFrame) {
       window.cancelAnimationFrame(currentFrame)
     }
+    running = false
   }
 
   return {
