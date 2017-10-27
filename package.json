@@ -1,0 +1,118 @@
+{
+  "name": "cinderella",
+  "version": "0.0.1",
+  "description": "A request animation frame friendly animation library.",
+  "license": "MIT",
+  "main": "commonjs/index.js",
+  "files": [
+    "*.js",
+    "*.md",
+    "umd",
+    "commonjs"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ctrlplusb/cinderella.git"
+  },
+  "homepage": "https://github.com/ctrlplusb/cinderella#readme",
+  "author": "Sean Matheson <sean@ctrlplusb.com>",
+  "keywords": [
+    "library"
+  ],
+  "scripts": {
+    "build": "babel-node ./tools/scripts/build.js",
+    "check": "npm run test",
+    "clean": "rimraf ./commonjs && rimraf ./umd && rimraf ./coverage && rimraf ./umd",
+    "lint": "eslint src",
+    "precommit": "lint-staged && npm run test",
+    "prepublish": "npm run build",
+    "test": "jest",
+    "test:coverage": "npm run test -- --coverage",
+    "test:coverage:deploy": "npm run test:coverage && codecov"
+  },
+  "peerDependencies": {},
+  "dependencies": {},
+  "devDependencies": {
+    "app-root-dir": "^1.0.2",
+    "babel-cli": "^6.26.0",
+    "babel-core": "^6.26.0",
+    "babel-eslint": "^8.0.1",
+    "babel-jest": "^21.2.0",
+    "babel-loader": "^7.1.2",
+    "babel-polyfill": "^6.26.0",
+    "babel-preset-env": "^1.6.1",
+    "babel-preset-react": "^6.24.1",
+    "babel-preset-stage-3": "^6.24.1",
+    "babel-register": "^6.26.0",
+    "codecov": "^3.0.0",
+    "cross-env": "^5.1.0",
+    "eslint": "^4.9.0",
+    "eslint-config-airbnb": "^16.1.0",
+    "eslint-config-prettier": "^2.6.0",
+    "eslint-plugin-import": "^2.8.0",
+    "eslint-plugin-jsx-a11y": "^6.0.2",
+    "gzip-size": "^4.0.0",
+    "husky": "^0.14.3",
+    "in-publish": "^2.0.0",
+    "jest": "^21.2.1",
+    "lint-staged": "^4.3.0",
+    "prettier": "^1.7.4",
+    "prettier-eslint": "^8.2.1",
+    "pretty-bytes": "^4.0.2",
+    "ramda": "^0.25.0",
+    "readline-sync": "^1.4.7",
+    "rimraf": "^2.6.2",
+    "sinon": "^4.0.2",
+    "webpack": "^3.8.1"
+  },
+  "jest": {
+    "collectCoverageFrom": [
+      "src/**/*.{js,jsx}"
+    ],
+    "testPathIgnorePatterns": [
+      "<rootDir>/(commonjs|coverage|node_modules|tools|umd)/"
+    ]
+  },
+  "eslintConfig": {
+    "parser": "babel-eslint",
+    "root": true,
+    "env": {
+      "browser": true,
+      "es6": true,
+      "node": true
+    },
+    "extends": [
+      "airbnb",
+      "prettier"
+    ],
+    "rules": {
+      "array-callback-return": 0,
+      "camelcase": 0,
+      "import/prefer-default-export": 0,
+      "import/no-extraneous-dependencies": 0,
+      "no-underscore-dangle": 0,
+      "react/no-array-index-key": 0,
+      "react/react-in-jsx-scope": 0,
+      "react/forbid-prop-types": 0,
+      "react/jsx-filename-extension": 0,
+      "react/sort-comp": 0
+    }
+  },
+  "eslintIgnoreConfig": [
+    "node_modules/",
+    "commonjs/",
+    "coverage/",
+    "umd/"
+  ],
+  "prettier": {
+    "semi": false,
+    "singleQuote": true,
+    "trailingComma": "all"
+  },
+  "lint-staged": {
+    "*.js": [
+      "prettier --write \"projects/**/*.js\"",
+      "git add"
+    ]
+  }
+}
