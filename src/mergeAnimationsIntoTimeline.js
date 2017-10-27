@@ -31,7 +31,13 @@ function normaliseAnimation(animation, relativeOffset) {
 
 export default (
   animations,
-  timeline = { duration: 0, queue: {}, animationIdx: 0 },
+  timeline = {
+    duration: 0,
+    queue: {},
+    animationIdx: 0,
+    duration: 0,
+    runTime: 0,
+  },
 ) => {
   return (Array.isArray(animations)
     ? animations
@@ -49,10 +55,20 @@ export default (
     }
     if (Array.isArray(animation)) {
       animation
-        .map(subAnimation => normaliseAnimation(subAnimation, acc.duration))
+        .map(subAnimation =>
+          normaliseAnimation(
+            subAnimation,
+            acc.runTime > acc.duration ? acc.runTime : acc.duration,
+          ),
+        )
         .forEach(processNormalised)
     } else {
-      processNormalised(normaliseAnimation(animation, acc.duration))
+      processNormalised(
+        normaliseAnimation(
+          animation,
+          acc.runTime > acc.duration ? acc.runTime : acc.duration,
+        ),
+      )
     }
     return acc
   }, timeline)

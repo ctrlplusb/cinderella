@@ -2,7 +2,7 @@ import mergeAnimationsIntoTimeline from '../mergeAnimationsIntoTimeline'
 
 describe('mergeAnimationsIntoTimeline', () => {
   it('should work as expected', () => {
-    let timeline = mergeAnimationsIntoTimeline([
+    const timeline = mergeAnimationsIntoTimeline([
       {
         // id: 1,
         duration: 1000,
@@ -54,7 +54,7 @@ describe('mergeAnimationsIntoTimeline', () => {
 
     expect(timeline.longestRunningAnimation).toEqual(10)
 
-    timeline = mergeAnimationsIntoTimeline(
+    mergeAnimationsIntoTimeline(
       [
         {
           // id: 11,
@@ -142,5 +142,24 @@ describe('mergeAnimationsIntoTimeline', () => {
     })
     expect(timeline.duration).toEqual(7300)
     expect(timeline.animationIdx).toEqual(14)
+
+    timeline.runTime = 10000
+
+    mergeAnimationsIntoTimeline(
+      [
+        {
+          // id: 15,
+          duration: 500,
+        },
+      ],
+      timeline,
+    )
+
+    expect(timeline.queue).toMatchObject({
+      15: {
+        offset: 10000,
+        duration: 500,
+      },
+    })
   })
 })
