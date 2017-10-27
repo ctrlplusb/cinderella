@@ -27,6 +27,7 @@ c.run()
  - Queue animations using a simple declarative approach.
  - Stop animations easily via a `.stop()` function.
  - Compatible with popular frameworks such as Paper.js, React, or just straight up vanilla JS.
+ - 2.65 kB gzipped
 
 ## TOCs
 
