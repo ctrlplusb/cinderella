@@ -7,13 +7,11 @@ import cinderella from 'cinderella'
 
 const input = document.getElementById('#foo')
 
-const c = cinderella()
-c.timeline({
+cinderella.timeline({
   from: 0,
   to: 100,
   onUpdate: x => { input.value = x }
-})
-c.run()
+}).run()
 ```
 
 [![npm](https://img.shields.io/npm/v/cinderella.svg?style=flat-square)](http://npm.im/cinderella)

@@ -3,40 +3,45 @@ import constants from './constants'
 import processAnimation from './processAnimation'
 import mergeAnimationsIntoTimeline from './mergeAnimationsIntoTimeline'
 
+// TODO:
+// [ ] Looping?
+// [ ] animate API
+// [ ] Remove "run" and make timelines/animations auto execute
+// [X] Absolute offset do not affect relative timing
+// [ ] Docs on the perils of absolute timings.
+// [ ] Add a run API chain to animate and timeline APIs
+// [ ] Allow nesting of timelines/animations
+
 export default () => {
   let running = false
   let currentFrame = null
   let animationTimelines = {}
-  let timelineIdx = 0
 
   function onFrame({ frame, time, delta }) {
     Object.keys(animationTimelines).forEach(timelineId => {
       const currentTimeline = animationTimelines[timelineId]
-      if (currentTimeline.queue.length === 0) {
-        return
-      }
 
       Object.keys(currentTimeline.queue).forEach(animationId => {
+        currentTimeline.startTime =
+          currentTimeline.startTime != null ? currentTimeline.startTime : time
+        currentTimeline.runTime =
+          currentTimeline.startTime != null
+            ? time - currentTimeline.startTime
+            : 0
         const animation = currentTimeline.queue[animationId]
-        processAnimation(animation, time, delta)
+        processAnimation(animation, currentTimeline.runTime, delta)
         if (animation.complete) {
           delete currentTimeline.queue[animationId]
         }
       })
-
-      currentTimeline.runTime = time
     })
   }
 
-  const timeline = (animations = [], existingTimeline) => {
-    var newTimeline = mergeAnimationsIntoTimeline(animations, existingTimeline)
+  const animate = (animations = []) => {
+    var timeline = mergeAnimationsIntoTimeline(animations)
 
-    if (newTimeline.id == null) {
-      timelineIdx += 1
-      newTimeline.id = timelineIdx
-      animationTimelines[timelineIdx] = newTimeline
-      console.log(animationTimelines)
-    }
+    animationTimelines[newTimeline.id] = newTimeline
+    console.log(JSON.stringify(newTimeline, null, 4))
 
     const done = new Promise(resolve => {
       if (newTimeline.longestRunningAnimation == null) {

@@ -7,9 +7,14 @@ function calculateValueDiff(newValue, prevValue) {
 }
 
 export default (animation, time, delta) => {
-  // Handle any delay specified for the animation
-  animation.delayStartTime = animation.delayStartTime || time
-  if (animation.delay && time - animation.delayStartTime < animation.delay) {
+  // // Handle any delay specified for the animation
+  // animation.delayStartTime = animation.delayStartTime || time
+  // if (animation.delay && time - animation.delayStartTime < animation.delay) {
+  //   return
+  // }
+
+  console.log(animation.offset, time)
+  if (animation.offset > time) {
     return
   }
 
