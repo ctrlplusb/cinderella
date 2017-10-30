@@ -25,9 +25,6 @@ export const onFrame = time => {
     runState.startTime = runState.startTime != null ? runState.startTime : time
     Object.keys(t.queue).forEach(animationId => {
       const animation = t.queue[animationId]
-      if (animation.runState && animation.runState.complete) {
-        return
-      }
       processAnimation(animation, time - runState.startTime)
     })
   })

@@ -86,4 +86,12 @@ describe('animate', () => {
     await empty.run()
     expect(new Date().getTime() - start).toBeLessThan(1)
   })
+
+  it('cancelling a timeline mid execution stops it immediately', async () => {
+    animation.run()
+    await waitForFrames(3)
+    animation.cancel()
+    await waitForFrames(2)
+    expect(onUpdateSpy.mock.calls.length).toBe(3)
+  })
 })
