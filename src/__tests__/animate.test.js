@@ -92,10 +92,8 @@ describe('animate', () => {
     await waitForFrames(3)
     animation.cancel()
     await waitForFrames(2)
-    expect(
-      onUpdateSpy.mock.calls.length === 2 ||
-        onUpdateSpy.mock.calls.length === 3,
-    ).toBe(true)
+    expect(onUpdateSpy.mock.calls.length).toBeGreaterThan(0)
+    expect(onCompleteSpy.mock.calls.length).toBe(0)
   })
 
   it('looping works', async () => {

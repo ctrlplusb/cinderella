@@ -77,10 +77,10 @@ export const animate = (animations = [], config = {}) => {
       if (queuedTimelines[t.id]) {
         unqueueTimeline(t)
         resetTimeline(t)
+        // Doing this gives an existing frame time to resolve.
         setTimeout(() => {
-          // Doing this gives an existing frame time to resolve.
           queuedTimelines[t.id] = t
-        }, 1000 / 60)
+        }, 1000 / 60 * 1.25)
       } else {
         queuedTimelines[t.id] = t
       }
