@@ -1,3 +1,5 @@
+/* eslint-disable no-param-reassign */
+
 function calculateValueDiff(newValue, prevValue) {
   return prevValue == null
     ? newValue
@@ -6,14 +8,9 @@ function calculateValueDiff(newValue, prevValue) {
       : newValue - prevValue
 }
 
-export default (animation, time, delta) => {
-  // // Handle any delay specified for the animation
-  // animation.delayStartTime = animation.delayStartTime || time
-  // if (animation.delay && time - animation.delayStartTime < animation.delay) {
-  //   return
-  // }
+const frameRate = 1000 / 60
 
-  console.log(animation.offset, time)
+export default (animation, time) => {
   if (animation.offset > time) {
     return
   }
@@ -22,11 +19,25 @@ export default (animation, time, delta) => {
     animation.onStart(time)
   }
 
-  // Record when the animation officially started
-  animation.startTime = animation.startTime || time
+  /**
+   * A note on animation.startTime. Technically for the first frame we 
+   * want the easing functions to consider that a frame of time has already
+   * passed (i.e 16ms).  Therefore we will subtract a frameRate time slice
+   * from the time and set it to the animation.startTime.  We therefore
+   * have to check the animation.complete first because due to this "hack"
+   * time will always be greater than animation.startTime on the first 
+   * frame check for the animation.
+   */
 
   // Check to see if the animation should be considered complete
-  animation.complete = time >= animation.startTime + animation.duration
+  // Totally possible that a bunch of frames were "dropped"
+  animation.complete =
+    animation.startTime != null &&
+    time >= animation.startTime + animation.duration
+
+  // Record when the animation officially started
+  animation.startTime =
+    animation.startTime != null ? animation.startTime : time - frameRate
 
   animation.fromValue =
     animation.fromValue != null
@@ -53,17 +64,18 @@ export default (animation, time, delta) => {
       animation.prevDiff,
     )
   } else {
+    const timePassed = time - animation.startTime
     const newValue = Array.isArray(animation.fromValue)
       ? animation.fromValue.map((x, idx) =>
           animation.easingFn(
-            time - animation.startTime,
+            timePassed,
             animation.fromValue[idx],
             animation.diff[idx],
             animation.duration,
           ),
         )
       : animation.easingFn(
-          time - animation.startTime,
+          timePassed,
           animation.fromValue,
           animation.diff,
           animation.duration,
@@ -75,8 +87,6 @@ export default (animation, time, delta) => {
   }
 
   if (animation.complete && animation.onComplete) {
-    setTimeout(() => {
-      animation.onComplete(time)
-    })
+    animation.onComplete(time)
   }
 }

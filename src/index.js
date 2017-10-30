@@ -1,106 +1,89 @@
-import * as Easings from './easings'
-import constants from './constants'
+import createTimeline from './createTimeline'
 import processAnimation from './processAnimation'
-import mergeAnimationsIntoTimeline from './mergeAnimationsIntoTimeline'
 
-// TODO:
-// [ ] Looping?
-// [ ] animate API
-// [ ] Remove "run" and make timelines/animations auto execute
-// [X] Absolute offset do not affect relative timing
-// [ ] Docs on the perils of absolute timings.
-// [ ] Add a run API chain to animate and timeline APIs
-// [ ] Allow nesting of timelines/animations
+// Maintains a list of timelines that have been queued to "executed"
+const queuedTimelines = {}
 
-export default () => {
-  let running = false
-  let currentFrame = null
-  let animationTimelines = {}
+// Represents the currently executing raf frame
+let currentFrame = null
 
-  function onFrame({ frame, time, delta }) {
-    Object.keys(animationTimelines).forEach(timelineId => {
-      const currentTimeline = animationTimelines[timelineId]
-
-      Object.keys(currentTimeline.queue).forEach(animationId => {
-        currentTimeline.startTime =
-          currentTimeline.startTime != null ? currentTimeline.startTime : time
-        currentTimeline.runTime =
-          currentTimeline.startTime != null
-            ? time - currentTimeline.startTime
-            : 0
-        const animation = currentTimeline.queue[animationId]
-        processAnimation(animation, currentTimeline.runTime, delta)
-        if (animation.complete) {
-          delete currentTimeline.queue[animationId]
-        }
-      })
-    })
-  }
-
-  const animate = (animations = []) => {
-    var timeline = mergeAnimationsIntoTimeline(animations)
-
-    animationTimelines[newTimeline.id] = newTimeline
-    console.log(JSON.stringify(newTimeline, null, 4))
-
-    const done = new Promise(resolve => {
-      if (newTimeline.longestRunningAnimation == null) {
-        resolve()
-        return
-      }
-      const longestAnim = newTimeline.queue[newTimeline.longestRunningAnimation]
-      const customOnComplete = longestAnim.onComplete
-      longestAnim.onComplete = x => {
-        if (customOnComplete != null) {
-          customOnComplete(x + 1)
-        }
-        resolve(x)
+const onFrame = time => {
+  Object.keys(queuedTimelines).forEach(timelineId => {
+    const t = queuedTimelines[timelineId]
+    Object.keys(t.queue).forEach(animationId => {
+      const animation = t.queue[animationId]
+      processAnimation(animation, time)
+      if (animation.complete) {
+        delete t.queue[animationId]
       }
     })
+  })
+}
 
-    return {
-      add: animations => timeline(animations, newTimeline),
-      done,
-    }
+const start = () => {
+  if (currentFrame != null) {
+    // We are already running the raf. Move along.
+    return
   }
-
-  const run = () => {
-    if (running) {
-      return
+  let started
+  const loop = time => {
+    if (!started) {
+      started = time
     }
-    running = true
-    const interval = 1000 / constants.fps
-    let frame = 0
-    let start = new Date().getTime()
-    let then = new Date().getTime()
-    const loop = () => {
-      frame += 1
-      const now = new Date().getTime()
-      const delta = now - then
-      if (delta > interval) {
-        onFrame({
-          time: now - start,
-          delta,
-          frame,
-        })
-        then = now - delta % interval
-      }
-      currentFrame = window.requestAnimationFrame(loop)
-    }
-    loop()
+    onFrame(time)
+    currentFrame = window.requestAnimationFrame(loop)
   }
+  currentFrame = window.requestAnimationFrame(loop)
+}
 
-  const stop = () => {
-    if (currentFrame) {
-      window.cancelAnimationFrame(currentFrame)
-    }
-    running = false
+export const cancelAll = () => {
+  const timelineIds = Object.keys(queuedTimelines)
+  timelineIds.forEach(id => {
+    delete queuedTimelines[id]
+  })
+  if (currentFrame) {
+    window.cancelAnimationFrame(currentFrame)
+    currentFrame = null
   }
+}
 
+const unqueueTimeline = id => {
+  delete queuedTimelines[id]
+  if (Object.keys(queuedTimelines).length === 0) {
+    cancelAll()
+  }
+}
+
+export const animate = (animations = []) => {
+  const t = createTimeline(animations)
   return {
-    onFrame,
-    timeline,
-    run,
-    stop,
+    run: () => {
+      t.run = true
+      queuedTimelines[t.id] = t
+      const hasExecutableAnimations = t.executionEnd > 0
+      if (hasExecutableAnimations) {
+        start()
+      }
+      return hasExecutableAnimations
+        ? // We will return a promise that resolves when the longest
+          // running animation completes.
+          new Promise(resolve => {
+            if (t.longestRunningAnimation == null) {
+              resolve()
+              return
+            }
+            const longestAnim = t.queue[t.longestRunningAnimation]
+            const customOnComplete = longestAnim.onComplete
+            longestAnim.onComplete = x => {
+              if (customOnComplete != null) {
+                customOnComplete(x)
+              }
+              resolve(x)
+            }
+          })
+        : // Otherwise we return a promise that resolves immediately
+          Promise.resolve(0)
+    },
+    cancel: () => unqueueTimeline(t.id),
   }
 }

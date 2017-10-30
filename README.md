@@ -7,7 +7,7 @@ import cinderella from 'cinderella'
 
 const input = document.getElementById('#foo')
 
-cinderella.timeline({
+cinderella.animate({
   from: 0,
   to: 100,
   onUpdate: x => { input.value = x }
@@ -23,7 +23,7 @@ cinderella.timeline({
  - Super simple api to define animations over time.
  - A barrel of easing functions, or bring your own.
  - Queue animations using a simple declarative approach.
- - Stop animations easily via a `.stop()` function.
+ - Cancel animations.
  - Compatible with popular frameworks such as Paper.js, React, or just straight up vanilla JS.
  - 2.65 kB gzipped
 

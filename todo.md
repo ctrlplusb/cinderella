@@ -1,0 +1,10 @@
+ - [ ] Loop
+ - [ ] Pause
+ - [ ] Seek
+ - [ ] Debug toolbar (preact?)
+ - [ ] What happens when errors occur in handlers?
+ - [X] animate API
+ - [X] Only execute RAF after run, and check to stop after each timeline completes or is stopped
+ - [X] Defer execution via "run" on animation
+ - [X] Allow nesting of timelines/animations
+ - [X] Absolute offset do not affect relative timing

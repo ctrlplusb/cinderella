@@ -1,10 +1,9 @@
 import * as Easings from './easings'
-import constants from './constants'
 
 export default ({
   from,
   to,
-  easing = constants.defaultEasing,
+  easing = 'linear',
   delay,
   duration = 100,
   onStart,

@@ -1,3 +1,5 @@
+/* eslint-disable no-param-reassign */
+
 import configureAnimation from './configureAnimation'
 
 let timelineIdx = 0
