@@ -77,4 +77,13 @@ describe('animate', () => {
     await empty.run()
     expect(new Date().getTime() - start).toBeLessThan(1)
   })
+
+  it('executing a timeline with no duration resolves immediately', async () => {
+    const empty = animate({
+      duration: 0,
+    })
+    const start = new Date().getTime()
+    await empty.run()
+    expect(new Date().getTime() - start).toBeLessThan(1)
+  })
 })
