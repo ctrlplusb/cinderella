@@ -44,13 +44,20 @@ describe('animate', () => {
 
   it('calls "onUpdate" for each frame', async () => {
     animation.run()
-    await waitForFrames(5)
+    await waitForFrames(6)
     expect(onUpdateSpy.mock.calls.length).toBe(5)
   })
 
   it('calls "onComplete" when animation is done', async () => {
     animation.run()
-    await waitForFrames(5)
+    await waitForFrames(6)
     expect(onCompleteSpy.mock.calls.length).toBe(1)
+  })
+
+  it('half way through an animation produces the expected result', async () => {
+    animation.run()
+    await waitForFrames(4)
+    expect(onUpdateSpy.mock.calls.length).toBe(3)
+    expect(Math.round(onUpdateSpy.mock.calls[2][0])).toBe(100 / 5 * 3)
   })
 })

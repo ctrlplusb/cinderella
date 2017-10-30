@@ -1,3 +1,5 @@
+/* eslint-disable no-param-reassign */
+
 import createTimeline from './createTimeline'
 import processAnimation from './processAnimation'
 
@@ -7,15 +9,26 @@ const queuedTimelines = {}
 // Represents the currently executing raf frame
 let currentFrame = null
 
-const onFrame = time => {
+function resetTimeline(t) {
+  t.runState = null
+  Object.keys(t.queue).forEach(animationId => {
+    const animation = t.queue[animationId]
+    animation.runState = null
+  })
+}
+
+export const onFrame = time => {
   Object.keys(queuedTimelines).forEach(timelineId => {
     const t = queuedTimelines[timelineId]
+    t.runState = t.runState || {}
+    const { runState } = t
+    runState.startTime = runState.startTime != null ? runState.startTime : time
     Object.keys(t.queue).forEach(animationId => {
       const animation = t.queue[animationId]
-      processAnimation(animation, time)
-      if (animation.complete) {
-        delete t.queue[animationId]
+      if (animation.runState && animation.runState.complete) {
+        return
       }
+      processAnimation(animation, time - runState.startTime)
     })
   })
 }
@@ -62,6 +75,7 @@ export const animate = (animations = []) => {
       queuedTimelines[t.id] = t
       const hasExecutableAnimations = t.executionEnd > 0
       if (hasExecutableAnimations) {
+        resetTimeline(t)
         start()
       }
       return hasExecutableAnimations

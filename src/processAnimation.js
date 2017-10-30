@@ -1,92 +1,72 @@
 /* eslint-disable no-param-reassign */
 
-function calculateValueDiff(newValue, prevValue) {
-  return prevValue == null
-    ? newValue
-    : Array.isArray(newValue)
-      ? newValue.map((x, idx) => x - prevValue[idx])
-      : newValue - prevValue
-}
-
 const frameRate = 1000 / 60
 
-export default (animation, time) => {
-  if (animation.offset > time) {
+export default (animation, timelineTime) => {
+  if (animation.executionStart > timelineTime) {
     return
   }
 
-  if (animation.startTime == null && animation.onStart != null) {
-    animation.onStart(time)
+  animation.runState = animation.runState || {}
+  const { runState } = animation
+
+  if (runState.startTime == null && animation.onStart != null) {
+    animation.onStart(timelineTime)
   }
 
-  /**
-   * A note on animation.startTime. Technically for the first frame we 
-   * want the easing functions to consider that a frame of time has already
-   * passed (i.e 16ms).  Therefore we will subtract a frameRate time slice
-   * from the time and set it to the animation.startTime.  We therefore
-   * have to check the animation.complete first because due to this "hack"
-   * time will always be greater than animation.startTime on the first 
-   * frame check for the animation.
-   */
+  // Record when the animation started
+  runState.startTime =
+    runState.startTime != null ? runState.startTime : timelineTime
 
-  // Check to see if the animation should be considered complete
-  // Totally possible that a bunch of frames were "dropped"
-  animation.complete =
-    animation.startTime != null &&
-    time >= animation.startTime + animation.duration
+  const timePassed = timelineTime - runState.startTime
 
-  // Record when the animation officially started
-  animation.startTime =
-    animation.startTime != null ? animation.startTime : time - frameRate
+  if (timePassed === 0) {
+    return
+  }
 
-  animation.fromValue =
-    animation.fromValue != null
-      ? animation.fromValue
+  runState.fromValue =
+    runState.fromValue != null
+      ? runState.fromValue
       : typeof animation.from === 'function' ? animation.from() : animation.from
 
-  animation.toValue =
-    animation.toValue != null
-      ? animation.toValue
+  runState.toValue =
+    runState.toValue != null
+      ? runState.toValue
       : typeof animation.to === 'function' ? animation.to() : animation.to
 
-  animation.diff =
-    animation.diff != null
-      ? animation.diff
-      : Array.isArray(animation.toValue)
-        ? animation.toValue.map((x, idx) => x - animation.fromValue[idx])
-        : animation.toValue - animation.fromValue
+  runState.diff =
+    runState.diff != null
+      ? runState.diff
+      : Array.isArray(runState.toValue)
+        ? runState.toValue.map((x, idx) => x - runState.fromValue[idx])
+        : runState.toValue - runState.fromValue
 
-  if (animation.complete) {
-    animation.onUpdate(
-      animation.toValue,
-      calculateValueDiff(animation.toValue, animation.prevValue),
-      animation.prevValue,
-      animation.prevDiff,
-    )
+  // Check to see if the animation should be considered complete
+  runState.complete = timelineTime + frameRate >= animation.executionEnd
+
+  if (runState.complete) {
+    animation.onUpdate(runState.toValue, runState.prevValue)
   } else {
-    const timePassed = time - animation.startTime
-    const newValue = Array.isArray(animation.fromValue)
-      ? animation.fromValue.map((x, idx) =>
+    const newValue = Array.isArray(runState.fromValue)
+      ? runState.fromValue.map((x, idx) =>
           animation.easingFn(
             timePassed,
-            animation.fromValue[idx],
-            animation.diff[idx],
+            runState.fromValue[idx],
+            runState.diff[idx],
             animation.duration,
           ),
         )
       : animation.easingFn(
           timePassed,
-          animation.fromValue,
-          animation.diff,
+          runState.fromValue,
+          runState.diff,
           animation.duration,
         )
-    const diff = calculateValueDiff(newValue, animation.prevValue)
-    animation.onUpdate(newValue, diff, animation.prevValue, animation.prevDiff)
-    animation.prevDiff = diff
-    animation.prevValue = newValue
+    animation.onUpdate(newValue, runState.prevValue)
+    runState.prevValue = newValue
   }
 
-  if (animation.complete && animation.onComplete) {
-    animation.onComplete(time)
+  if (runState.complete && animation.onComplete) {
+    animation.onComplete()
   }
 }
