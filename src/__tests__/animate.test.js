@@ -70,4 +70,11 @@ describe('animate', () => {
     expect(onUpdateSpy.mock.calls.length).toBe(4)
     expect(Math.round(onUpdateSpy.mock.calls[3][0])).toBe(0)
   })
+
+  it('executing a timeline with no definition resolves immediately', async () => {
+    const empty = animate()
+    const start = new Date().getTime()
+    await empty.run()
+    expect(new Date().getTime() - start).toBeLessThan(1)
+  })
 })

@@ -90,10 +90,6 @@ export const animate = (animations = []) => {
         ? // We will return a promise that resolves when the longest
           // running animation completes.
           new Promise(resolve => {
-            if (t.longestRunningAnimation == null) {
-              resolve()
-              return
-            }
             const longestAnim = t.queue[t.longestRunningAnimation]
             const customOnComplete = longestAnim.onComplete
             longestAnim.onComplete = x => {
@@ -104,7 +100,7 @@ export const animate = (animations = []) => {
             }
           })
         : // Otherwise we return a promise that resolves immediately
-          Promise.resolve(0)
+          Promise.resolve()
     },
     cancel: () => unqueueTimeline(t.id),
   }
