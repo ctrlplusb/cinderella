@@ -1,8 +1,14 @@
+/* eslint-disable no-param-reassign */
+/* eslint-disable no-return-assign */
+/* eslint-disable no-cond-assign */
+/* eslint-disable no-plusplus */
+/* eslint-disable no-restricted-properties */
+
 /**
  * t = time (since easing began) in ms
- * b = startValue
- * c = endValue
- * d = duration for ease is ms
+ * b = start value
+ * c = diff to end value
+ * d = duration for ease in ms
  * 
  * e.g.
  * 
@@ -80,16 +86,16 @@ export function easeInOutSine(t, b, c, d) {
 }
 
 export function easeInExpo(t, b, c, d) {
-  return t == 0 ? b : c * Math.pow(2, 10 * (t / d - 1)) + b
+  return t === 0 ? b : c * Math.pow(2, 10 * (t / d - 1)) + b
 }
 
 export function easeOutExpo(t, b, c, d) {
-  return t == d ? b + c : c * (-Math.pow(2, -10 * t / d) + 1) + b
+  return t === d ? b + c : c * (-Math.pow(2, -10 * t / d) + 1) + b
 }
 
 export function easeInOutExpo(t, b, c, d) {
-  if (t == 0) return b
-  if (t == d) return b + c
+  if (t === 0) return b
+  if (t === d) return b + c
   if ((t /= d / 2) < 1) return c / 2 * Math.pow(2, 10 * (t - 1)) + b
   return c / 2 * (-Math.pow(2, -10 * --t) + 2) + b
 }
@@ -108,16 +114,24 @@ export function easeInOutCirc(t, b, c, d) {
 }
 
 export function easeInElastic(t, b, c, d) {
-  var s = 1.70158
-  var p = 0
-  var a = c
-  if (t == 0) return b
-  if ((t /= d) == 1) return b + c
-  if (!p) p = d * 0.3
+  let s = 1.70158
+  let p = 0
+  let a = c
+  if (t === 0) {
+    return b
+  }
+  if ((t /= d) === 1) {
+    return b + c
+  }
+  if (!p) {
+    p = d * 0.3
+  }
   if (a < Math.abs(c)) {
     a = c
-    var s = p / 4
-  } else var s = p / (2 * Math.PI) * Math.asin(c / a)
+    s = p / 4
+  } else {
+    s = p / (2 * Math.PI) * Math.asin(c / a)
+  }
   return (
     -(
       a *
@@ -128,32 +142,36 @@ export function easeInElastic(t, b, c, d) {
 }
 
 export function easeOutElastic(t, b, c, d) {
-  var s = 1.70158
-  var p = 0
-  var a = c
-  if (t == 0) return b
-  if ((t /= d) == 1) return b + c
+  let s = 1.70158
+  let p = 0
+  let a = c
+  if (t === 0) return b
+  if ((t /= d) === 1) return b + c
   if (!p) p = d * 0.3
   if (a < Math.abs(c)) {
     a = c
-    var s = p / 4
-  } else var s = p / (2 * Math.PI) * Math.asin(c / a)
+    s = p / 4
+  } else {
+    s = p / (2 * Math.PI) * Math.asin(c / a)
+  }
   return (
     a * Math.pow(2, -10 * t) * Math.sin((t * d - s) * (2 * Math.PI) / p) + c + b
   )
 }
 
 export function easeInOutElastic(t, b, c, d) {
-  var s = 1.70158
-  var p = 0
-  var a = c
-  if (t == 0) return b
-  if ((t /= d / 2) == 2) return b + c
+  let s = 1.70158
+  let p = 0
+  let a = c
+  if (t === 0) return b
+  if ((t /= d / 2) === 2) return b + c
   if (!p) p = d * (0.3 * 1.5)
   if (a < Math.abs(c)) {
     a = c
-    var s = p / 4
-  } else var s = p / (2 * Math.PI) * Math.asin(c / a)
+    s = p / 4
+  } else {
+    s = p / (2 * Math.PI) * Math.asin(c / a)
+  }
   if (t < 1)
     return (
       -0.5 *
@@ -173,24 +191,20 @@ export function easeInOutElastic(t, b, c, d) {
 }
 
 export function easeInBack(t, b, c, d, s) {
-  if (s == undefined) s = 1.70158
+  if (s === undefined) s = 1.70158
   return c * (t /= d) * t * ((s + 1) * t - s) + b
 }
 
 export function easeOutBack(t, b, c, d, s) {
-  if (s == undefined) s = 1.70158
+  if (s === undefined) s = 1.70158
   return c * ((t = t / d - 1) * t * ((s + 1) * t + s) + 1) + b
 }
 
 export function easeInOutBack(t, b, c, d, s) {
-  if (s == undefined) s = 1.70158
+  if (s === undefined) s = 1.70158
   if ((t /= d / 2) < 1)
     return c / 2 * (t * t * (((s *= 1.525) + 1) * t - s)) + b
   return c / 2 * ((t -= 2) * t * (((s *= 1.525) + 1) * t + s) + 2) + b
-}
-
-export function easeInBounce(t, b, c, d) {
-  return c - easeOutBounce(d - t, 0, c, d) + b
 }
 
 export function easeOutBounce(t, b, c, d) {
@@ -200,9 +214,12 @@ export function easeOutBounce(t, b, c, d) {
     return c * (7.5625 * (t -= 1.5 / 2.75) * t + 0.75) + b
   } else if (t < 2.5 / 2.75) {
     return c * (7.5625 * (t -= 2.25 / 2.75) * t + 0.9375) + b
-  } else {
-    return c * (7.5625 * (t -= 2.625 / 2.75) * t + 0.984375) + b
   }
+  return c * (7.5625 * (t -= 2.625 / 2.75) * t + 0.984375) + b
+}
+
+export function easeInBounce(t, b, c, d) {
+  return c - easeOutBounce(d - t, 0, c, d) + b
 }
 
 export function easeInOutBounce(t, b, c, d) {
