@@ -9,6 +9,10 @@ const queuedTimelines = {}
 // Represents the currently executing raf frame
 let currentFrame = null
 
+const defaultConfig = {
+  loop: false,
+}
+
 function resetTimeline(t) {
   t.runState = null
   Object.keys(t.queue).forEach(animationId => {
@@ -64,41 +68,47 @@ const unqueueTimeline = id => {
   }
 }
 
-export const animate = (animations = []) => {
+export const animate = (animations = [], config = {}) => {
+  config = Object.assign({}, defaultConfig, config)
   const t = createTimeline(animations)
-  return {
-    run: () => {
-      const hasExecutableAnimations = t.executionEnd > 0
-      if (hasExecutableAnimations) {
-        if (queuedTimelines[t.id]) {
-          unqueueTimeline(t)
-          resetTimeline(t)
-          setTimeout(() => {
-            // Doing this gives an existing frame time to resolve.
-            queuedTimelines[t.id] = t
-          }, 1000 / 60)
-        } else {
+  const run = () => {
+    const hasExecutableAnimations = t.executionEnd > 0
+    if (hasExecutableAnimations) {
+      if (queuedTimelines[t.id]) {
+        unqueueTimeline(t)
+        resetTimeline(t)
+        setTimeout(() => {
+          // Doing this gives an existing frame time to resolve.
           queuedTimelines[t.id] = t
-        }
-        start()
+        }, 1000 / 60)
+      } else {
+        queuedTimelines[t.id] = t
       }
-
-      return hasExecutableAnimations
-        ? // We will return a promise that resolves when the longest
-          // running animation completes.
-          new Promise(resolve => {
-            const longestAnim = t.queue[t.longestRunningAnimation]
-            const customOnComplete = longestAnim.onComplete
-            longestAnim.onComplete = x => {
-              if (customOnComplete != null) {
-                customOnComplete(x)
-              }
-              resolve(x)
+      start()
+    }
+    return hasExecutableAnimations
+      ? // We will return a promise that resolves when the longest
+        // running animation completes.
+        new Promise(resolve => {
+          const longestAnim = t.queue[t.longestRunningAnimation]
+          const customOnComplete = longestAnim.onComplete
+          longestAnim.onComplete = x => {
+            if (customOnComplete != null) {
+              customOnComplete(x)
             }
-          })
-        : // Otherwise we return a promise that resolves immediately
-          Promise.resolve()
-    },
+            if (config.loop) {
+              // TODO: Check to see if this is a potential memory leak?
+              resolve(run())
+            } else {
+              resolve()
+            }
+          }
+        })
+      : // Otherwise we return a promise that resolves immediately
+        Promise.resolve()
+  }
+  return {
+    run,
     cancel: () => unqueueTimeline(t.id),
   }
 }

@@ -92,6 +92,36 @@ describe('animate', () => {
     await waitForFrames(3)
     animation.cancel()
     await waitForFrames(2)
-    expect(onUpdateSpy.mock.calls.length).toBe(3)
+    expect(
+      onUpdateSpy.mock.calls.length === 2 ||
+        onUpdateSpy.mock.calls.length === 3,
+    ).toBe(true)
+  })
+
+  it('looping works', async () => {
+    const loopStartSpy = jest.fn()
+    const loopUpdateSpy = jest.fn()
+    const loopCompleteSpy = jest.fn()
+    animate(
+      {
+        duration: 50,
+        from: 0,
+        to: 100,
+        onStart: loopStartSpy,
+        onUpdate: loopUpdateSpy,
+        onComplete: loopCompleteSpy,
+      },
+      { loop: true },
+    ).run()
+    await waitForFrames(10)
+    expect(
+      loopStartSpy.mock.calls.length === 4 ||
+        loopStartSpy.mock.calls.length === 3,
+    ).toBe(true)
+    expect(loopUpdateSpy.mock.calls.length).toBe(10)
+    expect(
+      loopCompleteSpy.mock.calls.length === 2 ||
+        loopCompleteSpy.mock.calls.length === 3,
+    ).toBe(true)
   })
 })

@@ -1,23 +1,28 @@
 {
   "name": "cinderella",
   "version": "0.3.0",
-  "description":
-    "A super simple animation library that snuggles with request animation frame.",
+  "description": "A super simple animation library that snuggles with request animation frame.",
   "license": "MIT",
   "main": "commonjs/index.js",
-  "files": ["*.js", "*.md", "umd", "commonjs"],
+  "files": [
+    "*.js",
+    "*.md",
+    "umd",
+    "commonjs"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/ctrlplusb/cinderella.git"
   },
   "homepage": "https://github.com/ctrlplusb/cinderella#readme",
   "author": "Sean Matheson <sean@ctrlplusb.com>",
-  "keywords": ["library"],
+  "keywords": [
+    "library"
+  ],
   "scripts": {
     "build": "babel-node ./tools/scripts/build.js",
     "check": "npm run test",
-    "clean":
-      "rimraf ./commonjs && rimraf ./umd && rimraf ./coverage && rimraf ./umd",
+    "clean": "rimraf ./commonjs && rimraf ./umd && rimraf ./coverage && rimraf ./umd",
     "lint": "eslint src",
     "precommit": "lint-staged && npm run test",
     "prepublish": "npm run build",
@@ -51,6 +56,7 @@
     "husky": "^0.14.3",
     "in-publish": "^2.0.0",
     "jest": "^21.2.1",
+    "leakage": "^0.3.0",
     "lint-staged": "^4.3.0",
     "prettier": "^1.7.4",
     "prettier-eslint": "^8.2.1",
@@ -63,7 +69,9 @@
     "webpack": "^3.8.1"
   },
   "jest": {
-    "collectCoverageFrom": ["src/**/*.{js,jsx}"],
+    "collectCoverageFrom": [
+      "src/**/*.{js,jsx}"
+    ],
     "testPathIgnorePatterns": [
       "<rootDir>/(commonjs|coverage|node_modules|tools|umd)/"
     ]
@@ -77,7 +85,10 @@
       "node": true,
       "jest": true
     },
-    "extends": ["airbnb", "prettier"],
+    "extends": [
+      "airbnb",
+      "prettier"
+    ],
     "rules": {
       "array-callback-return": 0,
       "camelcase": 0,
@@ -92,13 +103,21 @@
       "react/sort-comp": 0
     }
   },
-  "eslintIgnoreConfig": ["node_modules/", "commonjs/", "coverage/", "umd/"],
+  "eslintIgnoreConfig": [
+    "node_modules/",
+    "commonjs/",
+    "coverage/",
+    "umd/"
+  ],
   "prettier": {
     "semi": false,
     "singleQuote": true,
     "trailingComma": "all"
   },
   "lint-staged": {
-    "*.js": ["prettier --write \"projects/**/*.js\"", "git add"]
+    "*.js": [
+      "prettier --write \"projects/**/*.js\"",
+      "git add"
+    ]
   }
 }
