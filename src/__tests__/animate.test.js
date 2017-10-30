@@ -44,7 +44,7 @@ describe('animate', () => {
 
   it('calls "onUpdate" for each frame', async () => {
     animation.run()
-    await waitForFrames(6)
+    await waitForFrames(5)
     expect(onUpdateSpy.mock.calls.length).toBe(5)
   })
 
@@ -57,7 +57,17 @@ describe('animate', () => {
   it('half way through an animation produces the expected result', async () => {
     animation.run()
     await waitForFrames(4)
+    expect(onUpdateSpy.mock.calls.length).toBe(4)
+    expect(Math.round(onUpdateSpy.mock.calls[3][0])).toBe(100 / 5 * 3)
+  })
+
+  it('calling run again resets an animation', async () => {
+    animation.run()
+    await waitForFrames(3)
     expect(onUpdateSpy.mock.calls.length).toBe(3)
-    expect(Math.round(onUpdateSpy.mock.calls[2][0])).toBe(100 / 5 * 3)
+    animation.run()
+    await waitForFrames(1)
+    expect(onUpdateSpy.mock.calls.length).toBe(4)
+    expect(Math.round(onUpdateSpy.mock.calls[3][0])).toBe(0)
   })
 })

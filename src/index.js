@@ -71,13 +71,21 @@ export const animate = (animations = []) => {
   const t = createTimeline(animations)
   return {
     run: () => {
-      t.run = true
-      queuedTimelines[t.id] = t
       const hasExecutableAnimations = t.executionEnd > 0
       if (hasExecutableAnimations) {
-        resetTimeline(t)
+        if (queuedTimelines[t.id]) {
+          unqueueTimeline(t)
+          resetTimeline(t)
+          setTimeout(() => {
+            // Doing this gives an existing frame time to resolve.
+            queuedTimelines[t.id] = t
+          }, 1000 / 60)
+        } else {
+          queuedTimelines[t.id] = t
+        }
         start()
       }
+
       return hasExecutableAnimations
         ? // We will return a promise that resolves when the longest
           // running animation completes.

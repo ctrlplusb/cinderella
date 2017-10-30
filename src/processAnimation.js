@@ -3,25 +3,19 @@
 const frameRate = 1000 / 60
 
 export default (animation, timelineTime) => {
-  if (animation.executionStart > timelineTime) {
+  if (
+    timelineTime < animation.executionStart ||
+    timelineTime > animation.executionEnd
+  ) {
     return
   }
 
   animation.runState = animation.runState || {}
   const { runState } = animation
 
-  if (runState.startTime == null && animation.onStart != null) {
+  if (!runState.onStateRun && animation.onStart != null) {
     animation.onStart(timelineTime)
-  }
-
-  // Record when the animation started
-  runState.startTime =
-    runState.startTime != null ? runState.startTime : timelineTime
-
-  const timePassed = timelineTime - runState.startTime
-
-  if (timePassed === 0) {
-    return
+    runState.onStateRun = true
   }
 
   runState.fromValue =
@@ -47,6 +41,8 @@ export default (animation, timelineTime) => {
   if (runState.complete) {
     animation.onUpdate(runState.toValue, runState.prevValue)
   } else {
+    const timePassed = timelineTime - animation.executionStart
+
     const newValue = Array.isArray(runState.fromValue)
       ? runState.fromValue.map((x, idx) =>
           animation.easingFn(
@@ -57,7 +53,7 @@ export default (animation, timelineTime) => {
           ),
         )
       : animation.easingFn(
-          timePassed,
+          timelineTime - animation.executionStart,
           runState.fromValue,
           runState.diff,
           animation.duration,
