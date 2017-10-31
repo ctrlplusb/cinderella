@@ -26,11 +26,24 @@ export const onFrame = time => {
     const t = queuedTimelines[timelineId]
     t.runState = t.runState || {}
     const { runState } = t
+    if (runState.complete) {
+      return
+    }
     runState.startTime = runState.startTime != null ? runState.startTime : time
-    Object.keys(t.queue).forEach(animationId => {
-      const animation = t.queue[animationId]
-      processAnimation(animation, time - runState.startTime)
-    })
+    if (runState.paused) {
+      if (runState.startTime != null && runState.prevTime != null) {
+        runState.startTime += time - runState.prevTime
+      }
+    } else {
+      Object.keys(t.queue).forEach(animationId => {
+        const animation = t.queue[animationId]
+        processAnimation(animation, time - runState.startTime)
+      })
+      if (time - runState.startTime >= t.executionEnd) {
+        runState.complete = true
+      }
+    }
+    runState.prevTime = time
   })
 }
 
@@ -39,11 +52,7 @@ const start = () => {
     // We are already running the raf. Move along.
     return
   }
-  let started
   const loop = time => {
-    if (!started) {
-      started = time
-    }
     onFrame(time)
     currentFrame = window.requestAnimationFrame(loop)
   }
@@ -71,16 +80,19 @@ const unqueueTimeline = id => {
 export const animate = (animations = [], config = {}) => {
   config = Object.assign({}, defaultConfig, config)
   const t = createTimeline(animations)
-  const run = () => {
+  const play = () => {
     const hasExecutableAnimations = t.executionEnd > 0
     if (hasExecutableAnimations) {
       if (queuedTimelines[t.id]) {
-        unqueueTimeline(t)
-        resetTimeline(t)
-        // Doing this gives an existing frame time to resolve.
-        setTimeout(() => {
-          queuedTimelines[t.id] = t
-        }, 1000 / 60 * 1.25)
+        if (t.runState) {
+          if (t.runState.paused) {
+            t.runState.paused = false
+          } else if (t.runState.complete) {
+            resetTimeline(t)
+          } else {
+            // TODO?
+          }
+        }
       } else {
         queuedTimelines[t.id] = t
       }
@@ -97,8 +109,7 @@ export const animate = (animations = [], config = {}) => {
               customOnComplete(x)
             }
             if (config.loop) {
-              // TODO: Check to see if this is a potential memory leak?
-              resolve(run())
+              setTimeout(() => resolve(play()), 1000 / 16)
             } else {
               resolve()
             }
@@ -108,7 +119,11 @@ export const animate = (animations = [], config = {}) => {
         Promise.resolve()
   }
   return {
-    run,
+    play,
+    pause: () => {
+      t.runState = t.runState || {}
+      t.runState.paused = true
+    },
     cancel: () => unqueueTimeline(t.id),
   }
 }

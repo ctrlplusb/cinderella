@@ -1,8 +1,10 @@
- - [ ] Pause
  - [ ] Seek
+ - [ ] Test multiple values
+ - [ ] DOM animation utils
  - [ ] Debug toolbar (preact?)
  - [ ] What happens when errors occur in handlers?
  - [ ] Memory leak tests
+ - [X] Pause
  - [X] Loop
  - [X] animate API
  - [X] Only execute RAF after run, and check to stop after each timeline completes or is stopped
