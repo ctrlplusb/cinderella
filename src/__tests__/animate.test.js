@@ -1,6 +1,26 @@
 import raf from 'raf'
 import { animate, cancelAll } from '../index'
 
+expect.extend({
+  toHaveBeenCalledBetweenNTimes(received, min, max) {
+    const pass =
+      received.mock.calls.length >= min && received.mock.calls.length <= max
+    if (pass) {
+      return {
+        message: () =>
+          `expected function to be called between ${min} and ${max} times`,
+        pass: true,
+      }
+    }
+    return {
+      message: () =>
+        `expected function to be called between ${min} and ${max} times, but it was called ${received
+          .mock.calls.length} times`,
+      pass: false,
+    }
+  },
+})
+
 describe('animate', () => {
   const frameRate = 1000 / 60
 
@@ -33,49 +53,49 @@ describe('animate', () => {
 
   it('does not executes if "run" is not executed', async () => {
     await waitForFrames(1)
-    expect(onStartSpy.mock.calls.length).toBe(0)
+    expect(onStartSpy).toHaveBeenCalledTimes(0)
   })
 
   it('calls "onStart" when animation starts', async () => {
     animation.run()
     await waitForFrames(1)
-    expect(onStartSpy.mock.calls.length).toBe(1)
+    expect(onStartSpy).toHaveBeenCalledTimes(1)
   })
 
   it('calls "onUpdate" for each frame', async () => {
     animation.run()
     await waitForFrames(5)
-    expect(onUpdateSpy.mock.calls.length).toBeGreaterThanOrEqual(5)
+    expect(onUpdateSpy).toHaveBeenCalledBetweenNTimes(4, 6)
   })
 
   it('calls "onComplete" when animation is done', async () => {
     animation.run()
-    await waitForFrames(6)
-    expect(onCompleteSpy.mock.calls.length).toBe(1)
+    await waitForFrames(7)
+    expect(onCompleteSpy).toHaveBeenCalledTimes(1)
   })
 
   it('half way through an animation produces the expected result', async () => {
     animation.run()
     await waitForFrames(4)
-    expect(onUpdateSpy.mock.calls.length).toBe(4)
+    expect(onUpdateSpy).toHaveBeenCalledTimes(4)
     expect(Math.round(onUpdateSpy.mock.calls[3][0])).toBe(100 / 5 * 3)
   })
 
   it('calling run again resets an animation', async () => {
     animation.run()
     await waitForFrames(3)
-    expect(onStartSpy.mock.calls.length).toBe(1)
+    expect(onStartSpy).toHaveBeenCalledTimes(1)
     animation.run()
     await waitForFrames(1)
-    expect(onStartSpy.mock.calls.length).toBe(2)
-    expect(onCompleteSpy.mock.calls.length).toBe(0)
+    expect(onStartSpy).toHaveBeenCalledTimes(2)
+    expect(onCompleteSpy).toHaveBeenCalledTimes(0)
   })
 
   it('executing a timeline with no definition resolves immediately', async () => {
     const empty = animate()
     const start = new Date().getTime()
     await empty.run()
-    expect(new Date().getTime() - start).toBeLessThan(1)
+    expect(new Date().getTime() - start).toBeLessThan(5)
   })
 
   it('executing a timeline with no duration resolves immediately', async () => {
@@ -84,7 +104,7 @@ describe('animate', () => {
     })
     const start = new Date().getTime()
     await empty.run()
-    expect(new Date().getTime() - start).toBeLessThan(1)
+    expect(new Date().getTime() - start).toBeLessThan(5)
   })
 
   it('cancelling a timeline mid execution stops it immediately', async () => {
@@ -92,8 +112,16 @@ describe('animate', () => {
     await waitForFrames(3)
     animation.cancel()
     await waitForFrames(2)
-    expect(onUpdateSpy.mock.calls.length).toBeGreaterThan(0)
-    expect(onCompleteSpy.mock.calls.length).toBe(0)
+    expect(onUpdateSpy).toHaveBeenCalledBetweenNTimes(3, 4)
+    expect(onCompleteSpy).toHaveBeenCalledTimes(0)
+  })
+
+  it('only runs an animation once', async () => {
+    animation.run()
+    await waitForFrames(10)
+    expect(onCompleteSpy).toHaveBeenCalledTimes(1)
+    expect(onStartSpy).toHaveBeenCalledTimes(1)
+    expect(onUpdateSpy).toHaveBeenCalledBetweenNTimes(5, 7)
   })
 
   it('looping works', async () => {
@@ -109,17 +137,13 @@ describe('animate', () => {
         onUpdate: loopUpdateSpy,
         onComplete: loopCompleteSpy,
       },
-      { loop: true },
+      {
+        loop: true,
+      },
     ).run()
     await waitForFrames(10)
-    expect(
-      loopStartSpy.mock.calls.length === 4 ||
-        loopStartSpy.mock.calls.length === 3,
-    ).toBe(true)
-    expect(loopUpdateSpy.mock.calls.length).toBe(10)
-    expect(
-      loopCompleteSpy.mock.calls.length === 2 ||
-        loopCompleteSpy.mock.calls.length === 3,
-    ).toBe(true)
+    expect(loopStartSpy).toHaveBeenCalledBetweenNTimes(2, 3)
+    expect(loopUpdateSpy).toHaveBeenCalledBetweenNTimes(10, 11)
+    expect(loopCompleteSpy).toHaveBeenCalledTimes(2)
   })
 })

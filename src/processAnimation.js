@@ -1,11 +1,9 @@
 /* eslint-disable no-param-reassign */
 
-const frameRate = 1000 / 60
-
 export default (animation, timelineTime) => {
   if (
-    timelineTime < animation.executionStart ||
-    timelineTime > animation.executionEnd
+    (animation.runState && animation.runState.complete) ||
+    timelineTime < animation.executionStart
   ) {
     return
   }
@@ -36,13 +34,11 @@ export default (animation, timelineTime) => {
         : runState.toValue - runState.fromValue
 
   // Check to see if the animation should be considered complete
-  runState.complete = timelineTime + frameRate >= animation.executionEnd
-
+  runState.complete = timelineTime >= animation.executionEnd - 0.01
   if (runState.complete) {
     animation.onUpdate(runState.toValue, runState.prevValue)
   } else {
     const timePassed = timelineTime - animation.executionStart
-
     const newValue = Array.isArray(runState.fromValue)
       ? runState.fromValue.map((x, idx) =>
           animation.easingFn(
