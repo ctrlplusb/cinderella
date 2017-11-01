@@ -31,21 +31,32 @@ export const onFrame = time => {
     const t = queuedTimelines[timelineId]
     t.runState = t.runState || {}
     const { runState } = t
-    if (runState.seek != null) {
-      if (!runState.seekResolved) {
-        const timeForSeek = t.executionEnd / 100 * runState.seek
-        Object.keys(t.queue).forEach(animationId => {
-          const animation = t.queue[animationId]
-          processAnimation(animation, timeForSeek, true)
-        })
-        runState.seekResolved = true
-      }
+    if (
+      runState.seek != null &&
+      (!runState.playFromSeek || !runState.seekResolved)
+    ) {
+      runState.timeForSeek = t.executionEnd / 100 * runState.seek
+      Object.keys(t.queue).forEach(animationId => {
+        const animation = t.queue[animationId]
+        processAnimation(animation, runState.timeForSeek, true)
+      })
+      runState.seekResolved = true
     } else {
       if (runState.complete) {
         return
       }
-      runState.startTime =
-        runState.startTime != null ? runState.startTime : time
+
+      if (runState.playFromSeek) {
+        runState.startTime = time - runState.timeForSeek
+        delete runState.seek
+        delete runState.seekResolved
+        delete runState.timeForSeek
+        delete runState.playFromSeek
+      } else {
+        runState.startTime =
+          runState.startTime != null ? runState.startTime : time
+      }
+
       if (runState.paused) {
         if (runState.startTime != null && runState.prevTime != null) {
           runState.startTime += time - runState.prevTime
@@ -115,8 +126,8 @@ export const animate = (animations = [], config = {}) => {
           t.runState.paused = false
         } else if (t.runState.complete) {
           resetTimeline(t)
-        } else {
-          // TODO?
+        } else if (t.runState.seek) {
+          t.runState.playFromSeek = true
         }
       }
     } else {

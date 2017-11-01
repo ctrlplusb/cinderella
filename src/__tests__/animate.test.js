@@ -246,4 +246,13 @@ describe('animate', () => {
     expect(values.y).toBe(0)
     expect(values.z).toBe(0)
   })
+
+  it('play after seek', async () => {
+    animation.seek(90)
+    animation.play()
+    await waitForFrames(3)
+    // console.log(onUpdateSpy.mock.calls.map(([x]) => x))
+    expect(onUpdateSpy).toHaveBeenCalledBetweenNTimes(2, 3)
+    expect(onCompleteSpy).toHaveBeenCalledTimes(1)
+  })
 })
