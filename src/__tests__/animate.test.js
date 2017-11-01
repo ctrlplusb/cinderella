@@ -91,6 +91,20 @@ describe('animate', () => {
     })
   })
 
+  it('function values', async () => {
+    let actual = null
+    animate({
+      from: () => 0,
+      to: () => 50,
+      duration: 1 * frameRate,
+      onUpdate: x => {
+        actual = x
+      },
+    }).play()
+    await waitForFrames(2)
+    expect(actual).toBe(50)
+  })
+
   it('half way through an animation produces the expected result', async () => {
     animation.play()
     await waitForFrames(4)
