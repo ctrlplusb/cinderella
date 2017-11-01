@@ -144,7 +144,12 @@ export const animate = (animations = [], config = {}) => {
           customOnComplete(x)
         }
         if (config.loop) {
-          setTimeout(() => resolve(play()), frameRate)
+          delete queuedTimelines[t.id]
+          setTimeout(() => {
+            resetTimeline(t)
+            queuedTimelines[t.id] = t
+          }, frameRate)
+          resolve()
         } else {
           resolve()
         }
