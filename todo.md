@@ -1,9 +1,9 @@
- - [ ] Seek
  - [ ] Test multiple values
  - [ ] DOM animation utils
  - [ ] Debug toolbar (preact?)
  - [ ] What happens when errors occur in handlers?
  - [ ] Memory leak tests
+ - [X] Seek
  - [X] Pause
  - [X] Loop
  - [X] animate API

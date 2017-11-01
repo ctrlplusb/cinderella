@@ -1,9 +1,11 @@
 /* eslint-disable no-param-reassign */
 
-export default (animation, timelineTime) => {
+export default (animation, timelineTime, forceRun) => {
+  const timeIsBeforeAnimation = timelineTime <= animation.executionStart
   if (
-    (animation.runState && animation.runState.complete) ||
-    timelineTime < animation.executionStart
+    ((animation.runState && animation.runState.complete) ||
+      timeIsBeforeAnimation) &&
+    !forceRun
   ) {
     return
   }
@@ -35,7 +37,9 @@ export default (animation, timelineTime) => {
 
   // Check to see if the animation should be considered complete
   runState.complete = timelineTime >= animation.executionEnd - 0.01
-  if (runState.complete) {
+  if (timeIsBeforeAnimation) {
+    animation.onUpdate(runState.fromValue)
+  } else if (runState.complete) {
     animation.onUpdate(runState.toValue, runState.prevValue)
   } else {
     const timePassed = timelineTime - animation.executionStart

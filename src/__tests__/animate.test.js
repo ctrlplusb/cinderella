@@ -1,5 +1,6 @@
 import raf from 'raf'
 import { animate, cancelAll } from '../index'
+import { frameRate } from '../constants'
 
 expect.extend({
   toHaveBeenCalledBetweenNTimes(received, min, max) {
@@ -22,8 +23,6 @@ expect.extend({
 })
 
 describe('animate', () => {
-  const frameRate = 1000 / 60
-
   const waitForFrames = (n = 1) =>
     new Promise(resolve => setTimeout(resolve, n * frameRate))
 
@@ -52,13 +51,13 @@ describe('animate', () => {
   })
 
   it('does not executes if "play" is not executed', async () => {
-    await waitForFrames(1)
+    await waitForFrames(2)
     expect(onStartSpy).toHaveBeenCalledTimes(0)
   })
 
   it('calls "onStart" when animation starts', async () => {
     animation.play()
-    await waitForFrames(1)
+    await waitForFrames(2)
     expect(onStartSpy).toHaveBeenCalledTimes(1)
   })
 
@@ -77,8 +76,13 @@ describe('animate', () => {
   it('half way through an animation produces the expected result', async () => {
     animation.play()
     await waitForFrames(4)
-    expect(onUpdateSpy).toHaveBeenCalledTimes(4)
-    expect(Math.round(onUpdateSpy.mock.calls[3][0])).toBe(100 / 5 * 3)
+    expect(onUpdateSpy).toHaveBeenCalledBetweenNTimes(3, 4)
+    const lastUpdateValue = Math.round(
+      onUpdateSpy.mock.calls[onUpdateSpy.mock.calls.length - 1][0],
+    )
+    expect(
+      lastUpdateValue === 100 / 5 * 3 || lastUpdateValue === 100 / 5 * 4,
+    ).toBe(true)
   })
 
   it('calling play has no effect on an animation that is midway in their timeline', async () => {
@@ -93,12 +97,12 @@ describe('animate', () => {
 
   it('calling play on an animation that has complete causes it to play again', async () => {
     animation.play()
-    await waitForFrames(6)
+    await waitForFrames(7)
     expect(onStartSpy).toHaveBeenCalledTimes(1)
-    animation.play()
-    await waitForFrames(2)
-    expect(onStartSpy).toHaveBeenCalledTimes(2)
     expect(onCompleteSpy).toHaveBeenCalledTimes(1)
+    animation.play()
+    await waitForFrames(3)
+    expect(onStartSpy).toHaveBeenCalledTimes(2)
   })
 
   it('executing a timeline with no definition resolves immediately', async () => {
@@ -117,12 +121,12 @@ describe('animate', () => {
     expect(new Date().getTime() - start).toBeLessThan(5)
   })
 
-  it('cancelling a timeline mid execution stops it immediately', async () => {
+  it('disposing a timeline mid execution stops it immediately', async () => {
     animation.play()
     await waitForFrames(3)
-    animation.cancel()
+    animation.dispose()
     await waitForFrames(2)
-    expect(onUpdateSpy).toHaveBeenCalledBetweenNTimes(3, 4)
+    expect(onUpdateSpy).toHaveBeenCalledBetweenNTimes(2, 4)
     expect(onCompleteSpy).toHaveBeenCalledTimes(0)
   })
 
@@ -140,7 +144,7 @@ describe('animate', () => {
     const loopCompleteSpy = jest.fn()
     animate(
       {
-        duration: 2 * frameRate,
+        duration: 3 * frameRate,
         from: 0,
         to: 10,
         onStart: loopStartSpy,
@@ -153,7 +157,7 @@ describe('animate', () => {
     ).play()
     await waitForFrames(9)
     expect(loopStartSpy).toHaveBeenCalledBetweenNTimes(2, 3)
-    expect(loopUpdateSpy).toHaveBeenCalledBetweenNTimes(6, 7)
+    expect(loopUpdateSpy).toHaveBeenCalledBetweenNTimes(5, 8)
     expect(loopCompleteSpy).toHaveBeenCalledTimes(2)
   })
 
@@ -183,5 +187,63 @@ describe('animate', () => {
     pausable.play()
     await waitForFrames(4)
     expect(onUpdateTwoSpy).toHaveBeenCalledBetweenNTimes(3, 4)
+  })
+
+  it('seeking works', async () => {
+    const values = {
+      x: 0,
+      y: 0,
+      z: 0,
+    }
+    const seekable = animate([
+      {
+        duration: 3 * frameRate,
+        from: 0,
+        to: 100,
+        onUpdate: x => {
+          values.x = x
+        },
+      },
+      {
+        duration: 3 * frameRate,
+        from: 0,
+        to: 100,
+        onUpdate: y => {
+          values.y = y
+        },
+      },
+      {
+        duration: 3 * frameRate,
+        from: 0,
+        to: 100,
+        onUpdate: z => {
+          values.z = z
+        },
+      },
+    ])
+
+    seekable.seek(50)
+    await waitForFrames(1)
+    expect(values.x).toBe(100)
+    expect(values.y).toBeCloseTo(50)
+    expect(values.z).toBe(0)
+
+    seekable.seek(25)
+    await waitForFrames(1)
+    expect(values.x).toBeCloseTo(75)
+    expect(values.y).toBe(0)
+    expect(values.z).toBe(0)
+
+    seekable.seek(100)
+    await waitForFrames(1)
+    expect(values.x).toBe(100)
+    expect(values.y).toBe(100)
+    expect(values.z).toBe(100)
+
+    seekable.seek(0)
+    await waitForFrames(1)
+    expect(values.x).toBe(0)
+    expect(values.y).toBe(0)
+    expect(values.z).toBe(0)
   })
 })
