@@ -78,13 +78,13 @@ describe('animate', () => {
     animate({
       from: [0, 200],
       to: [50, 150],
-      duration: 1 * frameRate,
+      duration: 5 * frameRate,
       onUpdate: ([a, b]) => {
         actual.a = a
         actual.b = b
       },
     }).play()
-    await waitForFrames(2)
+    await waitForFrames(8)
     expect(actual).toMatchObject({
       a: 50,
       b: 150,
@@ -96,12 +96,12 @@ describe('animate', () => {
     animate({
       from: () => 0,
       to: () => 50,
-      duration: 1 * frameRate,
+      duration: 5 * frameRate,
       onUpdate: x => {
         actual = x
       },
     }).play()
-    await waitForFrames(2)
+    await waitForFrames(8)
     expect(actual).toBe(50)
   })
 
