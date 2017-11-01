@@ -1,6 +1,6 @@
 # cinderella
 
-A tiny and powerful animation library optimised against request animation frame.
+A tiny animation library.
 
 ```javascript
 import cinderella from 'cinderella'
@@ -19,26 +19,25 @@ cinderella.animate({
 [![Travis](https://img.shields.io/travis/ctrlplusb/cinderella.svg?style=flat-square)](https://travis-ci.org/ctrlplusb/cinderella)
 [![Codecov](https://img.shields.io/codecov/c/github/ctrlplusb/cinderella.svg?style=flat-square)](https://codecov.io/github/ctrlplusb/cinderella)
 
- - Optimised to run over requestAnimationFrame.
  - Easily define complex animation timelines.
- - A barrel of easing functions available, or define your own.
  - Pause, resume, seek, and dispose at any time.
- - Generic API with extensions to target DOM/Canvas/Frameworks.
- - Compatible with popular libraries and frameworks such as Paper.js, React, vanilla JS, etc.
+ - A barrel of easing functions available, or define your own.
+ - Simple and generic API with extensions to target DOM/Canvas/Frameworks.
+ - Animations auto-optimised to run over requestAnimationFrame.
  - 3kB gzipped
 
 ## TOCs
 
   - [Introduction](#introduction)
-  - [Overview](#overview)
+  - [Tutorial](#tutorial)
   - [API](#api)
-  - [FAQs](#faqs)
+  - [Credits](#credits)
 
 ## Introduction
 
 > WIP
 
-## Overview
+## Tutorial
 
 > WIP
 
@@ -46,10 +45,6 @@ cinderella.animate({
 
 > WIP
 
-## FAQs
-
-> Do you have any? 😀
-
 ## Credits
 
-A big huge awesome thank you goes to Mark O'Connor for donating the npm package name `cinderella` to this project. ⭐️ ❤️  ️
+Massive ❤️ to Mark O'Connor for donating the npm package `cinderella`.  ️

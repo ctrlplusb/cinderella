@@ -1,8 +1,7 @@
 {
   "name": "cinderella",
-  "version": "0.7.0",
-  "description":
-    "A super simple animation library that snuggles with request animation frame.",
+  "version": "0.7.1",
+  "description": "A tiny animation library.",
   "license": "MIT",
   "main": "commonjs/index.js",
   "files": ["*.js", "*.md", "umd", "commonjs"],
