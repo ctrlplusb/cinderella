@@ -73,6 +73,24 @@ describe('animate', () => {
     expect(onCompleteSpy).toHaveBeenCalledTimes(1)
   })
 
+  it('multiple values', async () => {
+    const actual = { a: null, b: null }
+    animate({
+      from: [0, 200],
+      to: [50, 150],
+      duration: 1 * frameRate,
+      onUpdate: ([a, b]) => {
+        actual.a = a
+        actual.b = b
+      },
+    }).play()
+    await waitForFrames(2)
+    expect(actual).toMatchObject({
+      a: 50,
+      b: 150,
+    })
+  })
+
   it('half way through an animation produces the expected result', async () => {
     animation.play()
     await waitForFrames(4)

@@ -1,13 +1,4 @@
- - [ ] Test multiple values
- - [ ] DOM animation utils
+  - [ ] DOM animation utils
  - [ ] Debug toolbar (preact?)
  - [ ] What happens when errors occur in handlers?
  - [ ] Memory leak tests
- - [X] Seek
- - [X] Pause
- - [X] Loop
- - [X] animate API
- - [X] Only execute RAF after run, and check to stop after each timeline completes or is stopped
- - [X] Defer execution via "run" on animation
- - [X] Allow nesting of timelines/animations
- - [X] Absolute offset do not affect relative timing
