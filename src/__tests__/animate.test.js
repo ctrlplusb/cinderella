@@ -137,22 +137,6 @@ describe('animate', () => {
     expect(onStartSpy).toHaveBeenCalledTimes(2)
   })
 
-  it('executing a timeline with no definition resolves immediately', async () => {
-    const empty = animate()
-    const start = new Date().getTime()
-    await empty.play()
-    expect(new Date().getTime() - start).toBeLessThan(5)
-  })
-
-  it('executing a timeline with no duration resolves immediately', async () => {
-    const empty = animate({
-      duration: 0,
-    })
-    const start = new Date().getTime()
-    await empty.play()
-    expect(new Date().getTime() - start).toBeLessThan(5)
-  })
-
   it('disposing a timeline mid execution stops it immediately', async () => {
     animation.play()
     await waitForFrames(3)

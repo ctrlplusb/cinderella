@@ -2,7 +2,6 @@
 
 import createTimeline from './createTimeline'
 import processAnimation from './processAnimation'
-import { frameRate } from './constants'
 
 // Maintains a list of timelines that have been queued to "executed"
 const queuedTimelines = {}
@@ -43,6 +42,9 @@ export const onFrame = time => {
       runState.seekResolved = true
     } else {
       if (runState.complete) {
+        if (t.config.loop) {
+          resetTimeline(t)
+        }
         return
       }
 
@@ -115,6 +117,7 @@ const emptyAnimation = {
 export const animate = (animations = [], config = {}) => {
   config = Object.assign({}, defaultConfig, config)
   const t = createTimeline(animations)
+  t.config = config
   if (t.executionEnd <= 0) {
     return emptyAnimation
   }
@@ -133,28 +136,8 @@ export const animate = (animations = [], config = {}) => {
     } else {
       queuedTimelines[t.id] = t
     }
+
     ensureRafIsRunning()
-    // We will return a promise that resolves when the longest
-    // running animation completes.
-    return new Promise(resolve => {
-      const longestAnim = t.queue[t.longestRunningAnimation]
-      const customOnComplete = longestAnim.onComplete
-      longestAnim.onComplete = x => {
-        if (customOnComplete != null) {
-          customOnComplete(x)
-        }
-        if (config.loop) {
-          delete queuedTimelines[t.id]
-          setTimeout(() => {
-            resetTimeline(t)
-            queuedTimelines[t.id] = t
-          }, frameRate)
-          resolve()
-        } else {
-          resolve()
-        }
-      }
-    })
   }
   return {
     play,

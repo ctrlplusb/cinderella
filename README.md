@@ -11,7 +11,7 @@ cinderella.animate({
   from: 0,
   to: 100,
   onUpdate: x => { input.value = x }
-}).run()
+}).play()
 ```
 
 [![npm](https://img.shields.io/npm/v/cinderella.svg?style=flat-square)](http://npm.im/cinderella)
