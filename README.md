@@ -1,6 +1,6 @@
 # cinderella
 
-A super simple animation library that snuggles with request animation frame.
+A tiny and powerful animation library optimised against request animation frame.
 
 ```javascript
 import cinderella from 'cinderella'
@@ -19,13 +19,13 @@ cinderella.animate({
 [![Travis](https://img.shields.io/travis/ctrlplusb/cinderella.svg?style=flat-square)](https://travis-ci.org/ctrlplusb/cinderella)
 [![Codecov](https://img.shields.io/codecov/c/github/ctrlplusb/cinderella.svg?style=flat-square)](https://codecov.io/github/ctrlplusb/cinderella)
 
- - RAF compatible, bring your own, or use ours.
- - Super simple api to define animations over time.
- - A barrel of easing functions, or bring your own.
- - Queue animations using a simple declarative approach.
- - Cancel animations.
- - Compatible with popular frameworks such as Paper.js, React, or just straight up vanilla JS.
- - 2.65 kB gzipped
+ - Optimised to run over requestAnimationFrame.
+ - Easily define complex animation timelines.
+ - A barrel of easing functions available, or define your own.
+ - Pause, resume, seek, and dispose at any time.
+ - Generic API with extensions to target DOM/Canvas/Frameworks.
+ - Compatible with popular libraries and frameworks such as Paper.js, React, vanilla JS, etc.
+ - 3kB gzipped
 
 ## TOCs
 
