@@ -1,5 +1,10 @@
 import raf from 'raf'
-import { animate, cancelAll } from '../index'
+import {
+  animate,
+  cancelAll,
+  addFrameListener,
+  removeFrameListener,
+} from '../index'
 import { frameRate } from '../constants'
 
 expect.extend({
@@ -174,7 +179,7 @@ describe('animate', () => {
     await waitForFrames(9)
     expect(loopStartSpy).toHaveBeenCalledBetweenNTimes(2, 3)
     expect(loopUpdateSpy).toHaveBeenCalledBetweenNTimes(5, 8)
-    expect(loopCompleteSpy).toHaveBeenCalledTimes(2)
+    expect(loopCompleteSpy).toHaveBeenCalledBetweenNTimes(1, 2)
   })
 
   it('pausing and resuming an animation works', async () => {
@@ -270,5 +275,16 @@ describe('animate', () => {
     // console.log(onUpdateSpy.mock.calls.map(([x]) => x))
     expect(onUpdateSpy).toHaveBeenCalledBetweenNTimes(2, 3)
     expect(onCompleteSpy).toHaveBeenCalledTimes(1)
+  })
+
+  it('registering custom onFrame listeners', async () => {
+    const listener = jest.fn()
+    addFrameListener(listener)
+    animation.play()
+    await waitForFrames(3)
+    expect(listener).toHaveBeenCalledBetweenNTimes(3, 4)
+    removeFrameListener(listener)
+    await waitForFrames(3)
+    expect(listener).toHaveBeenCalledBetweenNTimes(3, 4)
   })
 })

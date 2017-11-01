@@ -6,6 +6,9 @@ import processAnimation from './processAnimation'
 // Maintains a list of timelines that have been queued to "executed"
 const queuedTimelines = {}
 
+// Maintains a list of frame listeners
+let frameListeners = []
+
 // Represents the currently executing raf frame
 let currentFrame = null
 
@@ -25,7 +28,7 @@ const resetTimeline = t => {
   resetTimelineAnimations(t)
 }
 
-export const onFrame = time => {
+const onFrame = time => {
   Object.keys(queuedTimelines).forEach(timelineId => {
     const t = queuedTimelines[timelineId]
     t.runState = t.runState || {}
@@ -75,6 +78,10 @@ export const onFrame = time => {
       runState.prevTime = time
     }
   })
+
+  frameListeners.forEach(listener => {
+    listener(time)
+  })
 }
 
 const ensureRafIsRunning = () => {
@@ -121,7 +128,6 @@ export const animate = (animations = [], config = {}) => {
   if (t.executionEnd <= 0) {
     return emptyAnimation
   }
-
   const play = () => {
     if (queuedTimelines[t.id]) {
       if (t.runState) {
@@ -136,7 +142,6 @@ export const animate = (animations = [], config = {}) => {
     } else {
       queuedTimelines[t.id] = t
     }
-
     ensureRafIsRunning()
   }
   return {
@@ -155,4 +160,12 @@ export const animate = (animations = [], config = {}) => {
     },
     dispose: () => unqueueTimeline(t.id),
   }
+}
+
+export const addFrameListener = fn => {
+  frameListeners = [...frameListeners, fn]
+}
+
+export const removeFrameListener = fn => {
+  frameListeners = frameListeners.filter(x => x !== fn)
 }
