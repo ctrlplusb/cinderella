@@ -72,6 +72,9 @@ const onFrame = time => {
       }
       if (time - runState.startTime >= t.executionEnd) {
         runState.complete = true
+        if (t.config.onComplete) {
+          t.config.onComplete(time)
+        }
       }
       runState.prevTime = time
     }

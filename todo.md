@@ -1,4 +1,3 @@
- - [ ] config onComplete for animation
  - [ ] DOM animation utils
  - [ ] Debug toolbar (preact?)
  - [ ] What happens when errors occur in handlers?

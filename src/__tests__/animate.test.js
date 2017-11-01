@@ -34,6 +34,7 @@ describe('animate', () => {
   let onStartSpy
   let onUpdateSpy
   let onCompleteSpy
+  let onTimelineCompleteSpy
   let animation
 
   beforeAll(() => {
@@ -45,14 +46,18 @@ describe('animate', () => {
     onStartSpy = jest.fn()
     onUpdateSpy = jest.fn()
     onCompleteSpy = jest.fn()
-    animation = animate({
-      from: 0,
-      to: 100,
-      duration: 5 * frameRate,
-      onStart: onStartSpy,
-      onUpdate: onUpdateSpy,
-      onComplete: onCompleteSpy,
-    })
+    onTimelineCompleteSpy = jest.fn()
+    animation = animate(
+      {
+        from: 0,
+        to: 100,
+        duration: 5 * frameRate,
+        onStart: onStartSpy,
+        onUpdate: onUpdateSpy,
+        onComplete: onCompleteSpy,
+      },
+      { onComplete: onTimelineCompleteSpy },
+    )
   })
 
   it('does not executes if "play" is not executed', async () => {
@@ -69,7 +74,7 @@ describe('animate', () => {
   it('calls "onUpdate" for each frame', async () => {
     animation.play()
     await waitForFrames(5)
-    expect(onUpdateSpy).toHaveBeenCalledBetweenNTimes(4, 6)
+    expect(onUpdateSpy).toHaveBeenCalledBetweenNTimes(3, 6)
   })
 
   it('calls "onComplete" when animation is done', async () => {
@@ -286,5 +291,11 @@ describe('animate', () => {
     removeFrameListener(listener)
     await waitForFrames(3)
     expect(listener).toHaveBeenCalledBetweenNTimes(3, 4)
+  })
+
+  it('animation "onComplete"', async () => {
+    animation.play()
+    await waitForFrames(7)
+    expect(onTimelineCompleteSpy).toHaveBeenCalledTimes(1)
   })
 })
