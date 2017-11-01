@@ -43,14 +43,12 @@ const onFrame = time => {
         processAnimation(animation, runState.timeForSeek, true)
       })
       runState.seekResolved = true
-    } else {
-      if (runState.complete) {
-        if (t.config.loop) {
-          resetTimeline(t)
-        }
-        return
+    } else if (runState.complete) {
+      resetTimeline(t)
+      if (!t.config.loop) {
+        delete queuedTimelines[t.id]
       }
-
+    } else {
       if (runState.playFromSeek) {
         runState.startTime = time - runState.timeForSeek
         delete runState.seek
