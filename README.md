@@ -1,3 +1,5 @@
+> __WORK IN PROGRESS - DO NOT USE__
+
 # cinderella
 
 A tiny animation library.
@@ -7,10 +9,23 @@ import cinderella from 'cinderella'
 
 const input = document.getElementById('#foo')
 
-cinderella.animate({
+cinderella({
   from: 0,
   to: 100,
+  duration: 1000,
   onUpdate: x => { input.value = x }
+}).play()
+```
+
+_or the equivalent use our DOM extension_
+
+```javascript
+import cinderella from 'cinderella/dom'
+
+cinderella({
+  target: '#foo',
+  duration: 1000,
+  value: 100
 }).play()
 ```
 
@@ -36,6 +51,15 @@ cinderella.animate({
 ## Introduction
 
 > WIP
+
+I must be up front and say that this library is heavily inspired by the supremely
+awesome [animejs](http://animejs.com/) - I would highly recommend that you look
+there first before considering this library. It's heavily popular, well
+maintained and just all out badass.
+
+I created this library as I have my own opinions on creating timelines and also
+wanted to be able to expose a generic core to solve some of my "alternative"
+use cases.
 
 ## Tutorial
 
