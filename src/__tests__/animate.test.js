@@ -27,10 +27,10 @@ expect.extend({
   },
 })
 
-describe('animate', () => {
-  const waitForFrames = (n = 1) =>
-    new Promise(resolve => setTimeout(resolve, n * frameRate))
+const waitForFrames = (n = 1) =>
+  new Promise(resolve => setTimeout(resolve, n * frameRate))
 
+describe('animate', () => {
   let onStartSpy
   let onUpdateSpy
   let onCompleteSpy

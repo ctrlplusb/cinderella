@@ -170,3 +170,5 @@ export const addFrameListener = fn => {
 export const removeFrameListener = fn => {
   frameListeners = frameListeners.filter(x => x !== fn)
 }
+
+export default animate

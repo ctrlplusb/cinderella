@@ -1,4 +1,7 @@
- - [ ] DOM animation utils
+ - [ ] DOM extension
+ - [ ] UMD build of DOM extension
  - [ ] Debug toolbar (preact?)
  - [ ] What happens when errors occur in handlers?
  - [ ] Memory leak tests
+ - [ ] Performance optimisations
+ - [ ] Looping on individual animations

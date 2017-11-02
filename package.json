@@ -4,7 +4,7 @@
   "description": "A tiny animation library.",
   "license": "MIT",
   "main": "commonjs/index.js",
-  "files": ["*.js", "*.md", "umd", "commonjs"],
+  "files": ["dom.js", "*.md", "umd", "commonjs"],
   "repository": {
     "type": "git",
     "url": "https://github.com/ctrlplusb/cinderella.git"
@@ -82,6 +82,7 @@
       "array-callback-return": 0,
       "camelcase": 0,
       "import/prefer-default-export": 0,
+      "import/no-named-as-default": 0,
       "import/no-extraneous-dependencies": 0,
       "no-underscore-dangle": 0,
       "no-nested-ternary": 0,
