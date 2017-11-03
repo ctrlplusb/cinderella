@@ -22,3 +22,6 @@ flow-typed
 
 # Temp directories
 temp
+
+# IDEs
+.vscode
