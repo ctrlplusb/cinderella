@@ -1,7 +1,8 @@
 /* eslint-disable no-param-reassign */
 
-import createTimeline from './createTimeline'
-import processAnimation from './processAnimation'
+import * as Easings from './easings'
+
+let timelineIdx = 0
 
 // Maintains a list of timelines that have been queued to "executed"
 const queuedTimelines = {}
@@ -12,73 +13,183 @@ let frameListeners = []
 // Represents the currently executing raf frame
 let currentFrame = null
 
-const defaultConfig = {
+const defaultTimelineConfig = {
   loop: false,
 }
 
-const resetTimelineAnimations = t => {
-  Object.keys(t.queue).forEach(animationId => {
-    const animation = t.queue[animationId]
-    animation.runState = null
-  })
+export const isTimeline = x =>
+  typeof x === 'object' && x.id != null && typeof x.queue === 'object'
+
+const applyAnimationDefaults = ({
+  delay = 0,
+  duration = 1000,
+  easing = 'linear',
+  ...rest
+}) => ({
+  delay,
+  duration,
+  easing,
+  easingFn: Easings[easing],
+  state: {},
+  ...rest,
+})
+
+const initializeAnimation = animation => {
+  if (isTimeline(animation)) {
+    return animation
+  }
+  animation = applyAnimationDefaults(animation)
+  if (typeof animation.offset === 'number') {
+    animation.absoluteOffset = animation.offset
+  } else if (
+    typeof animation.offset === 'string' &&
+    animation.offset.length > 3
+  ) {
+    const operator = animation.offset.substr(0, 2)
+    const value = parseInt(animation.offset.substr(2), 10)
+    if (operator === '-=') {
+      animation.relativeOffset = value * -1
+    } else if (operator === '+=') {
+      animation.relativeOffset = value
+    } else {
+      throw new Error(`Invalid relative offset "${animation.offset}"`)
+    }
+  }
+
+  return animation
+}
+
+const createTimeline = (animations = [], config = {}) => {
+  timelineIdx += 1
+  return {
+    id: timelineIdx,
+    animations: Array.isArray(animations)
+      ? animations.map(initializeAnimation)
+      : [initializeAnimation(animations)],
+    config: Object.assign({}, defaultTimelineConfig, config),
+    state: {},
+  }
 }
 
 const resetTimeline = t => {
-  t.runState = null
-  resetTimelineAnimations(t)
+  t.state = {}
+  t.animations.forEach(a => {
+    a.state = {}
+  })
+}
+
+const processAnimation = (anim, time) => {
+  const { state } = anim
+
+  if (state.startTime == null && anim.onStart != null) {
+    anim.onStart()
+  }
+
+  state.startTime = state.startTime != null ? state.startTime : time
+
+  if (time - state.startTime < anim.delay) {
+    return
+  }
+
+  state.fromValue =
+    state.fromValue != null
+      ? state.fromValue
+      : typeof anim.from === 'function' ? anim.from() : anim.from
+
+  state.toValue =
+    state.toValue != null
+      ? state.toValue
+      : typeof anim.to === 'function' ? anim.to() : anim.to
+
+  state.diff =
+    state.diff != null
+      ? state.diff
+      : Array.isArray(state.toValue)
+        ? state.toValue.map((x, idx) => x - state.fromValue[idx])
+        : state.toValue - state.fromValue
+
+  state.complete = time >= state.startTime + anim.duration + anim.delay
+
+  if (state.complete) {
+    anim.onUpdate(state.toValue, state.prevValue)
+    if (anim.onComplete) {
+      anim.onComplete()
+    }
+  } else {
+    const timePassed = time - state.startTime
+    const newValue = Array.isArray(state.fromValue)
+      ? state.fromValue.map((x, idx) =>
+          anim.easingFn(
+            timePassed,
+            state.fromValue[idx],
+            state.diff[idx],
+            anim.duration,
+          ),
+        )
+      : anim.easingFn(
+          time - state.startTime,
+          state.fromValue,
+          state.diff,
+          anim.duration,
+        )
+    anim.onUpdate(newValue, state.prevValue)
+    state.prevValue = newValue
+  }
 }
 
 const onFrame = time => {
   Object.keys(queuedTimelines).forEach(timelineId => {
     const t = queuedTimelines[timelineId]
-    t.runState = t.runState || {}
-    const { runState } = t
-    if (
-      runState.seek != null &&
-      (!runState.playFromSeek || !runState.seekResolved)
-    ) {
-      runState.timeForSeek = t.executionEnd / 100 * runState.seek
-      Object.keys(t.queue).forEach(animationId => {
-        const animation = t.queue[animationId]
-        processAnimation(animation, runState.timeForSeek, true)
-      })
-      runState.seekResolved = true
-    } else if (runState.complete) {
-      resetTimeline(t)
-      if (!t.config.loop) {
-        delete queuedTimelines[t.id]
+    const { state, config } = t
+    if (state.complete) {
+      return
+    }
+    if (state.startTime == null && config.onStart != null) {
+      config.onStart()
+    }
+    state.startTime = state.startTime != null ? state.startTime : time
+    if (state.paused) {
+      if (state.startTime != null && state.prevTime != null) {
+        state.startTime += time - state.prevTime
       }
     } else {
-      if (runState.playFromSeek) {
-        runState.startTime = time - runState.timeForSeek
-        delete runState.seek
-        delete runState.seekResolved
-        delete runState.timeForSeek
-        delete runState.playFromSeek
-      } else {
-        if (runState.startTime == null && t.config.onStart != null) {
-          t.config.onStart()
+      t.executionTime = time - state.startTime
+      t.animations.map(x => x.state.complete)
+      t.animations.forEach((a, i) => {
+        if (a.state.complete) {
+          return
         }
-        runState.startTime =
-          runState.startTime != null ? runState.startTime : time
-      }
-      if (runState.paused) {
-        if (runState.startTime != null && runState.prevTime != null) {
-          runState.startTime += time - runState.prevTime
+        if (
+          a.absoluteOffset != null &&
+          time - state.startTime >= a.absoluteOffset
+        ) {
+          processAnimation(a, time)
+        } else {
+          let execute = true
+          if (a.state.startTime == null) {
+            for (let x = 0; x < i; x += 1) {
+              const y = t.animations[x]
+              if (!y.isAbsoluteOffset && !y.state.complete) {
+                execute = false
+                break
+              }
+            }
+          }
+          if (execute) {
+            processAnimation(a, time)
+          }
         }
-      } else {
-        Object.keys(t.queue).forEach(animationId => {
-          const animation = t.queue[animationId]
-          processAnimation(animation, time - runState.startTime)
-        })
+      })
+    }
+    state.prevTime = time
+    state.complete = t.animations.every(a => a.state.complete)
+    if (state.complete) {
+      if (config.onComplete) {
+        config.onComplete()
       }
-      if (time - runState.startTime >= t.executionEnd) {
-        runState.complete = true
-        if (t.config.onComplete) {
-          t.config.onComplete(time - runState.startTime)
-        }
+      if (config.loop) {
+        resetTimeline(t)
       }
-      runState.prevTime = time
     }
   })
 
@@ -117,29 +228,15 @@ const unqueueTimeline = id => {
   }
 }
 
-const emptyAnimation = {
-  play: () => Promise.resolve(),
-  pause: () => undefined,
-  seek: () => undefined,
-  dispose: () => undefined,
-}
-
-export const animate = (animations = [], config = {}) => {
-  config = Object.assign({}, defaultConfig, config)
-  const t = createTimeline(animations)
-  t.config = config
-  if (t.executionEnd <= 0) {
-    return emptyAnimation
-  }
+export const animate = (animations, config) => {
+  const t = createTimeline(animations, config)
   const play = () => {
     if (queuedTimelines[t.id]) {
-      if (t.runState) {
-        if (t.runState.paused) {
-          t.runState.paused = false
-        } else if (t.runState.complete) {
+      if (t.state) {
+        if (t.state.paused) {
+          t.state.paused = false
+        } else if (t.state.complete) {
           resetTimeline(t)
-        } else if (t.runState.seek) {
-          t.runState.playFromSeek = true
         }
       }
     } else {
@@ -150,18 +247,9 @@ export const animate = (animations = [], config = {}) => {
   return {
     play,
     pause: () => {
-      t.runState = t.runState || {}
-      t.runState.paused = true
+      t.state.paused = true
     },
-    seek: percentage => {
-      t.runState = t.runState || {}
-      t.runState.seek = percentage
-      t.runState.seekResolved = false
-      resetTimelineAnimations(t)
-      queuedTimelines[t.id] = t
-      ensureRafIsRunning()
-    },
-    dispose: () => unqueueTimeline(t.id),
+    stop: () => unqueueTimeline(t.id),
   }
 }
 

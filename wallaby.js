@@ -1,7 +1,10 @@
+const fs = require('fs')
+const path = require('path')
+
 process.env.NODE_ENV = 'test'
-const babelConfig = JSON.parse(
-  require('fs').readFileSync(require('path').join(__dirname, '.babelrc')),
-)
+
+const babelConfigContents = fs.readFileSync(path.join(__dirname, '.babelrc'))
+const babelConfig = JSON.parse(babelConfigContents)
 
 module.exports = wallaby => ({
   files: ['src/**/*.js', { pattern: 'src/**/*.test.js', ignore: true }],

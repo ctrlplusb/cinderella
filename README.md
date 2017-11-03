@@ -34,11 +34,11 @@ cinderella({
 [![Travis](https://img.shields.io/travis/ctrlplusb/cinderella.svg?style=flat-square)](https://travis-ci.org/ctrlplusb/cinderella)
 [![Codecov](https://img.shields.io/codecov/c/github/ctrlplusb/cinderella.svg?style=flat-square)](https://codecov.io/github/ctrlplusb/cinderella)
 
- - Easily define complex animation timelines.
- - Pause, resume, seek, and dispose at any time.
- - A barrel of easing functions available, or define your own.
- - Simple and generic API with extensions to target DOM/Canvas/Frameworks.
- - Animations auto-optimised to run over requestAnimationFrame.
+ - Timelines.
+ - Play, pause, loop, stop.
+ - Easing functions.
+ - Simple API.
+ - Optimised over requestAnimationFrame.
  - 3kB gzipped
 
 ## TOCs
@@ -53,13 +53,8 @@ cinderella({
 > WIP
 
 I must be up front and say that this library is heavily inspired by the supremely
-awesome [animejs](http://animejs.com/) - I would highly recommend that you look
-there first before considering this library. It's heavily popular, well
-maintained and just all out badass.
-
-I created this library as I have my own opinions on creating timelines and also
-wanted to be able to expose a generic core to solve some of my "alternative"
-use cases.
+awesome [animejs](http://animejs.com/) - I would highly recommend that you try them
+out before this library. Anime is extremely popular, well maintained, and just all out badass.
 
 ## Tutorial
 

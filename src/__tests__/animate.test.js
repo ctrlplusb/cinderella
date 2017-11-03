@@ -5,7 +5,8 @@ import {
   addFrameListener,
   removeFrameListener,
 } from '../index'
-import { frameRate } from '../constants'
+
+const frameRate = 1000 / 60
 
 expect.extend({
   toHaveBeenCalledBetweenNTimes(received, min, max) {
@@ -88,8 +89,103 @@ describe('animate', () => {
     expect(onCompleteSpy).toHaveBeenCalledTimes(1)
   })
 
+  it('relative', async () => {
+    const tween2OnStartSpy = jest.fn()
+    const timelineOnCompleteSpy = jest.fn()
+    animate(
+      [
+        {
+          from: 0,
+          to: 100,
+          duration: 3 * frameRate,
+          onStart: jest.fn(),
+          onUpdate: jest.fn(),
+        },
+        {
+          from: 0,
+          to: 100,
+          duration: 3 * frameRate,
+          onStart: tween2OnStartSpy,
+          onUpdate: jest.fn(),
+        },
+      ],
+      {
+        onComplete: timelineOnCompleteSpy,
+      },
+    ).play()
+    await waitForFrames(3)
+    expect(tween2OnStartSpy).toHaveBeenCalledTimes(0)
+    await waitForFrames(3)
+    expect(tween2OnStartSpy).toHaveBeenCalledTimes(1)
+    await waitForFrames(3)
+    expect(timelineOnCompleteSpy).toHaveBeenCalledTimes(1)
+  })
+
+  it('delay', async () => {
+    const delayOnStartSpy = jest.fn()
+    const delayOnUpdateSpy = jest.fn()
+    const timelineOnCompleteSpy = jest.fn()
+    animate(
+      [
+        {
+          from: 0,
+          to: 100,
+          delay: 2 * frameRate,
+          duration: 3 * frameRate,
+          onStart: delayOnStartSpy,
+          onUpdate: delayOnUpdateSpy,
+        },
+      ],
+      {
+        onComplete: timelineOnCompleteSpy,
+      },
+    ).play()
+    await waitForFrames(1)
+    expect(delayOnStartSpy).toHaveBeenCalledTimes(1)
+    expect(delayOnUpdateSpy).toHaveBeenCalledTimes(0)
+    await waitForFrames(3)
+    expect(delayOnStartSpy).toHaveBeenCalledTimes(1)
+    expect(delayOnUpdateSpy).toHaveBeenCalledBetweenNTimes(1, 2)
+  })
+
+  it('absolute offset', async () => {
+    const tween1OnStartSpy = jest.fn()
+    const tween2OnStartSpy = jest.fn()
+    const timelineOnCompleteSpy = jest.fn()
+    animate(
+      [
+        {
+          from: 0,
+          to: 100,
+          duration: 3 * frameRate,
+          onStart: tween1OnStartSpy,
+          onUpdate: jest.fn(),
+        },
+        {
+          from: 0,
+          to: 100,
+          offset: 0,
+          duration: 3 * frameRate,
+          onStart: tween2OnStartSpy,
+          onUpdate: jest.fn(),
+        },
+      ],
+      {
+        onComplete: timelineOnCompleteSpy,
+      },
+    ).play()
+    await waitForFrames(1)
+    expect(tween1OnStartSpy).toHaveBeenCalledTimes(1)
+    expect(tween2OnStartSpy).toHaveBeenCalledTimes(1)
+    await waitForFrames(4)
+    expect(timelineOnCompleteSpy).toHaveBeenCalledTimes(1)
+  })
+
   it('multiple values', async () => {
-    const actual = { a: null, b: null }
+    const actual = {
+      a: null,
+      b: null,
+    }
     animate({
       from: [0, 200],
       to: [50, 150],
@@ -122,20 +218,21 @@ describe('animate', () => {
 
   it('half way through an animation produces the expected result', async () => {
     animation.play()
-    await waitForFrames(4)
+    await waitForFrames(3)
     expect(onUpdateSpy).toHaveBeenCalledBetweenNTimes(3, 4)
     const lastUpdateValue = Math.round(
       onUpdateSpy.mock.calls[onUpdateSpy.mock.calls.length - 1][0],
     )
     expect(
-      lastUpdateValue === 100 / 5 * 3 || lastUpdateValue === 100 / 5 * 4,
+      lastUpdateValue === 100 / 5 * 2 || lastUpdateValue === 100 / 5 * 3,
     ).toBe(true)
   })
 
   it('calling play has no effect on an animation that is midway in their timeline', async () => {
     animation.play()
-    await waitForFrames(3)
+    await waitForFrames(4)
     expect(onStartSpy).toHaveBeenCalledTimes(1)
+    expect(onCompleteSpy).toHaveBeenCalledTimes(0)
     animation.play()
     await waitForFrames(3)
     expect(onStartSpy).toHaveBeenCalledTimes(1)
@@ -152,10 +249,10 @@ describe('animate', () => {
     expect(onStartSpy).toHaveBeenCalledTimes(2)
   })
 
-  it('disposing a timeline mid execution stops it immediately', async () => {
+  it('stop', async () => {
     animation.play()
     await waitForFrames(3)
-    animation.dispose()
+    animation.stop()
     await waitForFrames(2)
     expect(onUpdateSpy).toHaveBeenCalledBetweenNTimes(2, 4)
     expect(onCompleteSpy).toHaveBeenCalledTimes(0)
@@ -188,7 +285,7 @@ describe('animate', () => {
     ).play()
     await waitForFrames(9)
     expect(loopStartSpy).toHaveBeenCalledBetweenNTimes(2, 3)
-    expect(loopUpdateSpy).toHaveBeenCalledBetweenNTimes(5, 8)
+    expect(loopUpdateSpy).toHaveBeenCalledBetweenNTimes(8, 10)
     expect(loopCompleteSpy).toHaveBeenCalledBetweenNTimes(1, 2)
   })
 
@@ -218,73 +315,6 @@ describe('animate', () => {
     pausable.play()
     await waitForFrames(4)
     expect(onUpdateTwoSpy).toHaveBeenCalledBetweenNTimes(3, 4)
-  })
-
-  it('seeking works', async () => {
-    const values = {
-      x: 0,
-      y: 0,
-      z: 0,
-    }
-    const seekable = animate([
-      {
-        duration: 3 * frameRate,
-        from: 0,
-        to: 100,
-        onUpdate: x => {
-          values.x = x
-        },
-      },
-      {
-        duration: 3 * frameRate,
-        from: 0,
-        to: 100,
-        onUpdate: y => {
-          values.y = y
-        },
-      },
-      {
-        duration: 3 * frameRate,
-        from: 0,
-        to: 100,
-        onUpdate: z => {
-          values.z = z
-        },
-      },
-    ])
-
-    seekable.seek(50)
-    await waitForFrames(1)
-    expect(values.x).toBe(100)
-    expect(values.y).toBeCloseTo(50)
-    expect(values.z).toBe(0)
-
-    seekable.seek(25)
-    await waitForFrames(1)
-    expect(values.x).toBeCloseTo(75)
-    expect(values.y).toBe(0)
-    expect(values.z).toBe(0)
-
-    seekable.seek(100)
-    await waitForFrames(1)
-    expect(values.x).toBe(100)
-    expect(values.y).toBe(100)
-    expect(values.z).toBe(100)
-
-    seekable.seek(0)
-    await waitForFrames(1)
-    expect(values.x).toBe(0)
-    expect(values.y).toBe(0)
-    expect(values.z).toBe(0)
-  })
-
-  it('play after seek', async () => {
-    animation.seek(90)
-    animation.play()
-    await waitForFrames(3)
-    // console.log(onUpdateSpy.mock.calls.map(([x]) => x))
-    expect(onUpdateSpy).toHaveBeenCalledBetweenNTimes(2, 3)
-    expect(onCompleteSpy).toHaveBeenCalledTimes(1)
   })
 
   it('registering custom onFrame listeners', async () => {
