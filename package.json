@@ -1,6 +1,6 @@
 {
   "name": "cinderella",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "A tiny animation library.",
   "license": "MIT",
   "main": "commonjs/index.js",
