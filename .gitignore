@@ -19,3 +19,6 @@ build
 # Flow
 flow-coverage
 flow-typed
+
+# Temp directories
+temp

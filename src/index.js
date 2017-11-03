@@ -56,10 +56,12 @@ const onFrame = time => {
         delete runState.timeForSeek
         delete runState.playFromSeek
       } else {
+        if (runState.startTime == null && t.config.onStart != null) {
+          t.config.onStart()
+        }
         runState.startTime =
           runState.startTime != null ? runState.startTime : time
       }
-
       if (runState.paused) {
         if (runState.startTime != null && runState.prevTime != null) {
           runState.startTime += time - runState.prevTime
@@ -73,7 +75,7 @@ const onFrame = time => {
       if (time - runState.startTime >= t.executionEnd) {
         runState.complete = true
         if (t.config.onComplete) {
-          t.config.onComplete(time)
+          t.config.onComplete(time - runState.startTime)
         }
       }
       runState.prevTime = time

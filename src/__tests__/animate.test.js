@@ -35,6 +35,7 @@ describe('animate', () => {
   let onUpdateSpy
   let onCompleteSpy
   let onTimelineCompleteSpy
+  let onTimelineStartSpy
   let animation
 
   beforeAll(() => {
@@ -47,6 +48,7 @@ describe('animate', () => {
     onUpdateSpy = jest.fn()
     onCompleteSpy = jest.fn()
     onTimelineCompleteSpy = jest.fn()
+    onTimelineStartSpy = jest.fn()
     animation = animate(
       {
         from: 0,
@@ -56,7 +58,10 @@ describe('animate', () => {
         onUpdate: onUpdateSpy,
         onComplete: onCompleteSpy,
       },
-      { onComplete: onTimelineCompleteSpy },
+      {
+        onStart: onTimelineStartSpy,
+        onComplete: onTimelineCompleteSpy,
+      },
     )
   })
 
@@ -297,5 +302,11 @@ describe('animate', () => {
     animation.play()
     await waitForFrames(7)
     expect(onTimelineCompleteSpy).toHaveBeenCalledTimes(1)
+  })
+
+  it('animation "onStart"', async () => {
+    animation.play()
+    await waitForFrames(1)
+    expect(onTimelineStartSpy).toHaveBeenCalledTimes(1)
   })
 })
