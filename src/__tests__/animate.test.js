@@ -202,6 +202,40 @@ describe('animate', () => {
     })
   })
 
+  it('complex to values', async () => {
+    let actualX
+    let actualY
+    animate({
+      from: [
+        // x
+        -50,
+        // y
+        200,
+      ],
+      to: [
+        // x
+        {
+          value: 50,
+          delay: 1 * frameRate,
+          duration: 3 * frameRate,
+        },
+        // y
+        150,
+      ],
+      onUpdate: ([x, y]) => {
+        actualX = x
+        actualY = y
+      },
+    }).play()
+    await waitForFrames(3)
+    expect(actualX).toBeGreaterThan(-17)
+    expect(actualX).toBeLessThan(17)
+    expect(actualY).toBeCloseTo(175)
+    await waitForFrames(3)
+    expect(actualX).toBe(50)
+    expect(actualY).toBe(150)
+  })
+
   it('function values', async () => {
     let actual = null
     animate({
@@ -230,7 +264,7 @@ describe('animate', () => {
 
   it('calling play has no effect on an animation that is midway in their timeline', async () => {
     animation.play()
-    await waitForFrames(4)
+    await waitForFrames(3)
     expect(onStartSpy).toHaveBeenCalledTimes(1)
     expect(onCompleteSpy).toHaveBeenCalledTimes(0)
     animation.play()

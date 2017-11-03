@@ -22,14 +22,16 @@ export const isTimeline = x =>
 
 const applyAnimationDefaults = ({
   delay = 0,
-  duration = 1000,
+  duration = 0,
   easing = 'linear',
+  onUpdate = () => undefined,
   ...rest
 }) => ({
   delay,
   duration,
   easing,
   easingFn: Easings[easing],
+  onUpdate,
   state: {},
   ...rest,
 })
@@ -101,6 +103,29 @@ const processAnimation = (anim, time) => {
       ? state.toValue
       : typeof anim.to === 'function' ? anim.to() : anim.to
 
+  if (state.runDuration == null) {
+    state.runDuration = anim.duration
+
+    if (Array.isArray(state.toValue)) {
+      state.toValue.forEach((v, i) => {
+        let valueDuration = 0
+        if (typeof v === 'object') {
+          v.state = v.state != null ? v.state : {}
+          v.state = {
+            runDuration: v.duration || 0,
+            delay: v.delay || 0,
+            diff: v.value - state.fromValue[i],
+          }
+          valueDuration = v.state.runDuration + v.state.delay
+        } else {
+          valueDuration = anim.duration
+        }
+        state.runDuration =
+          valueDuration > state.runDuration ? valueDuration : state.runDuration
+      })
+    }
+  }
+
   state.diff =
     state.diff != null
       ? state.diff
@@ -108,29 +133,67 @@ const processAnimation = (anim, time) => {
         ? state.toValue.map((x, idx) => x - state.fromValue[idx])
         : state.toValue - state.fromValue
 
-  state.complete = time >= state.startTime + anim.duration + anim.delay
+  state.complete = time >= state.startTime + state.runDuration + anim.delay
 
   if (state.complete) {
-    anim.onUpdate(state.toValue, state.prevValue)
+    anim.onUpdate(
+      Array.isArray(state.toValue)
+        ? state.toValue.map(x => (typeof x === 'object' ? x.value : x))
+        : state.toValue,
+      state.prevValue,
+    )
     if (anim.onComplete) {
       anim.onComplete()
     }
   } else {
-    const timePassed = time - state.startTime
-    const newValue = Array.isArray(state.fromValue)
-      ? state.fromValue.map((x, idx) =>
-          anim.easingFn(
+    const timePassed = time - state.startTime + anim.delay
+    const newValue = Array.isArray(state.toValue)
+      ? state.toValue.map((x, idx) => {
+          if (typeof x === 'object') {
+            if (x.state.delay > timePassed) {
+              return state.fromValue[idx]
+            } else if (x.state.runDuration < timePassed) {
+              return x.value
+            }
+            // The below normalises the value so we can apply the delayed
+            // value to the same easing function and get an expected uniform
+            // easing across all of the concurrent values.
+            if (x.state.bufferredFrom == null) {
+              const animDurPerc = state.runDuration / 100
+              const postRunDuration =
+                state.runDuration - x.state.runDuration - x.state.delay
+
+              const prePercentage = x.state.delay / animDurPerc
+              const runPercentage = x.state.runDuration / animDurPerc
+              const postPercentage =
+                postRunDuration > 0.001 ? postRunDuration / animDurPerc : 0
+
+              const val = Math.abs(x.state.diff) / runPercentage
+              const beforeBuffer = prePercentage * val
+              const postBuffer = postPercentage * val
+
+              x.state.bufferredFrom = state.fromValue[idx] - beforeBuffer
+              x.state.diff = x.value + postBuffer - x.state.bufferredFrom
+            }
+            return anim.easingFn(
+              timePassed,
+              x.state.bufferredFrom,
+              x.state.diff,
+              state.runDuration,
+            )
+          }
+          return anim.easingFn(
             timePassed,
             state.fromValue[idx],
             state.diff[idx],
-            anim.duration,
-          ),
-        )
+            state.runDuration,
+          )
+        })
       : anim.easingFn(
           time - state.startTime,
           state.fromValue,
           state.diff,
-          anim.duration,
+          state.runDuration,
         )
     anim.onUpdate(newValue, state.prevValue)
     state.prevValue = newValue
