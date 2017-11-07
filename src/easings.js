@@ -1,3 +1,4 @@
+/* @flow */
 /* eslint-disable no-param-reassign */
 /* eslint-disable no-return-assign */
 /* eslint-disable no-cond-assign */
@@ -9,9 +10,9 @@
  * b = start value
  * c = diff to end value
  * d = duration for ease in ms
- * 
+ *
  * e.g.
- * 
+ *
  * easeInQuad(500, 1, 100, 1000)
  *  |-> 50
  */

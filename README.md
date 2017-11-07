@@ -2,30 +2,17 @@
 
 # cinderella
 
-A tiny animation library.
+A tiny transformation library.
 
 ```javascript
 import cinderella from 'cinderella'
 
-const input = document.getElementById('#foo')
-
-cinderella({
-  from: 0,
-  to: 100,
-  duration: 1000,
-  onUpdate: x => { input.value = x }
-}).play()
-```
-
-_or the equivalent use our DOM extension_
-
-```javascript
-import cinderella from 'cinderella/dom'
-
 cinderella({
   target: '#foo',
-  duration: 1000,
-  value: 100
+  transform: {
+    width: '200px'
+  },
+  duration: 1000
 }).play()
 ```
 
@@ -34,8 +21,8 @@ cinderella({
 [![Travis](https://img.shields.io/travis/ctrlplusb/cinderella.svg?style=flat-square)](https://travis-ci.org/ctrlplusb/cinderella)
 [![Codecov](https://img.shields.io/codecov/c/github/ctrlplusb/cinderella.svg?style=flat-square)](https://codecov.io/github/ctrlplusb/cinderella)
 
- - Timelines.
  - Play, pause, loop, stop.
+ - Compose animations to create timelines.
  - Easing functions.
  - Simple API.
  - Optimised over requestAnimationFrame.
@@ -50,11 +37,7 @@ cinderella({
 
 ## Introduction
 
-> WIP
-
-I must be up front and say that this library is heavily inspired by the supremely
-awesome [animejs](http://animejs.com/) - I would highly recommend that you try them
-out before this library. Anime is extremely popular, well maintained, and just all out badass.
+This library is _heavily_ inspired by [`animejs`](http://animejs.com/). `animejs` is wildly popular, well maintained, and just all out badass - so if you are a sane person you'll likely want to check them out first. I created `cinderella` to selfishly create the specific API and timeline semantics that I desired.
 
 ## Tutorial
 
@@ -62,8 +45,21 @@ out before this library. Anime is extremely popular, well maintained, and just a
 
 ## API
 
-> WIP
+```javascript
+
+cinderella({
+  targets: '#foo',
+  transform: {
+    opacity: 50,
+    translateX: [
+      { value: 250, duration: 1000 },
+      { value: 0, duration: 1000 }
+    ]
+  },
+})
+```
 
 ## Credits
 
-Massive ❤️ to Mark O'Connor for donating the npm package `cinderella`.  ️
+Humongous 😘 to Julian Garnier for the amazement that is `animejs`.  ️
+Massive ❤️ to Mark O'Connor for donating the npm package name `cinderella`.  ️
