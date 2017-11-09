@@ -42,23 +42,29 @@ const resetTimeline = t => {
   })
 }
 
-export const create = (config = {}) => {
+export const create = animation => {
   timelineIdx += 1
   const timeline = {
     id: timelineIdx,
     animations: [],
-    config: Object.assign({}, defaultConfig, config),
+    config: defaultConfig,
     state: {},
   }
 
-  const api = {
-    add: animation => {
-      timeline.animations.push(
-        isTimeline(animation) ? animation : Animations.initialize(animation),
-      )
-      return api
-    },
-    play: () => {
+  const api = {}
+  const add = animation => {
+    timeline.animations.push(
+      isTimeline(animation) ? animation : Animations.initialize(animation),
+    )
+    return api
+  }
+
+  add(animation)
+
+  Object.assign(api, {
+    add,
+    play: (config = {}) => {
+      timeline.config = Object.assign({}, timeline.config, config)
       if (isPaused(timeline)) {
         unpause(timeline)
       } else if (isComplete(timeline)) {
@@ -70,12 +76,10 @@ export const create = (config = {}) => {
       timeline.state.paused = true
     },
     stop: () => unqueue(timeline),
-  }
+  })
 
   return api
 }
-
-export const single = animation => create().add(animation)
 
 export const process = (time: number) => {
   Object.keys(queuedTimelines).forEach(id => {

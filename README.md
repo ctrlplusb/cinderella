@@ -37,7 +37,7 @@ cinderella({
 
 ## Introduction
 
-This library is _heavily_ inspired by [`animejs`](http://animejs.com/). `animejs` is wildly popular, well maintained, and just all out badass - so if you are a sane person you'll likely want to check them out first. I created `cinderella` to selfishly create the specific API and timeline semantics that I desired.
+`cinderella` is _heavily_ inspired by [`animejs`](http://animejs.com/) - a wildly popular, well maintained, and just all out badass library - so if you are a sane person you'll likely want to check them out first. I created `cinderella` out of my own selfishly desire for a specific API and timeline semantics.
 
 ## Tutorial
 

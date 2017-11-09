@@ -1,18 +1,9 @@
 /* @flow */
 /* eslint-disable prefer-destructuring */
 
+import type { AnimationDefinition } from './types'
 import * as Timelines from './timelines'
 import * as RAF from './raf'
-
-export const animate = (...args) => {
-  RAF.run()
-  return Timelines.single(...args)
-}
-
-export const timeline = (...args) => {
-  RAF.run()
-  return Timelines.create(...args)
-}
 
 export const addFrameListener = RAF.addFrameListener
 
@@ -23,4 +14,7 @@ export const stopAll = () => {
   Timelines.unqueueAll()
 }
 
-export default timeline
+export default (animation: AnimationDefinition) => {
+  RAF.run()
+  return Timelines.create(animation)
+}
