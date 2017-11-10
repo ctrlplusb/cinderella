@@ -2,7 +2,6 @@
 /* eslint-disable no-param-reassign */
 
 import * as Animations from './animations'
-import { animate } from './index'
 
 let timelineIdx = 0
 
@@ -37,9 +36,7 @@ const isTimeline = x => typeof x === 'object' && typeof x.queue === 'object'
 
 const resetTimeline = t => {
   t.state = {}
-  t.animations.forEach(a => {
-    a.state = {}
-  })
+  t.animations.forEach(Animations.reset)
 }
 
 export const create = animation => {
@@ -52,9 +49,11 @@ export const create = animation => {
   }
 
   const api = {}
-  const add = animation => {
+  const add = newAnimation => {
     timeline.animations.push(
-      isTimeline(animation) ? animation : Animations.initialize(animation),
+      isTimeline(newAnimation)
+        ? newAnimation
+        : Animations.initialize(newAnimation),
     )
     return api
   }
@@ -99,7 +98,7 @@ export const process = (time: number) => {
     } else {
       timeline.executionTime = time - timeline.state.startTime
       timeline.animations.forEach((animation, i) => {
-        if (animation.state.complete) {
+        if (animation.complete) {
           return
         }
         if (
@@ -109,10 +108,10 @@ export const process = (time: number) => {
           Animations.process(animation, time)
         } else {
           let execute = true
-          if (animation.state.startTime == null) {
+          if (animation.startTime == null) {
             for (let x = 0; x < i; x += 1) {
               const y = timeline.animations[x]
-              if (!y.isAbsoluteOffset && !y.state.complete) {
+              if (!y.isAbsoluteOffset && !y.complete) {
                 execute = false
                 break
               }
@@ -125,7 +124,7 @@ export const process = (time: number) => {
       })
     }
     timeline.state.prevTime = time
-    timeline.state.complete = timeline.animations.every(a => a.state.complete)
+    timeline.state.complete = timeline.animations.every(a => a.complete)
     if (timeline.state.complete) {
       if (timeline.config.onComplete) {
         timeline.config.onComplete()

@@ -1,6 +1,6 @@
 import * as Utils from '../utils'
 
-describe('utils', () => {
+describe.skip('utils', () => {
   describe('getCurrentValues', () => {
     it('works', () => {
       const el = document.createElement('div')

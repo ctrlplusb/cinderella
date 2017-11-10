@@ -1,13 +1,16 @@
 /* @flow */
+/* eslint-disable no-param-reassign */
 
 import type {
-  ResolvedTarget,
-  Transforms,
+  Animation,
+  DOMValueType,
+  Prop,
   RawValue,
+  ResolvedTarget,
+  Unit,
   Value,
   Values,
-  Prop,
-  Unit,
+  ValueType,
 } from './types'
 
 // e.g. matches <translateX>(<25px>)
@@ -20,6 +23,26 @@ const styleTransformItemRegex = /(\w+)\((.+?)\)/g
 // 2 = px
 const rawValueRegex = /([+-]?[0-9#.]+)(%|px|pt|em|rem|in|cm|mm|ex|ch|pc|vw|vh|vmin|vmax|deg|rad|turn)?$/
 
+const styleTransformProps = [
+  'translateX',
+  'translateY',
+  'translateZ',
+  'rotate',
+  'rotateX',
+  'rotateY',
+  'rotateZ',
+  'scale',
+  'scaleX',
+  'scaleY',
+  'scaleZ',
+  'skewX',
+  'skewY',
+  'perspective',
+]
+
+export const isStyleTransformProp = (propName: string) =>
+  styleTransformProps.some(y => y === propName)
+
 const defaultNumberForProp = (propName: Prop): number => {
   if (propName === 'scale') {
     return 1
@@ -27,7 +50,10 @@ const defaultNumberForProp = (propName: Prop): number => {
   return 0
 }
 
-const defaultUnitForProp = (propName: Prop): Unit | void => {
+const camelCaseToHyphens = (x: string): string =>
+  x.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase()
+
+const defaultUnitForDOMValue = (propName: Prop): Unit | void => {
   switch (propName) {
     case 'translateX':
     case 'translateY':
@@ -57,11 +83,53 @@ const defaultUnitForProp = (propName: Prop): Unit | void => {
   }
 }
 
-export const extractValue = (propName: Prop, raw: RawValue): Value => {
-  if (typeof raw === 'number') {
+const getDOMValueType = (el: HTMLElement, propName: Prop): DOMValueType => {
+  if (isStyleTransformProp(propName)) {
+    return 'dom-transform'
+  }
+  if (el.style[propName] != null) {
+    return 'dom-css'
+  }
+  return 'dom-attribute'
+}
+
+const getValueType = (
+  resolvedTarget: ResolvedTarget,
+  propName: Prop,
+): ValueType =>
+  resolvedTarget === 'dom'
+    ? getDOMValueType(resolvedTarget.actual, propName)
+    : 'object'
+
+export const getDefaultFromValue = (
+  resolvedTarget: ResolvedTarget,
+  propName: Prop,
+  toValue: Value,
+): Value => ({
+  number: defaultNumberForProp(propName),
+  unit:
+    toValue.unit ||
+    (resolvedTarget.type === 'dom'
+      ? defaultUnitForDOMValue(propName)
+      : undefined),
+  originType: toValue.originType,
+  type: getValueType(resolvedTarget, propName),
+})
+
+export const extractValue = (
+  resolvedTarget: ResolvedTarget,
+  propName: Prop,
+  raw: RawValue,
+): Value => {
+  if (raw == null || typeof raw === 'number') {
     return {
-      number: raw,
-      unit: defaultUnitForProp(propName),
+      number: raw == null ? defaultNumberForProp(propName) : raw,
+      unit:
+        resolvedTarget.type === 'dom'
+          ? defaultUnitForDOMValue(propName)
+          : undefined,
+      originType: 'number',
+      type: getValueType(resolvedTarget, propName),
     }
   }
   if (typeof raw === 'string') {
@@ -69,17 +137,20 @@ export const extractValue = (propName: Prop, raw: RawValue): Value => {
     if (match) {
       return {
         number: parseInt(match[1], 10) || defaultNumberForProp(propName),
-        unit: match[2] || defaultUnitForProp(propName),
+        unit:
+          match[2] ||
+          (resolvedTarget.type === 'dom'
+            ? defaultUnitForDOMValue(propName)
+            : undefined),
+        originType: 'string',
+        type: getValueType(resolvedTarget, propName),
       }
     }
   }
-  return {
-    number: defaultNumberForProp(propName),
-    unit: defaultUnitForProp(propName),
-  }
+  throw new Error(`Unsupported value type: ${raw}`)
 }
 
-const getStyleTransformValues = (el: HTMLElement): Values => {
+export const getStyleTransformValues = (el: HTMLElement): Values => {
   const result: Values = {}
   if (!el.style.transform) {
     return result
@@ -94,6 +165,8 @@ const getStyleTransformValues = (el: HTMLElement): Values => {
       result[propName] = {
         number: parseInt(splitValue[1], 10),
         unit: splitValue[2],
+        originType: 'string',
+        type: 'dom-css-transform',
       }
     }
     match = styleTransformItemRegex.exec(transformStr)
@@ -101,30 +174,75 @@ const getStyleTransformValues = (el: HTMLElement): Values => {
   return result
 }
 
-export const getCurrentValues = (
-  target: ResolvedTarget,
-  transforms: Transforms,
-): Values => {
-  const result = {}
-  const propNames: Array<Prop> = Object.keys(transforms)
+const relativeOffsetRegex = /^([+-]=)([0-9]+)$/
+
+export const resolveRelativeOffset = (offset: string): number | void => {
+  const match = relativeOffsetRegex.exec(offset)
+  if (!match) {
+    return undefined
+  }
+  const operator = match[1]
+  const offsetValue = match[2]
+  if (operator === '-=') {
+    return offsetValue * -1
+  }
+  return offsetValue
+}
+
+export const resolveTarget = (animation: Animation): ResolvedTarget => {
+  const { target } = animation
+  if (typeof target === 'string') {
+    const el = document.querySelector(target)
+    if (!el) {
+      throw new Error(`Could not resolve target "${target}"`)
+    }
+    return {
+      type: 'dom',
+      actual: el,
+    }
+  } else if (target instanceof HTMLElement) {
+    return {
+      type: 'dom',
+      actual: target,
+    }
+  } else if (typeof target === 'object') {
+    return {
+      type: 'object',
+      actual: target,
+    }
+  }
+  throw new Error(`Invalid target: ${target}`)
+}
+
+export const setValuesOnTarget = (target: ResolvedTarget, values: Values) => {
+  Object.keys(values).forEach(propName => {
+    const value = values[propName]
+    if (target.type === 'dom' && value.type === 'dom-css-transform') {
+      return
+    }
+
+    const resolvedValue =
+      value.originType === 'number'
+        ? value.number
+        : `${value.number}${value.unit || ''}`
+
+    if (target.type === 'dom' && value.type === 'dom-css') {
+      target.actual.style[propName] = resolvedValue
+    } else {
+      target.actual[propName] = resolvedValue
+    }
+  })
+
+  // Make sure we set the transform css prop for dom target
   if (target.type === 'dom') {
-    const styleTransformValues = getStyleTransformValues(target.actual)
-    const styleTransformProps: Array<Prop> = Object.keys(styleTransformValues)
-    styleTransformProps.forEach(propName => {
-      result[propName] = styleTransformValues[propName]
-    })
+    target.actual.style.transform = Object.keys(values)
+      .filter(v => v.type === 'dom-css-transform')
+      .map(
+        propName =>
+          `${camelCaseToHyphens(propName)}(${values[propName].number}${values[
+            propName
+          ].unit || ''})`,
+      )
+      .join(' ')
   }
-  if (target.type === 'object') {
-    propNames.forEach(propName => {
-      const transform = transforms[propName]
-      const from =
-        typeof transform !== 'object' && transform.from == null
-          ? undefined
-          : typeof transform.from === 'function'
-            ? extractValue(propName, transform.from())
-            : extractValue(propName, transform.from)
-      result[propName] = from
-    })
-  }
-  return result
 }

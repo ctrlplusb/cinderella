@@ -63,13 +63,13 @@ describe('cinderella', () => {
 
     it('calls "onStart" when animation starts', async () => {
       animation.play()
-      await waitForFrames(2)
+      await waitForFrames(5)
       expect(onStartSpy).toHaveBeenCalledTimes(1)
     })
 
-    it('calls "onUpdate" for each frame', async () => {
+    it('calls "onUpdate" for each frame', () => {
       animation.play()
-      await waitForFrames(5)
+      waitForFrames(5)
       expect(onUpdateSpy).toHaveBeenCalledTimes(5)
     })
 
@@ -152,9 +152,11 @@ describe('cinderella', () => {
       const loopUpdateSpy = jest.fn()
       const loopCompleteSpy = jest.fn()
       cinderella({
+        target: {},
         duration: 3 * frameRate,
-        from: 0,
-        to: 10,
+        transform: {
+          foo: 10,
+        },
         onStart: loopStartSpy,
         onUpdate: loopUpdateSpy,
         onComplete: loopCompleteSpy,
@@ -254,10 +256,12 @@ describe('cinderella', () => {
       animationOneOnStartSpy = jest.fn()
       animationTwoOnStartSpy = jest.fn()
       timeline = cinderella({
+        target: {},
         transform: { foo: 100 },
         duration: 3 * frameRate,
         onStart: animationOneOnStartSpy,
       }).add({
+        target: {},
         transform: { foo: 100 },
         duration: 3 * frameRate,
         onStart: animationTwoOnStartSpy,
@@ -297,14 +301,18 @@ describe('cinderella', () => {
       const tween2OnStartSpy = jest.fn()
       const absoluteTimelineOnCompleteSpy = jest.fn()
       const absoluteTimeline = cinderella({
-        from: 0,
-        to: 100,
+        target: {},
+        transform: {
+          foo: 100,
+        },
         duration: 3 * frameRate,
         onStart: tween1OnStartSpy,
         onUpdate: jest.fn(),
       }).add({
-        from: 0,
-        to: 100,
+        target: {},
+        transform: {
+          foo: 100,
+        },
         offset: 0,
         duration: 3 * frameRate,
         onStart: tween2OnStartSpy,
@@ -324,6 +332,7 @@ describe('cinderella', () => {
 
     beforeEach(() => {
       animation = cinderella({
+        target: {},
         transform: { foo: 100 },
         duration: 5 * frameRate,
       })

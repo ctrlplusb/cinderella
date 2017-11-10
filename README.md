@@ -46,7 +46,6 @@ cinderella({
 ## API
 
 ```javascript
-
 cinderella({
   targets: '#foo',
   transform: {
@@ -54,6 +53,26 @@ cinderella({
     translateX: [
       { value: 250, duration: 1000 },
       { value: 0, duration: 1000 }
+    ]
+  },
+})
+```
+
+Advanced Usage
+
+```javascript
+cinderella({
+  targets: '#foo',
+  transform: {
+    opacity: 50,
+    scale: {
+      to: 2, 
+      delay: 500,
+      easing: 'linear',
+    },
+    translateX: [
+      { to: 250, duration: 1000 },
+      { to: 0, duration: 1000 }
     ]
   },
 })

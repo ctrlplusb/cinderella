@@ -1,210 +1,89 @@
 /* @flow */
 /* eslint-disable no-param-reassign */
+/* eslint-disable prefer-destructuring */
+/* eslint-disable no-continue */
 
 import type {
-  AnimationDefinition,
-  Time,
   Animation,
-  ResolvedTarget,
-  Tweens,
+  AnimationDefinition,
   Prop,
+  ResolvedTarget,
+  Time,
+  Tween,
 } from './types'
 import * as Easings from './easings'
+import * as Utils from './utils'
 
-const relativeOffsetRegex = /^([+-]=)([0-9]+)$/
-
-const resolveRelativeOffset = offset => {
-  const match = relativeOffsetRegex.exec(offset)
-  if (!match) {
-    return undefined
-  }
-  const operator = match[1]
-  const offsetValue = match[2]
-  if (operator === '-=') {
-    return offsetValue * -1
-  }
-  return offsetValue
-}
-
-const resolveTarget = (animation: Animation): ResolvedTarget => {
-  const { target } = animation
-  if (typeof target === 'string') {
-    const el = document.querySelector(target)
-    if (!el) {
-      throw new Error(`Could not resolve target "${target}"`)
-    }
-    return {
-      type: 'dom',
-      actual: el,
-    }
-  } else if (target instanceof HTMLElement) {
-    return {
-      type: 'dom',
-      actual: target,
-    }
-  } else if (typeof target === 'object') {
-    return {
-      type: 'object',
-      actual: target,
-    }
-  }
-  throw new Error(`Invalid target: ${target}`)
-}
-
-const initialiseAnimationState = (animation: Animation, time: Time) => {
-  /*
-    Object.keys(transform).reduce((acc, cur) => {
-      const tween =
-        typeof transform[cur] === 'object'
-          ? transform[cur]
-          : {
-              value: transform[cur],
-            }
-      const initializedTween = {
-        value: tween.value,
-        duration: tween.duration != null ? tween.duration : duration,
-        delay: tween.delay != null ? tween.delay : delay,
-        state: null,
-        result: {},
-      }
-      acc[cur] = initializedTween
-      return acc
-    }, {}),
-    */
-
-  const target = resolveTarget(animation)
-  // const targetValues = resolveTargetInitialValues(target, animation.transform)
-
-  const props: Array<Prop> = Object.keys(animation.transform)
-
-  const tweens: Tweens = props.reduce((acc, propName) => {
-    const definition = animation.transform[propName]
-    const initialValue =
-      definition.initialValue != null
-        ? extractValue(definition.initialValue)
-        : getValueFromTarget()
-    return acc
-  }, {})
-
-  let fullDuration = 0
-
-  props.forEach(prop => {
-    tweens[prop].forEach(({ delay, duration }) => {
-      const tweenDuration = delay + duration
-      fullDuration = tweenDuration > fullDuration ? tweenDuration : fullDuration
-    })
-  })
-
-  animation.state = {
-    complete: false,
-    fullDuration,
-    startTime: time,
-    target,
-    tweens,
-  }
-}
-
-export const process = (animation: Animation, time: Time) => {
-  if (animation.state == null) {
-    initialiseAnimationState(animation, time)
-    if (animation.onStart != null) {
-      animation.onStart()
-    }
+const resolveToFromForTween = (
+  resolvedTarget: ResolvedTarget,
+  propName: Prop,
+  tween: Tween,
+) => {
+  if (tween.toValue && tween.fromValue && tween.diff) {
+    return
   }
 
-  const { state } = animation
-  if (state == null) throw new Error('💩')
-  // TODO: Resolve target
-  // resolveTargetAndSourceValues(animation)
-  // state.targetType =
-  state.complete = time >= state.startTime + state.fullDuration
-  const timePassed = time - state.startTime
-  const values = transformPropNames.reduce((acc, propName) => {
-    const tween = animation.transform[propName]
-    let value
-    if (timePassed < tween.delay) {
-      value = undefined
+  const styleTransformValues =
+    resolvedTarget.type === 'dom'
+      ? Utils.getStyleTransformValues(resolvedTarget.actual)
+      : undefined
+
+  if (tween.from == null) {
+    if (
+      resolvedTarget.type === 'dom' &&
+      styleTransformValues &&
+      Utils.isStyleTransformProp(propName)
+    ) {
+      tween.fromValue = styleTransformValues[propName]
     } else {
-      // TODO: Resolve the "fromValue" from various source types.
-      tween.state.fromValue =
-        tween.state.fromValue != null
-          ? tween.state.fromValue
-          : typeof animation.target === 'object'
-            ? animation.target[propName] || 0
-            : 0
-      /*
-    transform.state.fromValue =
-      transform.state.fromValue != null
-        ? transform.state.fromValue
-        : typeof transform.from === 'function'
-          ? transform.from()
-          : transform.from
-    */ tween.state.toValue =
-        tween.state.toValue != null
-          ? tween.state.toValue
-          : typeof tween.value === 'function' ? tween.value() : tween.value
-      tween.state.diff =
-        tween.state.diff != null
-          ? tween.state.diff
-          : tween.state.toValue - tween.state.fromValue
-      if (
-        tween.duration !== animation.duration &&
-        tween.delay !== animation.delay &&
-        tween.state.bufferedFromValue == null
-      ) {
-        // The below normalises our values so we can resolve a value that will
-        // be correctly relative to the easing function that is being applied
-        // across all of the values.
-        const animDurPerc = state.fullDuration / 100
-        const postRunDuration =
-          state.fullDuration - tween.duration - tween.delay
-        const prePercentage = tween.delay / animDurPerc
-        const runPercentage = tween.duration / animDurPerc
-        const postPercentage =
-          postRunDuration > 0.001 ? postRunDuration / animDurPerc : 0
-        const val = Math.abs(tween.state.diff) / runPercentage
-        const beforeBuffer = prePercentage * val
-        const postBuffer = postPercentage * val
-        tween.state.bufferedFromValue = tween.state.fromValue - beforeBuffer
-        tween.state.bufferedDiff =
-          tween.toValue + postBuffer - tween.state.fromValue
-      }
-      if (timePassed > tween.duration + tween.delay) {
-        tween.state.complete = true
-        value = tween.state.toValue
-      } else {
-        value = Easings[animation.easing](
-          timePassed,
-          tween.state.bufferedFromValue != null
-            ? tween.state.bufferedFromValue
-            : tween.state.fromValue,
-          tween.state.bufferedDiff != null
-            ? tween.state.bufferedDiff
-            : tween.state.diff,
-          state.fullDuration,
-        )
-      }
+      tween.fromValue = Utils.extractValue(
+        resolvedTarget,
+        propName,
+        resolvedTarget[propName],
+      )
     }
-    acc[propName] = value
-    return acc
-  }, {})
-  // TODO: Stuff with the values
-  Object.keys(values).forEach(propName => {
-    if (typeof animation.target === 'object' && values[propName] != null) {
-      animation.target[propName] = values[propName]
-    }
-  })
-  if (animation.onUpdate) {
-    animation.onUpdate()
+  } else {
+    tween.fromValue =
+      typeof tween.from === 'function'
+        ? Utils.extractValue(resolvedTarget, propName, tween.from())
+        : Utils.extractValue(resolvedTarget, propName, tween.from)
   }
-  if (state.complete && animation.onComplete) {
-    animation.onComplete()
+
+  tween.toValue =
+    typeof tween.to === 'function'
+      ? Utils.extractValue(resolvedTarget, propName, tween.to())
+      : Utils.extractValue(resolvedTarget, propName, tween.to)
+
+  if (tween.fromValue == null) {
+    tween.fromValue = Utils.getDefaultFromValue(
+      resolvedTarget,
+      propName,
+      tween.toValue,
+    )
   }
+
+  if (tween.fromValue.unit !== tween.toValue.unit) {
+    // eslint-disable-next-line no-console
+    console.warn(
+      `Mixed units from from/to of ${propName}. from: ${tween.fromValue.unit ||
+        ''}, to: "${tween.toValue.unit || ''}"`,
+    )
+  }
+
+  tween.diff = tween.toValue.number - tween.fromValue.number
 }
+
 export const initialize = (definition: AnimationDefinition): Animation => {
-  const mapTransformDefinition = transformDefinition => ({
-    delay: transformDefinition.delay || definition.delay || 0,
-    duration: transformDefinition.duration || definition.duration || 0,
+  const mapTransformDefinition = (
+    transformDefinition,
+    useDefaultsFromAnimation,
+  ) => ({
+    delay:
+      transformDefinition.delay ||
+      (useDefaultsFromAnimation ? definition.delay || 0 : 0),
+    duration:
+      transformDefinition.duration ||
+      (useDefaultsFromAnimation ? definition.duration || 0 : 0),
     easing: transformDefinition.easing,
     from: transformDefinition.from,
     to: transformDefinition.to,
@@ -212,20 +91,25 @@ export const initialize = (definition: AnimationDefinition): Animation => {
   return {
     absoluteOffset:
       typeof definition.offset === 'number' ? definition.offset : undefined,
+    complete: false,
     easing: definition.easing || 'linear',
     onComplete: definition.onComplete,
     onStart: definition.onStart,
     onUpdate: definition.onUpdate,
     relativeOffset:
       typeof definition.offset === 'string'
-        ? resolveRelativeOffset(definition.offset)
+        ? Utils.resolveRelativeOffset(definition.offset)
         : undefined,
     state: null,
     target: definition.target,
     transform: Object.keys(definition.transform).reduce(
       (transforms, propName) => {
         const transformDefinition = definition.transform[propName]
-        if (typeof transformDefinition === 'string') {
+        if (
+          typeof transformDefinition === 'string' ||
+          typeof transformDefinition === 'number' ||
+          typeof transformDefinition === 'function'
+        ) {
           transforms[propName] = [
             {
               delay: definition.delay || 0,
@@ -234,13 +118,160 @@ export const initialize = (definition: AnimationDefinition): Animation => {
             },
           ]
         } else if (Array.isArray(transformDefinition)) {
-          transforms[propName] = transformDefinition.map(mapTransformDefinition)
+          transforms[propName] = transformDefinition.map(
+            (subTransformDefinition, idx) =>
+              mapTransformDefinition(subTransformDefinition, idx === 0),
+          )
         } else if (typeof transformDefinition === 'object') {
-          transforms[propName] = [mapTransformDefinition(transformDefinition)]
+          transforms[propName] = [
+            mapTransformDefinition(transformDefinition, true),
+          ]
         }
         return transforms
       },
       {},
     ),
+  }
+}
+
+export const reset = (animation: Animation) => {
+  animation.complete = false
+  animation.fullDuration = undefined
+  animation.startTime = undefined
+  animation.resolvedTarget = undefined
+  animation.tweens = undefined
+}
+
+export const process = (animation: Animation, time: Time) => {
+  if (animation.startTime == null) {
+    const resolvedTarget = Utils.resolveTarget(animation)
+    const props: Array<Prop> = Object.keys(animation.transform)
+    const tweens = props.reduce((tweenAcc, propName) => {
+      const definition = animation.transform[propName]
+      tweenAcc[propName] = definition.reduce(
+        (subTweenAcc, subTween) => {
+          const initedSubTween = {
+            complete: false,
+            delay:
+              subTweenAcc.prevFullDuration +
+              (typeof subTween.delay === 'function'
+                ? subTween.delay()
+                : subTween.delay),
+            duration:
+              typeof subTween.duration === 'function'
+                ? subTween.duration()
+                : subTween.duration,
+            easing: subTween.easing,
+            from: subTween.from,
+            to: subTween.to,
+          }
+          subTweenAcc.prevFullDuration +=
+            initedSubTween.duration + initedSubTween.delay
+          subTweenAcc.subTweens.push(initedSubTween)
+          return subTweenAcc
+        },
+        { subTweens: [], prevFullDuration: 0 },
+      ).subTweens
+      return tweenAcc
+    }, {})
+    let fullDuration = 0
+    props.forEach(prop => {
+      tweens[prop].forEach(({ delay, duration }) => {
+        const tweenDuration = delay + duration
+        fullDuration =
+          tweenDuration > fullDuration ? tweenDuration : fullDuration
+      })
+    })
+    animation.fullDuration = fullDuration
+    animation.startTime = time
+    animation.resolvedTarget = resolvedTarget
+    animation.tweens = tweens
+    if (animation.onStart != null) {
+      animation.onStart()
+    }
+  }
+  const { startTime, fullDuration, resolvedTarget, tweens } = animation
+  if (
+    startTime == null ||
+    fullDuration == null ||
+    resolvedTarget == null ||
+    tweens == null
+  ) {
+    throw new Error('💩')
+  }
+  animation.complete = time >= startTime + fullDuration
+  const timePassed = time - startTime
+  const values = Object.keys(tweens).reduce((acc, propName) => {
+    const propTweens = tweens[propName]
+    let value
+    let unit
+    let originType
+    let type
+    for (let i = 0; i < propTweens.length; i += 1) {
+      const tween = propTweens[i]
+      if (tween.complete) {
+        continue
+      }
+      if (timePassed < tween.delay) {
+        break
+      }
+      resolveToFromForTween(resolvedTarget, propName, tween)
+      // The below normalises our values so we can resolve a value that will
+      // be correctly relative to the easing function that is being applied
+      // across all of the values.
+      if (
+        tween.easing == null &&
+        tween.duration + tween.delay !== animation.fullDuration &&
+        tween.bufferedFromValue == null
+      ) {
+        const animDurPerc = fullDuration / 100
+        const postRunDuration = fullDuration - tween.duration - tween.delay
+        const prePercentage = tween.delay / animDurPerc
+        const runPercentage = tween.duration / animDurPerc
+        const postPercentage =
+          postRunDuration > 0.001 ? postRunDuration / animDurPerc : 0
+        const val = Math.abs(tween.diff) / runPercentage
+        const beforeBuffer = prePercentage * val
+        const postBuffer = postPercentage * val
+        tween.bufferedFromNumber = tween.fromValue.number - beforeBuffer
+        tween.bufferedDiff =
+          tween.toValue.number + postBuffer - tween.bufferedFromNumber
+      }
+      if (timePassed > tween.duration + tween.delay) {
+        tween.complete = true
+        value = tween.toValue.number
+        unit = tween.toValue.unit
+        originType = tween.toValue.originType
+        type = tween.toValue.type
+      } else {
+        value = Easings[tween.easing || animation.easing](
+          tween.bufferedFromNumber != null
+            ? timePassed - tween.delay
+            : timePassed,
+          tween.bufferedFromNumber != null
+            ? tween.bufferedFromNumber
+            : tween.fromValue.number,
+          tween.bufferedDiff != null ? tween.bufferedDiff : tween.diff,
+          tween.bufferedFromNumber != null
+            ? animation.fullDuration
+            : tween.duration,
+        )
+        unit = tween.toValue.unit
+        originType = tween.toValue.originType
+        type = tween.toValue.type
+        break
+      }
+    }
+    if (value != null) {
+      acc[propName] = { number: value, unit, originType, type }
+    }
+    return acc
+  }, {})
+  Utils.setValuesOnTarget(resolvedTarget, values)
+  if (animation.onUpdate) {
+    animation.onUpdate()
+  }
+  if (animation.complete && animation.onComplete) {
+    animation.onComplete()
   }
 }

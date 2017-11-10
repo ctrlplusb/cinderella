@@ -20,28 +20,7 @@ export type Unit =
   | 'vmin'
   | 'vw'
 
-export type Prop =
-  | 'translateX'
-  | 'translateY'
-  | 'translateZ'
-  | 'rotate'
-  | 'rotateX'
-  | 'rotateY'
-  | 'rotateZ'
-  | 'scale'
-  | 'scaleX'
-  | 'scaleY'
-  | 'scaleZ'
-  | 'skewX'
-  | 'skewY'
-  | 'perspective'
-  | 'width'
-  | 'height'
-  | 'top'
-  | 'left'
-  | 'right'
-  | 'bottom'
-  | 'value'
+export type Prop = string
 
 export type Time = number
 
@@ -81,29 +60,19 @@ export type AnimationDefinition = {
   transform: TransformDefinitions,
 }
 
+export type DOMValueType = 'dom-css-transform' | 'dom-css' | 'dom-attribute'
+
+export type ValueType = 'object' | DOMValueType
+
 export type Value = {
   number: number,
   unit?: Unit,
+  originType: 'number' | 'string',
+  type: ValueType,
 }
 
 export type Values = {
   [prop: Prop]: Value,
-}
-
-type Tween = {
-  complete: boolean,
-  currentValue?: number,
-  delay: Time,
-  diff: number,
-  duration: Time,
-  easing?: string,
-  from: number,
-  to: number,
-  unit: Unit,
-}
-
-export type Tweens = {
-  [prop: Prop]: Array<Tween>,
 }
 
 type DOMTarget = {
@@ -118,15 +87,7 @@ type ObjectTarget = {
 
 export type ResolvedTarget = DOMTarget | ObjectTarget
 
-export type AnimationState = {
-  complete: boolean,
-  fullDuration: Time,
-  startTime: Time,
-  target: ResolvedTarget,
-  tweens: Tweens,
-}
-
-export type Transform = {
+export type TweenDefinition = {
   delay: Time | (() => Time),
   duration: Time | (() => Time),
   easing?: string,
@@ -134,18 +95,42 @@ export type Transform = {
   to: RawValue | (() => RawValue),
 }
 
-export type Transforms = {
-  [prop: Prop]: Array<Transform>,
+export type TweenDefinitions = {
+  [prop: Prop]: Array<TweenDefinition>,
+}
+
+export type Tween = {
+  bufferedFromNumber?: number,
+  bufferedDiff?: number,
+  complete: boolean,
+  currentNumber?: number,
+  delay: Time,
+  diff: number,
+  duration: Time,
+  easing?: string,
+  from: RawValue | (() => RawValue),
+  fromValue: Value,
+  startTime: Time,
+  to: RawValue | (() => RawValue),
+  toValue: Value,
+}
+
+export type Tweens = {
+  [prop: Prop]: Array<Tween>,
 }
 
 export type Animation = {
   absoluteOffset?: Time,
+  complete: boolean,
   easing: string,
+  fullDuration?: Time,
   onComplete?: Noop,
   onStart?: Noop,
   onUpdate?: Noop,
   relativeOffset?: Time,
-  state: AnimationState | null,
+  startTime?: Time,
   target: RawTarget,
-  transform: Transforms,
+  resolvedTarget?: ResolvedTarget,
+  transform: TweenDefinitions,
+  tweens?: Tweens,
 }
