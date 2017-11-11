@@ -83,7 +83,7 @@ const defaultUnitForDOMValue = (propName: Prop): Unit | void => {
   }
 }
 
-const getDOMValueType = (el: HTMLElement, propName: Prop): DOMValueType => {
+const getDOMPropType = (el: HTMLElement, propName: Prop): DOMValueType => {
   if (isStyleTransformProp(propName)) {
     return 'dom-transform'
   }
@@ -98,7 +98,7 @@ const getValueType = (
   propName: Prop,
 ): ValueType =>
   resolvedTarget === 'dom'
-    ? getDOMValueType(resolvedTarget.actual, propName)
+    ? getDOMPropType(resolvedTarget.actual, propName)
     : 'object'
 
 export const getDefaultFromValue = (
@@ -135,6 +135,7 @@ export const extractValue = (
   if (typeof raw === 'string') {
     const match = rawValueRegex.exec(raw)
     if (match) {
+      match[2] /*?*/
       return {
         number: parseInt(match[1], 10) || defaultNumberForProp(propName),
         unit:
@@ -150,7 +151,7 @@ export const extractValue = (
   throw new Error(`Unsupported value type: ${raw}`)
 }
 
-export const getStyleTransformValues = (el: HTMLElement): Values => {
+const getStyleTransformValues = (el: HTMLElement): Values => {
   const result: Values = {}
   if (!el.style.transform) {
     return result
@@ -172,6 +173,26 @@ export const getStyleTransformValues = (el: HTMLElement): Values => {
     match = styleTransformItemRegex.exec(transformStr)
   }
   return result
+}
+
+export const getValueFromTarget = (
+  animation: Animation,
+  propName: Prop,
+): Value => {
+  const { resolvedTarget } = animation
+  if (resolvedTarget.type === 'dom') {
+    const propType = getDOMPropType(resolvedTarget.actual, propName)
+    if (propType === 'dom-css-transform') {
+      return getStyleTransformValues(resolvedTarget.actual)[propName]
+    } else if (propType === 'dom-css') {
+      return extractValue(
+        resolvedTarget,
+        propName,
+        resolvedTarget.actual.style[propName],
+      )
+    }
+  }
+  return extractValue(resolvedTarget, propName, resolvedTarget.actual[propName])
 }
 
 const relativeOffsetRegex = /^([+-]=)([0-9]+)$/

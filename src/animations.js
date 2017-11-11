@@ -3,75 +3,9 @@
 /* eslint-disable prefer-destructuring */
 /* eslint-disable no-continue */
 
-import type {
-  Animation,
-  AnimationDefinition,
-  Prop,
-  ResolvedTarget,
-  Time,
-  Tween,
-} from './types'
+import type { Animation, AnimationDefinition, Prop, Time, Tween } from './types'
 import * as Easings from './easings'
 import * as Utils from './utils'
-
-const resolveToFromForTween = (
-  resolvedTarget: ResolvedTarget,
-  propName: Prop,
-  tween: Tween,
-) => {
-  if (tween.toValue && tween.fromValue && tween.diff) {
-    return
-  }
-
-  const styleTransformValues =
-    resolvedTarget.type === 'dom'
-      ? Utils.getStyleTransformValues(resolvedTarget.actual)
-      : undefined
-
-  if (tween.from == null) {
-    if (
-      resolvedTarget.type === 'dom' &&
-      styleTransformValues &&
-      Utils.isStyleTransformProp(propName)
-    ) {
-      tween.fromValue = styleTransformValues[propName]
-    } else {
-      tween.fromValue = Utils.extractValue(
-        resolvedTarget,
-        propName,
-        resolvedTarget[propName],
-      )
-    }
-  } else {
-    tween.fromValue =
-      typeof tween.from === 'function'
-        ? Utils.extractValue(resolvedTarget, propName, tween.from())
-        : Utils.extractValue(resolvedTarget, propName, tween.from)
-  }
-
-  tween.toValue =
-    typeof tween.to === 'function'
-      ? Utils.extractValue(resolvedTarget, propName, tween.to())
-      : Utils.extractValue(resolvedTarget, propName, tween.to)
-
-  if (tween.fromValue == null) {
-    tween.fromValue = Utils.getDefaultFromValue(
-      resolvedTarget,
-      propName,
-      tween.toValue,
-    )
-  }
-
-  if (tween.fromValue.unit !== tween.toValue.unit) {
-    // eslint-disable-next-line no-console
-    console.warn(
-      `Mixed units from from/to of ${propName}. from: ${tween.fromValue.unit ||
-        ''}, to: "${tween.toValue.unit || ''}"`,
-    )
-  }
-
-  tween.diff = tween.toValue.number - tween.fromValue.number
-}
 
 export const initialize = (definition: AnimationDefinition): Animation => {
   const mapTransformDefinition = (
@@ -140,6 +74,50 @@ export const reset = (animation: Animation) => {
   animation.startTime = undefined
   animation.resolvedTarget = undefined
   animation.tweens = undefined
+}
+
+const resolveToFromForTween = (
+  animation: Animation,
+  propName: Prop,
+  tween: Tween,
+) => {
+  const { resolvedTarget } = animation
+
+  if (tween.toValue && tween.fromValue && tween.diff) {
+    return
+  }
+
+  if (tween.from == null) {
+    tween.fromValue = Utils.getValueFromTarget(animation, propName)
+  } else {
+    tween.fromValue =
+      typeof tween.from === 'function'
+        ? Utils.extractValue(resolvedTarget, propName, tween.from())
+        : Utils.extractValue(resolvedTarget, propName, tween.from)
+  }
+
+  tween.toValue =
+    typeof tween.to === 'function'
+      ? Utils.extractValue(resolvedTarget, propName, tween.to())
+      : Utils.extractValue(resolvedTarget, propName, tween.to)
+
+  if (tween.fromValue == null) {
+    tween.fromValue = Utils.getDefaultFromValue(
+      resolvedTarget,
+      propName,
+      tween.toValue,
+    )
+  }
+
+  if (tween.fromValue.unit !== tween.toValue.unit) {
+    // eslint-disable-next-line no-console
+    console.warn(
+      `Mixed units from from/to of ${propName}. from: ${tween.fromValue.unit ||
+        ''}, to: "${tween.toValue.unit || ''}"`,
+    )
+  }
+
+  tween.diff = tween.toValue.number - tween.fromValue.number
 }
 
 export const process = (animation: Animation, time: Time) => {
@@ -215,7 +193,7 @@ export const process = (animation: Animation, time: Time) => {
       if (timePassed < tween.delay) {
         break
       }
-      resolveToFromForTween(resolvedTarget, propName, tween)
+      resolveToFromForTween(animation, propName, tween)
       // The below normalises our values so we can resolve a value that will
       // be correctly relative to the easing function that is being applied
       // across all of the values.
