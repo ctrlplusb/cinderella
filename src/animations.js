@@ -8,16 +8,9 @@ import * as Easings from './easings'
 import * as Utils from './utils'
 
 export const initialize = (definition: AnimationDefinition): Animation => {
-  const mapTransformDefinition = (
-    transformDefinition,
-    useDefaultsFromAnimation,
-  ) => ({
-    delay:
-      transformDefinition.delay ||
-      (useDefaultsFromAnimation ? definition.delay || 0 : 0),
-    duration:
-      transformDefinition.duration ||
-      (useDefaultsFromAnimation ? definition.duration || 0 : 0),
+  const mapTransformDefinition = transformDefinition => ({
+    delay: transformDefinition.delay || 0,
+    duration: transformDefinition.duration || 0,
     easing: transformDefinition.easing,
     from: transformDefinition.from,
     to: transformDefinition.to,
@@ -26,6 +19,7 @@ export const initialize = (definition: AnimationDefinition): Animation => {
     absoluteOffset:
       typeof definition.offset === 'number' ? definition.offset : undefined,
     complete: false,
+    delay: definition.delay || 0,
     easing: definition.easing || 'linear',
     onComplete: definition.onComplete,
     onStart: definition.onStart,
@@ -39,27 +33,10 @@ export const initialize = (definition: AnimationDefinition): Animation => {
     transform: Object.keys(definition.transform).reduce(
       (transforms, propName) => {
         const transformDefinition = definition.transform[propName]
-        if (
-          typeof transformDefinition === 'string' ||
-          typeof transformDefinition === 'number' ||
-          typeof transformDefinition === 'function'
-        ) {
-          transforms[propName] = [
-            {
-              delay: definition.delay || 0,
-              duration: definition.duration || 0,
-              to: transformDefinition,
-            },
-          ]
-        } else if (Array.isArray(transformDefinition)) {
-          transforms[propName] = transformDefinition.map(
-            (subTransformDefinition, idx) =>
-              mapTransformDefinition(subTransformDefinition, idx === 0),
-          )
+        if (Array.isArray(transformDefinition)) {
+          transforms[propName] = transformDefinition.map(mapTransformDefinition)
         } else if (typeof transformDefinition === 'object') {
-          transforms[propName] = [
-            mapTransformDefinition(transformDefinition, true),
-          ]
+          transforms[propName] = [mapTransformDefinition(transformDefinition)]
         }
         return transforms
       },
@@ -70,6 +47,7 @@ export const initialize = (definition: AnimationDefinition): Animation => {
 
 export const reset = (animation: Animation) => {
   animation.complete = false
+  animation.delayValue = undefined
   animation.fullDuration = undefined
   animation.startTime = undefined
   animation.resolvedTarget = undefined
@@ -155,11 +133,15 @@ export const process = (animation: Animation, time: Time) => {
     let fullDuration = 0
     props.forEach(prop => {
       tweens[prop].forEach(({ delay, duration }) => {
-        const tweenDuration = delay + duration
+        const tweenFullDuration = delay + duration
         fullDuration =
-          tweenDuration > fullDuration ? tweenDuration : fullDuration
+          tweenFullDuration > fullDuration ? tweenFullDuration : fullDuration
       })
     })
+    animation.delayValue =
+      typeof animation.delay === 'function'
+        ? animation.delay()
+        : animation.delay
     animation.fullDuration = fullDuration
     animation.startTime = time
     animation.resolvedTarget = resolvedTarget
@@ -168,17 +150,27 @@ export const process = (animation: Animation, time: Time) => {
       animation.onStart()
     }
   }
-  const { startTime, fullDuration, resolvedTarget, tweens } = animation
+  const {
+    startTime,
+    fullDuration,
+    resolvedTarget,
+    tweens,
+    delayValue,
+  } = animation
   if (
     startTime == null ||
     fullDuration == null ||
     resolvedTarget == null ||
-    tweens == null
+    tweens == null ||
+    delayValue == null
   ) {
     throw new Error('💩')
   }
-  animation.complete = time >= startTime + fullDuration
   const timePassed = time - startTime
+  if (timePassed < delayValue) {
+    return
+  }
+  animation.complete = time >= startTime + fullDuration
   const values = Object.keys(tweens).reduce((acc, propName) => {
     const propTweens = tweens[propName]
     let value

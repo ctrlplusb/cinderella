@@ -51,7 +51,6 @@ export type TransformDefinitions = {
 
 export type AnimationDefinition = {
   delay?: Time | (() => Time),
-  duration?: Time | (() => Time),
   easing?: string,
   onComplete?: Noop,
   onStart?: Noop,
@@ -122,6 +121,8 @@ export type Tweens = {
 export type Animation = {
   absoluteOffset?: Time,
   complete: boolean,
+  delay: number | (() => number),
+  delayValue?: number,
   easing: string,
   fullDuration?: Time,
   onComplete?: Noop,
