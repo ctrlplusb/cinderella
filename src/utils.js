@@ -135,7 +135,6 @@ export const extractValue = (
   if (typeof raw === 'string') {
     const match = rawValueRegex.exec(raw)
     if (match) {
-      match[2] /*?*/
       return {
         number: parseInt(match[1], 10) || defaultNumberForProp(propName),
         unit:

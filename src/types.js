@@ -1,38 +1,15 @@
 /* @flow */
 
-export type Unit =
-  | '%'
-  | 'ch'
-  | 'cm'
-  | 'deg'
-  | 'em'
-  | 'ex'
-  | 'in'
-  | 'mm'
-  | 'pc'
-  | 'pt'
-  | 'px'
-  | 'rad'
-  | 'rem'
-  | 'turn'
-  | 'vh'
-  | 'vmax'
-  | 'vmin'
-  | 'vw'
-
+export type Unit = string
 export type Prop = string
-
 export type Time = number
-
-type Noop = () => void
-
+export type Noop = () => void
 export type RawValue = string | number
+export type RawTarget = string | HTMLElement | Object
+export type DOMValueType = 'dom-css-transform' | 'dom-css' | 'dom-attribute'
+export type ValueType = 'object' | DOMValueType
 
-type RawTarget = string | HTMLElement | Object
-
-type SimpleTransformDefinition = RawValue
-
-type ComplexTransformDefinition = {
+export type TweenDefinition = {
   delay?: Time | (() => Time),
   duration?: Time | (() => Time),
   easing?: string,
@@ -40,13 +17,8 @@ type ComplexTransformDefinition = {
   to: RawValue | (() => RawValue),
 }
 
-type TransformDefinition =
-  | SimpleTransformDefinition
-  | ComplexTransformDefinition
-  | Array<ComplexTransformDefinition>
-
-export type TransformDefinitions = {
-  [name: string]: TransformDefinition,
+export type TweenDefinitions = {
+  [prop: Prop]: TweenDefinition | Array<TweenDefinition>,
 }
 
 export type AnimationDefinition = {
@@ -56,12 +28,8 @@ export type AnimationDefinition = {
   onStart?: Noop,
   onUpdate?: Noop,
   target: RawTarget,
-  transform: TransformDefinitions,
+  transform: TweenDefinitions,
 }
-
-export type DOMValueType = 'dom-css-transform' | 'dom-css' | 'dom-attribute'
-
-export type ValueType = 'object' | DOMValueType
 
 export type Value = {
   number: number,
@@ -85,18 +53,6 @@ type ObjectTarget = {
 }
 
 export type ResolvedTarget = DOMTarget | ObjectTarget
-
-export type TweenDefinition = {
-  delay: Time | (() => Time),
-  duration: Time | (() => Time),
-  easing?: string,
-  from?: RawValue | (() => RawValue),
-  to: RawValue | (() => RawValue),
-}
-
-export type TweenDefinitions = {
-  [prop: Prop]: Array<TweenDefinition>,
-}
 
 export type Tween = {
   bufferedFromNumber?: number,
