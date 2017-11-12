@@ -3,7 +3,14 @@
 /* eslint-disable prefer-destructuring */
 /* eslint-disable no-continue */
 
-import type { Animation, AnimationDefinition, Prop, Time } from './types'
+import type {
+  Animation,
+  AnimationDefinition,
+  EasingFn,
+  Prop,
+  Time,
+  Tween,
+} from './types'
 import * as Easings from './easings'
 import * as Utils from './utils'
 
@@ -73,50 +80,33 @@ export const process = (animation: Animation, time: Time) => {
     const props: Array<Prop> = Object.keys(animation.transform)
     const tweens = props.reduce((tweenAcc, propName) => {
       const definition = animation.transform[propName]
-      tweenAcc[propName] = Array.isArray(definition)
-        ? definition.reduce(
-            (subTweenAcc, subTween) => {
-              const initedSubTween = {
-                complete: false,
-                delay:
-                  subTweenAcc.prevFullDuration +
-                  (typeof subTween.delay === 'function'
-                    ? subTween.delay()
-                    : subTween.delay),
-                duration:
-                  typeof subTween.duration === 'function'
-                    ? subTween.duration()
-                    : subTween.duration,
-                easing: subTween.easing,
-                from: subTween.from,
-                to: subTween.to,
-              }
-              subTweenAcc.prevFullDuration +=
-                initedSubTween.duration + initedSubTween.delay
-              subTweenAcc.subTweens.push(initedSubTween)
-              return subTweenAcc
-            },
-            {
-              subTweens: [],
-              prevFullDuration: 0,
-            },
-          ).subTweens
-        : [
-            {
-              complete: false,
-              delay:
-                typeof definition.delay === 'function'
-                  ? definition.delay()
-                  : definition.delay,
-              duration:
-                typeof definition.duration === 'function'
-                  ? definition.duration()
-                  : definition.duration,
-              easing: definition.easing,
-              from: definition.from,
-              to: definition.to,
-            },
-          ]
+      tweenAcc[propName] = definition.reduce(
+        (subTweenAcc, subTween) => {
+          const initedSubTween = {
+            complete: false,
+            delay:
+              subTweenAcc.prevFullDuration +
+              (typeof subTween.delay === 'function'
+                ? subTween.delay()
+                : subTween.delay),
+            duration:
+              typeof subTween.duration === 'function'
+                ? subTween.duration()
+                : subTween.duration,
+            easing: subTween.easing,
+            from: subTween.from,
+            to: subTween.to,
+          }
+          subTweenAcc.prevFullDuration +=
+            initedSubTween.duration + initedSubTween.delay
+          subTweenAcc.subTweens.push(initedSubTween)
+          return subTweenAcc
+        },
+        {
+          subTweens: [],
+          prevFullDuration: 0,
+        },
+      ).subTweens
       return tweenAcc
     }, {})
     let longestTweenDuration = 0
@@ -164,7 +154,7 @@ export const process = (animation: Animation, time: Time) => {
   animation.complete = time >= startTime + delayValue + longestTweenDuration
   const tweenRunDuration = timePassed - delayValue
   const values = Object.keys(tweens).reduce((acc, propName) => {
-    const propTweens = tweens[propName]
+    const propTweens: Array<Tween> = tweens[propName]
     let tweenCurrentValue
     for (let i = 0; i < propTweens.length; i += 1) {
       const tween = propTweens[i]
@@ -232,8 +222,9 @@ export const process = (animation: Animation, time: Time) => {
         tween.complete = true
         tweenCurrentValue = tween.toValue
       } else {
+        const easingFn: EasingFn = Easings[tween.easing || animation.easing]
         tweenCurrentValue = Object.assign({}, tween.toValue, {
-          number: Easings[tween.easing || animation.easing](
+          number: easingFn(
             tween.bufferedFromNumber != null
               ? tweenRunDuration
               : tweenRunDuration - tween.delay,

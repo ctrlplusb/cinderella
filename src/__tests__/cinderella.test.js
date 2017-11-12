@@ -233,12 +233,13 @@ describe('cinderella', () => {
         target: lazyTarget,
         transform: {
           foo: {
+            delay: () => 1 * frameRate,
             to: () => 100,
             duration: () => 5 * frameRate,
           },
         },
       }).play()
-      waitForFrames(7)
+      waitForFrames(8)
       expect(lazyTarget.foo).toBe(100)
     })
 
@@ -342,6 +343,49 @@ describe('cinderella', () => {
       expect(multiTweenTarget.foo).toBeCloseTo(100)
       waitForFrames(3)
       expect(multiTweenTarget.foo).toBeCloseTo(200)
+    })
+
+    it('individual easing multi tween', () => {
+      const multiTweenTarget = {
+        foo: 0,
+      }
+      cinderella({
+        target: multiTweenTarget,
+        transform: {
+          foo: [
+            {
+              to: 100,
+              easing: 'easeOutQuad',
+              duration: 5 * frameRate,
+            },
+            {
+              to: 200,
+              delay: 2 * frameRate,
+              duration: 5 * frameRate,
+            },
+          ],
+        },
+      }).play()
+      waitForFrames(1)
+      expect(multiTweenTarget).toMatchObject({ foo: 0 })
+      // First tween runs for 2 frames
+      waitForFrames(2)
+      expect(multiTweenTarget.foo).toBeCloseTo(64)
+      waitForFrames(5)
+      expect(multiTweenTarget.foo).toBeCloseTo(100)
+      // Second tween runs for 2 frames
+      waitForFrames(2)
+      expect(multiTweenTarget.foo).toBeCloseTo(140)
+      waitForFrames(3)
+      expect(multiTweenTarget.foo).toBeCloseTo(200)
+    })
+
+    it.skip('from', () => {
+      // TODO: test
+    })
+
+    it.skip('mixed from/to units', () => {
+      // TODO: test
     })
   })
 

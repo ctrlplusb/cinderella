@@ -8,6 +8,7 @@ export type RawValue = string | number
 export type RawTarget = string | HTMLElement | Object
 export type DOMValueType = 'dom-css-transform' | 'dom-css' | 'dom-attribute'
 export type ValueType = 'object' | DOMValueType
+export type EasingFn = (t: number, b: number, c: number, d: number) => number
 
 export type TweenDefinition = {
   delay?: Time | (() => Time),
@@ -17,10 +18,6 @@ export type TweenDefinition = {
   to: RawValue | (() => RawValue),
 }
 
-export type TweenDefinitions = {
-  [prop: Prop]: TweenDefinition | Array<TweenDefinition>,
-}
-
 export type AnimationDefinition = {
   delay?: Time | (() => Time),
   easing?: string,
@@ -28,7 +25,7 @@ export type AnimationDefinition = {
   onStart?: Noop,
   onUpdate?: Noop,
   target: RawTarget,
-  transform: TweenDefinitions,
+  transform: { [prop: Prop]: TweenDefinition | Array<TweenDefinition> },
   transformDefaults?: {
     delay?: Time | (() => Time),
     duration?: Time | (() => Time),
@@ -74,10 +71,6 @@ export type Tween = {
   toValue: Value,
 }
 
-export type Tweens = {
-  [prop: Prop]: Array<Tween>,
-}
-
 export type Animation = {
   absoluteOffset?: Time,
   complete: boolean,
@@ -92,6 +85,6 @@ export type Animation = {
   resolvedTarget?: ResolvedTarget,
   startTime?: Time,
   target: RawTarget,
-  transform: TweenDefinitions,
-  tweens?: Tweens,
+  transform: { [prop: Prop]: Array<TweenDefinition> },
+  tweens?: { [prop: Prop]: Array<Tween> },
 }

@@ -5,6 +5,8 @@
 /* eslint-disable no-plusplus */
 /* eslint-disable no-restricted-properties */
 
+import type { EasingFn } from './types'
+
 /**
  * t = time (since easing began) in ms
  * b = start value
@@ -17,20 +19,16 @@
  *  |-> 50
  */
 
-export function linear(t, b, c, d) {
+export const linear: EasingFn = (t, b, c, d) => {
   t /= d
   return b + c * t
 }
 
-export function easeInQuad(t, b, c, d) {
-  return c * (t /= d) * t + b
-}
+export const easeInQuad: EasingFn = (t, b, c, d) => c * (t /= d) * t + b
 
-export function easeOutQuad(t, b, c, d) {
-  return -c * (t /= d) * (t - 2) + b
-}
+export const easeOutQuad: EasingFn = (t, b, c, d) => -c * (t /= d) * (t - 2) + b
 
-export function easeInOutQuad(t, b, c, d) {
+export const easeInOutQuad: EasingFn = (t, b, c, d) => {
   if ((t /= d / 2) < 1) return c / 2 * t * t + b
   return -c / 2 * (--t * (t - 2) - 1) + b
 }
