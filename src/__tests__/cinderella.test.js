@@ -286,12 +286,12 @@ describe('cinderella', () => {
     })
 
     it('transform defaults', () => {
-      const multiTarget = {
+      const defaultsTarget = {
         foo: 100,
         bar: 0,
       }
       cinderella({
-        target: multiTarget,
+        target: defaultsTarget,
         transform: {
           foo: {
             to: 0,
@@ -306,14 +306,42 @@ describe('cinderella', () => {
         },
       }).play()
       waitForFrames(9)
-      expect(multiTarget).toMatchObject({
+      expect(defaultsTarget).toMatchObject({
         foo: 0,
         bar: 100,
       })
     })
 
-    it.skip('advanced transform', () => {
-      const animation = animate({})
+    it('multi tween', () => {
+      const multiTweenTarget = {
+        foo: 0,
+      }
+      cinderella({
+        target: multiTweenTarget,
+        transform: {
+          foo: [
+            {
+              to: 100,
+              duration: 2 * frameRate,
+            },
+            {
+              to: 200,
+              delay: 2 * frameRate,
+              duration: 3 * frameRate,
+            },
+          ],
+        },
+      }).play()
+      waitForFrames(1)
+      expect(multiTweenTarget).toMatchObject({ foo: 0 })
+      waitForFrames(2)
+      expect(multiTweenTarget.foo).toBeCloseTo(100)
+      waitForFrames(1)
+      expect(multiTweenTarget.foo).toBeCloseTo(100)
+      waitForFrames(1)
+      expect(multiTweenTarget.foo).toBeCloseTo(100)
+      waitForFrames(3)
+      expect(multiTweenTarget.foo).toBeCloseTo(200)
     })
   })
 

@@ -57,7 +57,7 @@ export const initialize = (definition: AnimationDefinition): Animation => {
 export const reset = (animation: Animation) => {
   animation.complete = false
   animation.delayValue = undefined
-  animation.fullDuration = undefined
+  animation.longestTweenDuration = undefined
   animation.startTime = undefined
   animation.resolvedTarget = undefined
   animation.tweens = undefined
