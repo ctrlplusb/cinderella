@@ -8,9 +8,18 @@ import * as Easings from './easings'
 import * as Utils from './utils'
 
 export const initialize = (definition: AnimationDefinition): Animation => {
+  const { transformDefaults } = definition
   const mapTransformDefinition = transformDefinition => ({
-    delay: transformDefinition.delay || 0,
-    duration: transformDefinition.duration || 0,
+    delay:
+      transformDefinition.delay ||
+      (transformDefaults && transformDefaults.delay != null
+        ? transformDefaults.delay
+        : 0),
+    duration:
+      transformDefinition.duration ||
+      (transformDefaults && transformDefaults.duration != null
+        ? transformDefaults.duration
+        : 0),
     easing: transformDefinition.easing,
     from: transformDefinition.from,
     to: transformDefinition.to,
@@ -110,19 +119,21 @@ export const process = (animation: Animation, time: Time) => {
           ]
       return tweenAcc
     }, {})
-    let fullDuration = 0
+    let longestTweenDuration = 0
     props.forEach(prop => {
       tweens[prop].forEach(({ delay, duration }) => {
-        const tweenFullDuration = delay + duration
-        fullDuration =
-          tweenFullDuration > fullDuration ? tweenFullDuration : fullDuration
+        const currentTweenDuration = delay + duration
+        longestTweenDuration =
+          currentTweenDuration > longestTweenDuration
+            ? currentTweenDuration
+            : longestTweenDuration
       })
     })
     animation.delayValue =
       typeof animation.delay === 'function'
         ? animation.delay()
         : animation.delay
-    animation.fullDuration = fullDuration
+    animation.longestTweenDuration = longestTweenDuration
     animation.startTime = time
     animation.resolvedTarget = resolvedTarget
     animation.tweens = tweens
@@ -132,25 +143,26 @@ export const process = (animation: Animation, time: Time) => {
   }
   const {
     startTime,
-    fullDuration,
+    longestTweenDuration,
     resolvedTarget,
     tweens,
     delayValue,
   } = animation
   if (
     startTime == null ||
-    fullDuration == null ||
+    longestTweenDuration == null ||
     resolvedTarget == null ||
     tweens == null ||
     delayValue == null
   ) {
-    throw new Error('💩')
+    throw new Error('Animation initialization failed')
   }
   const timePassed = time - startTime
   if (timePassed < delayValue) {
     return
   }
-  animation.complete = time >= startTime + fullDuration
+  animation.complete = time >= startTime + delayValue + longestTweenDuration
+  const tweenRunDuration = timePassed - delayValue
   const values = Object.keys(tweens).reduce((acc, propName) => {
     const propTweens = tweens[propName]
     let tweenCurrentValue
@@ -159,7 +171,7 @@ export const process = (animation: Animation, time: Time) => {
       if (tween.complete) {
         continue
       }
-      if (timePassed < tween.delay) {
+      if (tweenRunDuration < tween.delay) {
         break
       }
       // Resolve the to/from values for the tweens
@@ -200,8 +212,9 @@ export const process = (animation: Animation, time: Time) => {
         tween.duration + tween.delay !== animation.fullDuration &&
         tween.bufferedFromValue == null
       ) {
-        const animDurPerc = fullDuration / 100
-        const postRunDuration = fullDuration - tween.duration - tween.delay
+        const animDurPerc = longestTweenDuration / 100
+        const postRunDuration =
+          longestTweenDuration - tween.duration - tween.delay
         const prePercentage = tween.delay / animDurPerc
         const runPercentage = tween.duration / animDurPerc
         const postPercentage =
@@ -215,21 +228,21 @@ export const process = (animation: Animation, time: Time) => {
       }
       // If the time has passed the tween run time then we just use the "to"
       // as our value.
-      if (timePassed > tween.duration + tween.delay) {
+      if (tweenRunDuration > tween.duration + tween.delay) {
         tween.complete = true
         tweenCurrentValue = tween.toValue
       } else {
         tweenCurrentValue = Object.assign({}, tween.toValue, {
           number: Easings[tween.easing || animation.easing](
             tween.bufferedFromNumber != null
-              ? timePassed - tween.delay
-              : timePassed,
+              ? tweenRunDuration
+              : tweenRunDuration - tween.delay,
             tween.bufferedFromNumber != null
               ? tween.bufferedFromNumber
               : tween.fromValue.number,
             tween.bufferedDiff != null ? tween.bufferedDiff : tween.diff,
             tween.bufferedFromNumber != null
-              ? animation.fullDuration
+              ? animation.longestTweenDuration
               : tween.duration,
           ),
         })

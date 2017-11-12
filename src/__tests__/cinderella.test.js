@@ -37,7 +37,7 @@ describe('cinderella', () => {
     let onCompleteSpy
     let animation
 
-    beforeEach(async () => {
+    beforeEach(() => {
       target = {
         foo: 0,
       }
@@ -58,14 +58,14 @@ describe('cinderella', () => {
       })
     })
 
-    it('does not executes if "play" is not executed', async () => {
-      await waitForFrames(2)
+    it('does not executes if "play" is not executed', () => {
+      waitForFrames(2)
       expect(onStartSpy).toHaveBeenCalledTimes(0)
     })
 
-    it('calls "onStart" when animation starts', async () => {
+    it('calls "onStart" when animation starts', () => {
       animation.play()
-      await waitForFrames(5)
+      waitForFrames(5)
       expect(onStartSpy).toHaveBeenCalledTimes(1)
     })
 
@@ -75,14 +75,14 @@ describe('cinderella', () => {
       expect(onUpdateSpy).toHaveBeenCalledTimes(5)
     })
 
-    it('onComplete', async () => {
+    it('onComplete', () => {
       animation.play()
-      await waitForFrames(7)
+      waitForFrames(7)
       expect(target.foo).toBeCloseTo(100)
       expect(onCompleteSpy).toHaveBeenCalledTimes(1)
     })
 
-    it('delay on tween', async () => {
+    it('delay on tween', () => {
       const delayTarget = {}
       const delayOnStartSpy = jest.fn()
       cinderella({
@@ -96,15 +96,15 @@ describe('cinderella', () => {
         },
         onStart: delayOnStartSpy,
       }).play()
-      await waitForFrames(1)
+      waitForFrames(1)
       expect(delayOnStartSpy).toHaveBeenCalledTimes(1)
       expect(delayTarget.foo).toBeUndefined()
-      await waitForFrames(3)
+      waitForFrames(3)
       expect(delayOnStartSpy).toHaveBeenCalledTimes(1)
       expect(delayTarget.foo).not.toBeUndefined()
     })
 
-    it('delay on animation', async () => {
+    it('delay on animation', () => {
       const delayTarget = {}
       const delayOnStartSpy = jest.fn()
       cinderella({
@@ -118,64 +118,64 @@ describe('cinderella', () => {
         delay: 1 * frameRate,
         onStart: delayOnStartSpy,
       }).play()
-      await waitForFrames(1)
+      waitForFrames(1)
       expect(delayOnStartSpy).toHaveBeenCalledTimes(1)
       expect(delayTarget.foo).toBeUndefined()
-      await waitForFrames(3)
+      waitForFrames(3)
       expect(delayOnStartSpy).toHaveBeenCalledTimes(1)
       expect(delayTarget.foo).not.toBeUndefined()
     })
 
-    it('calling play has no effect on an animation that is still executing', async () => {
+    it('calling play has no effect on an animation that is still executing', () => {
       animation.play()
-      await waitForFrames(3)
+      waitForFrames(3)
       expect(onStartSpy).toHaveBeenCalledTimes(1)
       expect(onCompleteSpy).toHaveBeenCalledTimes(0)
       animation.play()
-      await waitForFrames(4)
+      waitForFrames(4)
       expect(onStartSpy).toHaveBeenCalledTimes(1)
       expect(onCompleteSpy).toHaveBeenCalledTimes(1)
     })
 
-    it('calling play on an animation that has complete causes it to play again', async () => {
+    it('calling play on an animation that has complete causes it to play again', () => {
       animation.play()
-      await waitForFrames(7)
+      waitForFrames(7)
       expect(onStartSpy).toHaveBeenCalledTimes(1)
       expect(onCompleteSpy).toHaveBeenCalledTimes(1)
       animation.play()
-      await waitForFrames(3)
+      waitForFrames(3)
       expect(onStartSpy).toHaveBeenCalledTimes(2)
     })
 
-    it('stop', async () => {
+    it('stop', () => {
       animation.play()
-      await waitForFrames(3)
+      waitForFrames(3)
       expect(onStartSpy).toHaveBeenCalledTimes(1)
       animation.stop()
-      await waitForFrames(4)
+      waitForFrames(4)
       expect(onCompleteSpy).toHaveBeenCalledTimes(0)
     })
 
-    it('runs once', async () => {
+    it('runs once', () => {
       animation.play()
-      await waitForFrames(10)
+      waitForFrames(10)
       expect(onCompleteSpy).toHaveBeenCalledTimes(1)
       expect(onStartSpy).toHaveBeenCalledTimes(1)
     })
 
-    it('pause and play', async () => {
+    it('pause and play', () => {
       animation.play()
-      await waitForFrames(3)
+      waitForFrames(3)
       expect(onStartSpy).toHaveBeenCalledTimes(1)
       animation.pause()
-      await waitForFrames(5)
+      waitForFrames(5)
       expect(onCompleteSpy).toHaveBeenCalledTimes(0)
       animation.play()
-      await waitForFrames(4)
+      waitForFrames(4)
       expect(onCompleteSpy).toHaveBeenCalledTimes(1)
     })
 
-    it('loop', async () => {
+    it('loop', () => {
       const loopStartSpy = jest.fn()
       const loopUpdateSpy = jest.fn()
       const loopCompleteSpy = jest.fn()
@@ -193,7 +193,7 @@ describe('cinderella', () => {
       }).play({
         loop: true,
       })
-      await waitForFrames(12)
+      waitForFrames(12)
       expect(loopStartSpy).toHaveBeenCalledTimes(3)
       expect(loopUpdateSpy).toHaveBeenCalledTimes(12)
       expect(loopCompleteSpy).toHaveBeenCalledTimes(2)
@@ -227,7 +227,7 @@ describe('cinderella', () => {
       validUnits.forEach(unit => expect(unitTarget[unit]).toBe(`20${unit}`))
     })
 
-    it('lazy transform', async () => {
+    it('lazy transform', () => {
       const lazyTarget = {}
       cinderella({
         target: lazyTarget,
@@ -238,11 +238,11 @@ describe('cinderella', () => {
           },
         },
       }).play()
-      await waitForFrames(7)
+      waitForFrames(7)
       expect(lazyTarget.foo).toBe(100)
     })
 
-    it('basic transform', async () => {
+    it('basic transform', () => {
       const multiTarget = {
         foo: 100,
         bar: 0,
@@ -260,7 +260,7 @@ describe('cinderella', () => {
           },
         },
       }).play()
-      await waitForFrames(7)
+      waitForFrames(7)
       expect(multiTarget).toMatchObject({
         foo: 0,
         bar: 100,
@@ -283,6 +283,33 @@ describe('cinderella', () => {
       expect(target.foo).toBeCloseTo(100)
       waitForFrames(1)
       expect(target.foo).toBe(100)
+    })
+
+    it('transform defaults', () => {
+      const multiTarget = {
+        foo: 100,
+        bar: 0,
+      }
+      cinderella({
+        target: multiTarget,
+        transform: {
+          foo: {
+            to: 0,
+          },
+          bar: {
+            to: 100,
+          },
+        },
+        transformDefaults: {
+          delay: 2 * frameRate,
+          duration: 5 * frameRate,
+        },
+      }).play()
+      waitForFrames(9)
+      expect(multiTarget).toMatchObject({
+        foo: 0,
+        bar: 100,
+      })
     })
 
     it.skip('advanced transform', () => {

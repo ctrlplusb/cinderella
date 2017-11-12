@@ -29,6 +29,10 @@ export type AnimationDefinition = {
   onUpdate?: Noop,
   target: RawTarget,
   transform: TweenDefinitions,
+  transformDefaults?: {
+    delay?: Time | (() => Time),
+    duration?: Time | (() => Time),
+  },
 }
 
 export type Value = {
@@ -80,14 +84,14 @@ export type Animation = {
   delay: number | (() => number),
   delayValue?: number,
   easing: string,
-  fullDuration?: Time,
+  longestTweenDuration?: Time,
   onComplete?: Noop,
   onStart?: Noop,
   onUpdate?: Noop,
   relativeOffset?: Time,
+  resolvedTarget?: ResolvedTarget,
   startTime?: Time,
   target: RawTarget,
-  resolvedTarget?: ResolvedTarget,
   transform: TweenDefinitions,
   tweens?: Tweens,
 }
