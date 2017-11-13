@@ -23,18 +23,20 @@ cinderella().add({
 [![Travis](https://img.shields.io/travis/ctrlplusb/cinderella.svg?style=flat-square)](https://travis-ci.org/ctrlplusb/cinderella)
 [![Codecov](https://img.shields.io/codecov/c/github/ctrlplusb/cinderella.svg?style=flat-square)](https://codecov.io/github/ctrlplusb/cinderella)
 
- - Play, pause, loop, stop.
- - Compose animations to create timelines.
- - Easing functions.
- - Simple API.
- - Optimised over requestAnimationFrame.
- - 3kB gzipped
+ - Simple API
+ - Play, pause, loop, stop
+ - Compose animations to create timelines
+ - Easing functions
+ - Devtools to visualise and debug
+ - Optimised over requestAnimationFrame
+ - 4kB gzipped
 
 ## TOCs
 
   - [Introduction](#introduction)
   - [Tutorial](#tutorial)
   - [API](#api)
+  - [Development Tools](#development-tools)
   - [Credits](#credits)
 
 ## Introduction
@@ -69,6 +71,10 @@ cinderella().add({
   }
 }).play()
 ```
+
+## Development Tools
+
+> WIP
 
 ## Credits
 
