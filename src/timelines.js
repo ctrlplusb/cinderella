@@ -51,9 +51,7 @@ export const create = animation => {
   const api = {}
   const add = newAnimation => {
     timeline.animations.push(
-      isTimeline(newAnimation)
-        ? newAnimation
-        : Animations.initialize(newAnimation),
+      isTimeline(newAnimation) ? newAnimation : Animations.create(newAnimation),
     )
     return api
   }
@@ -86,6 +84,26 @@ export const process = (time: number) => {
     if (isComplete(timeline)) {
       return
     }
+    if (!timeline.state.initializedAnimations) {
+      let relativeExecutionTime = 0
+      timeline.animations.map(Animations.initialize).forEach(animation => {
+        if (animation.absoluteOffset != null) {
+          animation.executionOffset = animation.absoluteOffset
+          return
+        }
+        let executionOffset =
+          relativeExecutionTime +
+          (animation.relativeOffset != null ? animation.relativeOffset : 0)
+        if (executionOffset < 0) {
+          executionOffset = 0
+        }
+        animation.executionOffset = executionOffset
+        relativeExecutionTime =
+          animation.executionOffset + animation.longestTweenDuration
+      })
+      timeline.state.initializedAnimations = true
+    }
+
     if (timeline.state.startTime == null && timeline.config.onStart != null) {
       timeline.config.onStart()
     }
@@ -96,30 +114,13 @@ export const process = (time: number) => {
         timeline.state.startTime += time - timeline.state.prevTime
       }
     } else {
-      timeline.executionTime = time - timeline.state.startTime
-      timeline.animations.forEach((animation, i) => {
+      timeline.state.executionTime = Math.round(time - timeline.state.startTime)
+      timeline.animations.forEach(animation => {
         if (animation.complete) {
           return
         }
-        if (
-          animation.absoluteOffset != null &&
-          time - timeline.state.startTime >= animation.absoluteOffset
-        ) {
+        if (timeline.state.executionTime >= animation.executionOffset) {
           Animations.process(animation, time)
-        } else {
-          let execute = true
-          if (animation.startTime == null) {
-            for (let x = 0; x < i; x += 1) {
-              const y = timeline.animations[x]
-              if (!y.isAbsoluteOffset && !y.complete) {
-                execute = false
-                break
-              }
-            }
-          }
-          if (execute) {
-            Animations.process(animation, time)
-          }
         }
       })
     }

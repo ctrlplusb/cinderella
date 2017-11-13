@@ -177,8 +177,6 @@ describe('cinderella', () => {
 
     it('loop', () => {
       const loopStartSpy = jest.fn()
-      const loopUpdateSpy = jest.fn()
-      const loopCompleteSpy = jest.fn()
       cinderella({
         target: {},
         transform: {
@@ -188,15 +186,11 @@ describe('cinderella', () => {
           },
         },
         onStart: loopStartSpy,
-        onUpdate: loopUpdateSpy,
-        onComplete: loopCompleteSpy,
       }).play({
         loop: true,
       })
       waitForFrames(12)
       expect(loopStartSpy).toHaveBeenCalledTimes(3)
-      expect(loopUpdateSpy).toHaveBeenCalledTimes(12)
-      expect(loopCompleteSpy).toHaveBeenCalledTimes(2)
     })
 
     it('units', () => {
@@ -334,7 +328,9 @@ describe('cinderella', () => {
         },
       }).play()
       waitForFrames(1)
-      expect(multiTweenTarget).toMatchObject({ foo: 0 })
+      expect(multiTweenTarget).toMatchObject({
+        foo: 0,
+      })
       waitForFrames(2)
       expect(multiTweenTarget.foo).toBeCloseTo(100)
       waitForFrames(1)
@@ -367,7 +363,9 @@ describe('cinderella', () => {
         },
       }).play()
       waitForFrames(1)
-      expect(multiTweenTarget).toMatchObject({ foo: 0 })
+      expect(multiTweenTarget).toMatchObject({
+        foo: 0,
+      })
       // First tween runs for 2 frames
       waitForFrames(2)
       expect(multiTweenTarget.foo).toBeCloseTo(64)
@@ -446,7 +444,7 @@ describe('cinderella', () => {
       expect(animationTwoOnStartSpy).toHaveBeenCalledTimes(1)
     })
 
-    it('absolute', async () => {
+    it('absolute offset', async () => {
       const tween1OnStartSpy = jest.fn()
       const tween2OnStartSpy = jest.fn()
       const absoluteTimelineOnCompleteSpy = jest.fn()
@@ -479,6 +477,51 @@ describe('cinderella', () => {
       expect(tween1OnStartSpy).toHaveBeenCalledTimes(1)
       expect(tween2OnStartSpy).toHaveBeenCalledTimes(1)
       await waitForFrames(4)
+      expect(absoluteTimelineOnCompleteSpy).toHaveBeenCalledTimes(1)
+    })
+
+    it('relative offset', async () => {
+      const tween1OnStartSpy = jest.fn()
+      const tween2OnStartSpy = jest.fn()
+      const absoluteTimelineOnCompleteSpy = jest.fn()
+      const relativeOffsetTarget = {
+        foo: 0,
+        bar: 0,
+      }
+      const absoluteTimeline = cinderella({
+        target: relativeOffsetTarget,
+        transform: {
+          foo: {
+            to: 100,
+            duration: 6 * frameRate,
+          },
+        },
+        onStart: tween1OnStartSpy,
+        onUpdate: jest.fn(),
+      }).add({
+        target: relativeOffsetTarget,
+        transform: {
+          bar: {
+            to: 100,
+            duration: 3 * frameRate,
+          },
+        },
+        offset: `-=${3 * frameRate}`,
+        onStart: tween2OnStartSpy,
+        onUpdate: jest.fn(),
+      })
+      absoluteTimeline.play({
+        onComplete: absoluteTimelineOnCompleteSpy,
+      })
+      await waitForFrames(1)
+      expect(tween1OnStartSpy).toHaveBeenCalledTimes(1)
+      await waitForFrames(3)
+      expect(tween2OnStartSpy).toHaveBeenCalledTimes(1)
+      expect(relativeOffsetTarget.foo).toBeCloseTo(50)
+      expect(relativeOffsetTarget.bar).toBeCloseTo(0)
+      await waitForFrames(4)
+      expect(relativeOffsetTarget.foo).toBe(100)
+      expect(relativeOffsetTarget.bar).toBe(100)
       expect(absoluteTimelineOnCompleteSpy).toHaveBeenCalledTimes(1)
     })
   })

@@ -14,7 +14,7 @@ import type {
 import * as Easings from './easings'
 import * as Utils from './utils'
 
-export const initialize = (definition: AnimationDefinition): Animation => {
+export const create = (definition: AnimationDefinition): Animation => {
   const { transformDefaults } = definition
   const mapTransformDefinition = transformDefinition => ({
     delay:
@@ -64,10 +64,67 @@ export const initialize = (definition: AnimationDefinition): Animation => {
 export const reset = (animation: Animation) => {
   animation.complete = false
   animation.delayValue = undefined
+  animation.executionOffset = undefined
   animation.longestTweenDuration = undefined
   animation.startTime = undefined
   animation.resolvedTarget = undefined
   animation.tweens = undefined
+}
+
+export const initialize = (animation: Animation): Animation => {
+  if (animation.tweens != null) {
+    // already initialized
+    return animation
+  }
+  const resolvedTarget = Utils.resolveTarget(animation)
+  const props: Array<Prop> = Object.keys(animation.transform)
+  const tweens = props.reduce((tweenAcc, propName) => {
+    const definition = animation.transform[propName]
+    tweenAcc[propName] = definition.reduce(
+      (subTweenAcc, subTween) => {
+        const initedSubTween = {
+          complete: false,
+          delay:
+            subTweenAcc.prevFullDuration +
+            (typeof subTween.delay === 'function'
+              ? subTween.delay()
+              : subTween.delay),
+          duration:
+            typeof subTween.duration === 'function'
+              ? subTween.duration()
+              : subTween.duration,
+          easing: subTween.easing,
+          from: subTween.from,
+          to: subTween.to,
+        }
+        subTweenAcc.prevFullDuration +=
+          initedSubTween.duration + initedSubTween.delay
+        subTweenAcc.subTweens.push(initedSubTween)
+        return subTweenAcc
+      },
+      {
+        subTweens: [],
+        prevFullDuration: 0,
+      },
+    ).subTweens
+    return tweenAcc
+  }, {})
+  let longestTweenDuration = 0
+  props.forEach(prop => {
+    tweens[prop].forEach(({ delay, duration }) => {
+      const currentTweenDuration = delay + duration
+      longestTweenDuration =
+        currentTweenDuration > longestTweenDuration
+          ? currentTweenDuration
+          : longestTweenDuration
+    })
+  })
+  animation.delayValue =
+    typeof animation.delay === 'function' ? animation.delay() : animation.delay
+  animation.longestTweenDuration = longestTweenDuration
+  animation.resolvedTarget = resolvedTarget
+  animation.tweens = tweens
+  return animation
 }
 
 export const process = (animation: Animation, time: Time) => {
@@ -76,57 +133,7 @@ export const process = (animation: Animation, time: Time) => {
   // of initial set up and do some basic resolving of some the lazy values for
   // tweens
   if (animation.startTime == null) {
-    const resolvedTarget = Utils.resolveTarget(animation)
-    const props: Array<Prop> = Object.keys(animation.transform)
-    const tweens = props.reduce((tweenAcc, propName) => {
-      const definition = animation.transform[propName]
-      tweenAcc[propName] = definition.reduce(
-        (subTweenAcc, subTween) => {
-          const initedSubTween = {
-            complete: false,
-            delay:
-              subTweenAcc.prevFullDuration +
-              (typeof subTween.delay === 'function'
-                ? subTween.delay()
-                : subTween.delay),
-            duration:
-              typeof subTween.duration === 'function'
-                ? subTween.duration()
-                : subTween.duration,
-            easing: subTween.easing,
-            from: subTween.from,
-            to: subTween.to,
-          }
-          subTweenAcc.prevFullDuration +=
-            initedSubTween.duration + initedSubTween.delay
-          subTweenAcc.subTweens.push(initedSubTween)
-          return subTweenAcc
-        },
-        {
-          subTweens: [],
-          prevFullDuration: 0,
-        },
-      ).subTweens
-      return tweenAcc
-    }, {})
-    let longestTweenDuration = 0
-    props.forEach(prop => {
-      tweens[prop].forEach(({ delay, duration }) => {
-        const currentTweenDuration = delay + duration
-        longestTweenDuration =
-          currentTweenDuration > longestTweenDuration
-            ? currentTweenDuration
-            : longestTweenDuration
-      })
-    })
-    animation.delayValue =
-      typeof animation.delay === 'function'
-        ? animation.delay()
-        : animation.delay
-    animation.longestTweenDuration = longestTweenDuration
     animation.startTime = time
-    animation.resolvedTarget = resolvedTarget
-    animation.tweens = tweens
     if (animation.onStart != null) {
       animation.onStart()
     }

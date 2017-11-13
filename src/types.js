@@ -74,9 +74,10 @@ export type Tween = {
 export type Animation = {
   absoluteOffset?: Time,
   complete: boolean,
-  delay: number | (() => number),
-  delayValue?: number,
+  delay: Time | (() => Time),
+  delayValue?: Time,
   easing: string,
+  executionOffset?: Time,
   longestTweenDuration?: Time,
   onComplete?: Noop,
   onStart?: Noop,
