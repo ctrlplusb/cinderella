@@ -7,7 +7,7 @@ A tiny transformation library.
 ```javascript
 import cinderella from 'cinderella'
 
-cinderella({
+cinderella().add({
   target: '#foo',
   transform: {
     width: {
@@ -48,7 +48,7 @@ cinderella({
 ## API
 
 ```javascript
-cinderella({
+cinderella().add({
   targets: '#foo',
   transform: {
     opacity: {
@@ -67,7 +67,7 @@ cinderella({
   transformDefaults: { 
     duration: 1000
   }
-})
+}).play()
 ```
 
 ## Credits

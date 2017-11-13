@@ -1,7 +1,7 @@
 /* @flow */
 /* eslint-disable prefer-destructuring */
 
-import type { AnimationDefinition, TimelineAPI } from './types'
+import type { Cinderella } from './types'
 import * as Timelines from './timelines'
 import * as RAF from './raf'
 
@@ -14,7 +14,9 @@ export const stopAll = () => {
   Timelines.unqueueAll()
 }
 
-export default (animation: AnimationDefinition): TimelineAPI => {
+const cinderella: Cinderella = config => {
   RAF.run()
-  return Timelines.create(animation)
+  return Timelines.create(config)
 }
+
+export default cinderella

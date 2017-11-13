@@ -113,8 +113,10 @@ export type TimelineQueue = {
 }
 
 export type TimelineAPI = {
-  add: (AnimationDefinition | Timeline) => TimelineAPI,
+  add: AnimationDefinition => TimelineAPI,
   play: (config?: TimelineConfig) => TimelineAPI,
   pause: () => TimelineAPI,
   stop: () => TimelineAPI,
 }
+
+export type Cinderella = (config?: TimelineConfig) => TimelineAPI

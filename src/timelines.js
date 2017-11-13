@@ -3,7 +3,6 @@
 
 import type {
   Animation,
-  AnimationDefinition,
   Timeline,
   TimelineAPI,
   TimelineQueue,
@@ -41,40 +40,29 @@ export const unqueueAll = () => {
   queuedTimelines = {}
 }
 
-const isTimeline = x => typeof x === 'object' && Array.isArray(x.animations)
-
 const resetTimeline = t => {
   t = Object.assign(t, defaultState)
   t.animations.forEach(Animations.reset)
 }
 
-export const create = (
-  animation: AnimationDefinition | Timeline,
-): TimelineAPI => {
+export const create = (config?: TimelineConfig): TimelineAPI => {
   timelineIdx += 1
   const timeline: Timeline = Object.assign(
     {},
     {
-      id: timelineIdx,
       animations: [],
-      config: Object.assign({}, defaultConfig),
+      config: Object.assign({}, defaultConfig, config || {}),
+      id: timelineIdx,
     },
     defaultState,
   )
   const api = {}
-  const add = newAnimation => {
-    timeline.animations.push(
-      isTimeline(newAnimation) ? newAnimation : Animations.create(newAnimation),
-    )
-    return api
-  }
-
-  add(animation)
-
   Object.assign(api, {
-    add,
-    play: (config = {}) => {
-      timeline.config = Object.assign({}, timeline.config, config)
+    add: animation => {
+      timeline.animations.push(Animations.create(animation))
+      return api
+    },
+    play: () => {
       if (timeline.paused) {
         timeline.paused = false
       } else if (timeline.complete) {
@@ -92,7 +80,6 @@ export const create = (
       return api
     },
   })
-
   return api
 }
 
@@ -117,7 +104,7 @@ export const process = (time: number) => {
           if (executionOffset < 0) {
             executionOffset = 0
           }
-          animation.executionOffset = executionOffset /*?*/
+          animation.executionOffset = executionOffset
           relativeExecutionTime =
             animation.executionOffset + animation.longestTweenDuration
         })
