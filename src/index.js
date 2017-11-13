@@ -1,7 +1,7 @@
 /* @flow */
 /* eslint-disable prefer-destructuring */
 
-import type { AnimationDefinition } from './types'
+import type { AnimationDefinition, TimelineAPI } from './types'
 import * as Timelines from './timelines'
 import * as RAF from './raf'
 
@@ -14,7 +14,7 @@ export const stopAll = () => {
   Timelines.unqueueAll()
 }
 
-export default (animation: AnimationDefinition) => {
+export default (animation: AnimationDefinition): TimelineAPI => {
   RAF.run()
   return Timelines.create(animation)
 }

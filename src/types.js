@@ -89,3 +89,32 @@ export type Animation = {
   transform: { [prop: Prop]: Array<TweenDefinition> },
   tweens?: { [prop: Prop]: Array<Tween> },
 }
+
+export type TimelineConfig = {
+  loop?: boolean,
+  onComplete?: Noop,
+  onStart?: Noop,
+}
+
+export type Timeline = {
+  animations: Array<Animation | Timeline>,
+  complete: boolean,
+  config: TimelineConfig,
+  executionTime?: Time,
+  id: number,
+  initializedAnimations: boolean,
+  paused: boolean,
+  prevTime?: Time,
+  startTime?: Time,
+}
+
+export type TimelineQueue = {
+  [id: string]: Timeline,
+}
+
+export type TimelineAPI = {
+  add: (AnimationDefinition | Timeline) => TimelineAPI,
+  play: (config?: TimelineConfig) => TimelineAPI,
+  pause: () => TimelineAPI,
+  stop: () => TimelineAPI,
+}

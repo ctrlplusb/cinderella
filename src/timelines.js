@@ -1,53 +1,66 @@
 /* @flow */
 /* eslint-disable no-param-reassign */
 
+import type {
+  Animation,
+  AnimationDefinition,
+  Timeline,
+  TimelineAPI,
+  TimelineQueue,
+  TimelineConfig,
+} from './types'
 import * as Animations from './animations'
 
 let timelineIdx = 0
 
 // Maintains a list of timelines that have been queued to "executed"
-let queuedTimelines = {}
+let queuedTimelines: TimelineQueue = {}
 
-const defaultConfig = {
+const defaultConfig: TimelineConfig = {
   loop: false,
 }
 
+const defaultState = {
+  initializedAnimations: false,
+  complete: false,
+  executionTime: undefined,
+  paused: false,
+  prevTime: undefined,
+  startTime: undefined,
+}
+
 const queue = t => {
-  queuedTimelines[t.id] = t
+  queuedTimelines[t.id.toString()] = t
 }
 
 const unqueue = t => {
-  delete queuedTimelines[t.id]
+  delete queuedTimelines[t.id.toString()]
 }
 
 export const unqueueAll = () => {
   queuedTimelines = {}
 }
 
-const isPaused = t => t.state.paused
-
-const unpause = t => {
-  t.state.paused = false
-}
-
-const isComplete = t => t.state.complete
-
-const isTimeline = x => typeof x === 'object' && typeof x.queue === 'object'
+const isTimeline = x => typeof x === 'object' && Array.isArray(x.animations)
 
 const resetTimeline = t => {
-  t.state = {}
+  t = Object.assign(t, defaultState)
   t.animations.forEach(Animations.reset)
 }
 
-export const create = animation => {
+export const create = (
+  animation: AnimationDefinition | Timeline,
+): TimelineAPI => {
   timelineIdx += 1
-  const timeline = {
-    id: timelineIdx,
-    animations: [],
-    config: defaultConfig,
-    state: {},
-  }
-
+  const timeline: Timeline = Object.assign(
+    {},
+    {
+      id: timelineIdx,
+      animations: [],
+      config: Object.assign({}, defaultConfig),
+    },
+    defaultState,
+  )
   const api = {}
   const add = newAnimation => {
     timeline.animations.push(
@@ -62,17 +75,22 @@ export const create = animation => {
     add,
     play: (config = {}) => {
       timeline.config = Object.assign({}, timeline.config, config)
-      if (isPaused(timeline)) {
-        unpause(timeline)
-      } else if (isComplete(timeline)) {
+      if (timeline.paused) {
+        timeline.paused = false
+      } else if (timeline.complete) {
         resetTimeline(timeline)
       }
       queue(timeline)
+      return api
     },
     pause: () => {
-      timeline.state.paused = true
+      timeline.paused = true
+      return api
     },
-    stop: () => unqueue(timeline),
+    stop: () => {
+      unqueue(timeline)
+      return api
+    },
   })
 
   return api
@@ -81,52 +99,54 @@ export const create = animation => {
 export const process = (time: number) => {
   Object.keys(queuedTimelines).forEach(id => {
     const timeline = queuedTimelines[id]
-    if (isComplete(timeline)) {
+    if (timeline.complete) {
       return
     }
-    if (!timeline.state.initializedAnimations) {
+    if (!timeline.initializedAnimations) {
       let relativeExecutionTime = 0
-      timeline.animations.map(Animations.initialize).forEach(animation => {
-        if (animation.absoluteOffset != null) {
-          animation.executionOffset = animation.absoluteOffset
-          return
-        }
-        let executionOffset =
-          relativeExecutionTime +
-          (animation.relativeOffset != null ? animation.relativeOffset : 0)
-        if (executionOffset < 0) {
-          executionOffset = 0
-        }
-        animation.executionOffset = executionOffset
-        relativeExecutionTime =
-          animation.executionOffset + animation.longestTweenDuration
-      })
-      timeline.state.initializedAnimations = true
+      timeline.animations
+        .map(Animations.initialize)
+        .forEach((animation: Animation) => {
+          if (animation.absoluteOffset != null) {
+            animation.executionOffset = animation.absoluteOffset
+            return
+          }
+          let executionOffset =
+            relativeExecutionTime +
+            (animation.relativeOffset != null ? animation.relativeOffset : 0)
+          if (executionOffset < 0) {
+            executionOffset = 0
+          }
+          animation.executionOffset = executionOffset /*?*/
+          relativeExecutionTime =
+            animation.executionOffset + animation.longestTweenDuration
+        })
+      timeline.initializedAnimations = true
     }
-
-    if (timeline.state.startTime == null && timeline.config.onStart != null) {
-      timeline.config.onStart()
+    if (timeline.startTime == null) {
+      timeline.startTime = time
+      if (timeline.config.onStart != null) {
+        timeline.config.onStart()
+      }
     }
-    timeline.state.startTime =
-      timeline.state.startTime != null ? timeline.state.startTime : time
-    if (timeline.state.paused) {
-      if (timeline.state.startTime != null && timeline.state.prevTime != null) {
-        timeline.state.startTime += time - timeline.state.prevTime
+    if (timeline.paused) {
+      if (timeline.startTime != null && timeline.prevTime != null) {
+        timeline.startTime += time - timeline.prevTime
       }
     } else {
-      timeline.state.executionTime = Math.round(time - timeline.state.startTime)
+      timeline.executionTime = Math.round(time - timeline.startTime)
       timeline.animations.forEach(animation => {
         if (animation.complete) {
           return
         }
-        if (timeline.state.executionTime >= animation.executionOffset) {
+        if (timeline.executionTime >= animation.executionOffset) {
           Animations.process(animation, time)
         }
       })
     }
-    timeline.state.prevTime = time
-    timeline.state.complete = timeline.animations.every(a => a.complete)
-    if (timeline.state.complete) {
+    timeline.prevTime = time
+    timeline.complete = timeline.animations.every(a => a.complete)
+    if (timeline.complete) {
       if (timeline.config.onComplete) {
         timeline.config.onComplete()
       }
