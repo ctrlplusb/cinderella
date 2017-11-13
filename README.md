@@ -10,9 +10,11 @@ import cinderella from 'cinderella'
 cinderella({
   target: '#foo',
   transform: {
-    width: '200px'
-  },
-  duration: 1000
+    width: {
+      to: '200px',
+      duration: 1000
+    }
+  }
 }).play()
 ```
 
@@ -37,7 +39,7 @@ cinderella({
 
 ## Introduction
 
-`cinderella` is _heavily_ inspired by [`animejs`](http://animejs.com/) - a wildly popular, well maintained, and just all out badass library - so if you are a sane person you'll likely want to check them out first. I created `cinderella` out of my own selfishly desire for a specific API and timeline semantics.
+`cinderella` is _heavily_ inspired by [`animejs`](http://animejs.com/) - a wildly popular, well maintained, and just all out badass library - so if you are a sane person you'll likely want to check them out first. I created `cinderella` out of a selfishly desire for specific timeline semantics.
 
 ## Tutorial
 
@@ -49,32 +51,22 @@ cinderella({
 cinderella({
   targets: '#foo',
   transform: {
-    opacity: 50,
-    translateX: [
-      { value: 250, duration: 1000 },
-      { value: 0, duration: 1000 }
-    ]
-  },
-})
-```
-
-Advanced Usage
-
-```javascript
-cinderella({
-  targets: '#foo',
-  transform: {
-    opacity: 50,
+    opacity: {
+      to: 50
+    },
     scale: {
       to: 2, 
       delay: 500,
       easing: 'linear',
     },
     translateX: [
-      { to: 250, duration: 1000 },
-      { to: 0, duration: 1000 }
+      { to: 250, duration: 250 },
+      { to: 0, delay: 500, duration: 250 }
     ]
   },
+  transformDefaults: { 
+    duration: 1000
+  }
 })
 ```
 
