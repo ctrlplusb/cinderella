@@ -240,6 +240,8 @@ export const process = (animation: Animation, time: Time) => {
                 ''}"`,
             )
           }
+          tween.toValues[idx].number
+          tween.fromValues[idx].number
           tween.diff[idx] =
             tween.toValues[idx].number - tween.fromValues[idx].number
         }
@@ -277,21 +279,29 @@ export const process = (animation: Animation, time: Time) => {
         } else {
           const easingFn: EasingFn =
             Easings[tween.easing[idx] || animation.easing]
+          const runDuration =
+            tween.bufferedFromNumber != null
+              ? tweenRunDuration
+              : tweenRunDuration - tween.delay[idx]
+          // const to =
+          //   tween.bufferedFromNumber[idx] != null
+          //     ? tween.bufferedToNumber[idx]
+          //     : tween.toValues[idx].number /*?*/
+          const from =
+            tween.bufferedFromNumber[idx] != null
+              ? tween.bufferedFromNumber[idx]
+              : tween.fromValues[idx].number
+          const diff =
+            tween.bufferedDiff[idx] != null
+              ? tween.bufferedDiff[idx]
+              : tween.diff[idx]
+          const duration =
+            tween.bufferedFromNumber[idx] != null
+              ? animation.longestTweenDuration
+              : tween.duration[idx]
+          const easingResult = easingFn(runDuration, from, diff, duration)
           tweenCurrentValues[idx] = Object.assign({}, tween.toValues[idx], {
-            number: easingFn(
-              tween.bufferedFromNumber != null
-                ? tweenRunDuration
-                : tweenRunDuration - tween.delay[idx],
-              tween.bufferedFromNumber[idx] != null
-                ? tween.bufferedFromNumber[idx]
-                : tween.fromValues[idx].number,
-              tween.bufferedDiff[idx] != null
-                ? tween.bufferedDiff[idx]
-                : tween.diff[idx],
-              tween.bufferedFromNumber[idx] != null
-                ? animation.longestTweenDuration
-                : tween.duration[idx],
-            ),
+            number: easingResult,
           })
           // TODO: Change forEach back to for so we can break early
         }

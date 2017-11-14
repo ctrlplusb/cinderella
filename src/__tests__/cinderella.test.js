@@ -364,6 +364,52 @@ describe('cinderella', () => {
           expect(multiTweenTarget.foo).toBeCloseTo(200)
         })
 
+        it('negative easing', () => {
+          const keyFrameTarget = {
+            foo: 1,
+            bar: 200,
+          }
+          cinderella()
+            .add({
+              targets: keyFrameTarget,
+              transform: {
+                foo: {
+                  to: 0,
+                  easing: 'linear',
+                  duration: 5 * frameRate,
+                },
+                bar: {
+                  to: 100,
+                  easing: 'linear',
+                  duration: 5 * frameRate,
+                },
+              },
+            })
+            .play()
+          waitForFrames(1)
+          expect(keyFrameTarget).toMatchObject({
+            foo: 1,
+            bar: 200,
+          })
+          expect(keyFrameTarget.foo * 100).toBeCloseTo(100)
+          expect(keyFrameTarget.bar).toBeCloseTo(200)
+          waitForFrames(1)
+          expect(keyFrameTarget.foo * 100).toBeCloseTo(80)
+          expect(keyFrameTarget.bar).toBeCloseTo(180)
+          waitForFrames(1)
+          expect(keyFrameTarget.foo * 100).toBeCloseTo(60)
+          expect(keyFrameTarget.bar).toBeCloseTo(160)
+          waitForFrames(1)
+          expect(keyFrameTarget.foo * 100).toBeCloseTo(40)
+          expect(keyFrameTarget.bar).toBeCloseTo(140)
+          waitForFrames(1)
+          expect(keyFrameTarget.foo * 100).toBeCloseTo(20)
+          expect(keyFrameTarget.bar).toBeCloseTo(120)
+          waitForFrames(1)
+          expect(keyFrameTarget.foo * 100).toBeCloseTo(0)
+          expect(keyFrameTarget.bar).toBeCloseTo(100)
+        })
+
         it('unique easings', () => {
           const multiTweenTarget = {
             foo: 0,
