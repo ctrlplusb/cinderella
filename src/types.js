@@ -39,7 +39,7 @@ export type TweenDefinition = {
   duration?: Time | TweenTimeResolver,
   easing?: string | TweenEasingResolver,
   from?: RawValue | TweenRawValueResolver,
-  to: RawValue | TweenRawValueResolver,
+  to?: RawValue | TweenRawValueResolver,
 }
 
 export type AnimationDefinition = {
@@ -50,10 +50,7 @@ export type AnimationDefinition = {
   onUpdate?: Noop,
   targets: RawTarget | Array<RawTarget>,
   transform: { [prop: Prop]: TweenDefinition | Array<TweenDefinition> },
-  transformDefaults?: {
-    delay?: Time | TweenTimeResolver,
-    duration?: Time | TweenTimeResolver,
-  },
+  transformDefaults?: TweenDefinition,
 }
 
 export type Value = {

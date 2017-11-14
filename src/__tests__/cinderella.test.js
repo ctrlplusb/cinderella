@@ -297,32 +297,27 @@ describe('cinderella', () => {
         expect(delayTarget.foo).not.toBeUndefined()
       })
 
-      // TODO: Make defaults allow setting of ANY tween prop
       it('defaults', () => {
-        const defaultsTarget = {
-          foo: 100,
-          bar: 0,
-        }
+        const defaultsTarget = {}
         cinderella()
           .add({
             targets: defaultsTarget,
             transform: {
-              foo: {
-                to: 0,
-              },
-              bar: {
-                to: 100,
-              },
+              foo: {},
+              bar: {},
             },
             transformDefaults: {
               delay: 2 * frameRate,
               duration: 5 * frameRate,
+              easing: 'linear',
+              from: 0,
+              to: 100,
             },
           })
           .play()
-        waitForFrames(9)
+        waitForFrames(3 + 6)
         expect(defaultsTarget).toMatchObject({
-          foo: 0,
+          foo: 100,
           bar: 100,
         })
       })

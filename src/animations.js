@@ -18,18 +18,35 @@ export const create = (definition: AnimationDefinition): Animation => {
   const { transformDefaults } = definition
   const mapTransformDefinition = transformDefinition => ({
     delay:
-      transformDefinition.delay ||
-      (transformDefaults && transformDefaults.delay != null
-        ? transformDefaults.delay
-        : 0),
+      transformDefinition.delay != null
+        ? transformDefinition.delay
+        : transformDefaults && transformDefaults.delay != null
+          ? transformDefaults.delay
+          : 0,
     duration:
-      transformDefinition.duration ||
-      (transformDefaults && transformDefaults.duration != null
-        ? transformDefaults.duration
-        : 0),
-    easing: transformDefinition.easing,
-    from: transformDefinition.from,
-    to: transformDefinition.to,
+      transformDefinition.duration != null
+        ? transformDefinition.duration
+        : transformDefaults && transformDefaults.duration != null
+          ? transformDefaults.duration
+          : 0,
+    easing:
+      transformDefinition.easing != null
+        ? transformDefinition.easing
+        : transformDefaults && transformDefaults.easing != null
+          ? transformDefaults.easing
+          : null,
+    from:
+      transformDefinition.from != null
+        ? transformDefinition.from
+        : transformDefaults && transformDefaults.from != null
+          ? transformDefaults.from
+          : null,
+    to:
+      transformDefinition.to != null
+        ? transformDefinition.to
+        : transformDefaults && transformDefaults.to != null
+          ? transformDefaults.to
+          : null,
   })
   return {
     absoluteOffset:
