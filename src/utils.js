@@ -175,10 +175,9 @@ const getStyleTransformValues = (el: HTMLElement): Values => {
 }
 
 export const getValueFromTarget = (
-  animation: Animation,
+  resolvedTarget: ResolvedTarget,
   propName: Prop,
 ): Value => {
-  const { resolvedTarget } = animation
   if (resolvedTarget.type === 'dom') {
     const propType = getDOMPropType(resolvedTarget.actual, propName)
     if (propType === 'dom-css-transform') {
@@ -209,29 +208,34 @@ export const resolveRelativeOffset = (offset: string): number | void => {
   return offsetValue
 }
 
-export const resolveTarget = (animation: Animation): ResolvedTarget => {
-  const { target } = animation
-  if (typeof target === 'string') {
-    const el = document.querySelector(target)
-    if (!el) {
-      throw new Error(`Could not resolve target "${target}"`)
-    }
-    return {
-      type: 'dom',
-      actual: el,
-    }
-  } else if (target instanceof HTMLElement) {
-    return {
-      type: 'dom',
-      actual: target,
-    }
-  } else if (typeof target === 'object') {
-    return {
-      type: 'object',
-      actual: target,
+export const resolveTargets = (animation: Animation): Array<ResolvedTarget> => {
+  const result = []
+  const resolve = targets => {
+    if (Array.isArray(targets)) {
+      targets.forEach(resolve)
+    } else if (typeof targets === 'string') {
+      const el = document.querySelector(targets)
+      if (!el) {
+        throw new Error(`Could not resolve target "${targets}"`)
+      }
+      result.push({
+        type: 'dom',
+        actual: el,
+      })
+    } else if (targets instanceof HTMLElement) {
+      result.push({
+        type: 'dom',
+        actual: targets,
+      })
+    } else if (typeof targets === 'object') {
+      result.push({
+        type: 'object',
+        actual: targets,
+      })
     }
   }
-  throw new Error(`Invalid target: ${target}`)
+  resolve(animation.targets)
+  return result
 }
 
 export const setValuesOnTarget = (target: ResolvedTarget, values: Values) => {

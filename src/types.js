@@ -1,5 +1,14 @@
 /* @flow */
 
+export type DOMTarget = {
+  type: 'dom',
+  actual: HTMLElement,
+}
+export type ObjectTarget = {
+  type: 'object',
+  actual: Object,
+}
+export type ResolvedTarget = DOMTarget | ObjectTarget
 export type Unit = string
 export type Prop = string
 export type Time = number
@@ -9,13 +18,28 @@ export type RawTarget = string | HTMLElement | Object
 export type DOMValueType = 'dom-css-transform' | 'dom-css' | 'dom-attribute'
 export type ValueType = 'object' | DOMValueType
 export type EasingFn = (t: number, b: number, c: number, d: number) => number
+export type TweenTimeResolver = (
+  target?: ResolvedTarget,
+  index?: number,
+  targetCount?: number,
+) => Time
+export type TweenRawValueResolver = (
+  target?: ResolvedTarget,
+  index?: number,
+  targetCount?: number,
+) => RawValue
+export type TweenEasingResolver = (
+  target?: ResolvedTarget,
+  index?: number,
+  targetCount?: number,
+) => string
 
 export type TweenDefinition = {
-  delay?: Time | (() => Time),
-  duration?: Time | (() => Time),
-  easing?: string,
-  from?: RawValue | (() => RawValue),
-  to: RawValue | (() => RawValue),
+  delay?: Time | TweenTimeResolver,
+  duration?: Time | TweenTimeResolver,
+  easing?: string | TweenEasingResolver,
+  from?: RawValue | TweenRawValueResolver,
+  to: RawValue | TweenRawValueResolver,
 }
 
 export type AnimationDefinition = {
@@ -24,11 +48,11 @@ export type AnimationDefinition = {
   onComplete?: Noop,
   onStart?: Noop,
   onUpdate?: Noop,
-  target: RawTarget,
+  targets: RawTarget | Array<RawTarget>,
   transform: { [prop: Prop]: TweenDefinition | Array<TweenDefinition> },
   transformDefaults?: {
-    delay?: Time | (() => Time),
-    duration?: Time | (() => Time),
+    delay?: Time | TweenTimeResolver,
+    duration?: Time | TweenTimeResolver,
   },
 }
 
@@ -43,32 +67,20 @@ export type Values = {
   [prop: Prop]: Value,
 }
 
-type DOMTarget = {
-  type: 'dom',
-  actual: HTMLElement,
-}
-
-type ObjectTarget = {
-  type: 'object',
-  actual: Object,
-}
-
-export type ResolvedTarget = DOMTarget | ObjectTarget
-
 export type Tween = {
-  bufferedFromNumber?: number,
-  bufferedDiff?: number,
+  bufferedFromNumber: Array<number | void>,
+  bufferedDiff: Array<number | void>,
   complete: boolean,
   currentNumber?: number,
-  delay: Time,
-  diff: number,
-  duration: Time,
-  easing?: string,
-  from: RawValue | (() => RawValue),
-  fromValue: Value,
+  delay: Array<Time>,
+  diff: Array<number | void>,
+  duration: Array<Time>,
+  easing: Array<string | void>,
+  from: RawValue | TweenRawValueResolver,
+  fromValues: Array<Value | void>,
   startTime: Time,
-  to: RawValue | (() => RawValue),
-  toValue: Value,
+  to: RawValue | TweenRawValueResolver,
+  toValues: Array<Value | void>,
 }
 
 export type Animation = {
@@ -83,9 +95,9 @@ export type Animation = {
   onStart?: Noop,
   onUpdate?: Noop,
   relativeOffset?: Time,
-  resolvedTarget?: ResolvedTarget,
+  resolvedTargets?: Array<ResolvedTarget>,
   startTime?: Time,
-  target: RawTarget,
+  targets: RawTarget | Array<RawTarget>,
   transform: { [prop: Prop]: Array<TweenDefinition> },
   tweens?: { [prop: Prop]: Array<Tween> },
 }

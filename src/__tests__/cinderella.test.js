@@ -31,21 +31,21 @@ describe('cinderella', () => {
   })
 
   describe('animation', () => {
-    let target
+    let targets
     let onStartSpy
     let onUpdateSpy
     let onCompleteSpy
     let animation
 
     beforeEach(() => {
-      target = {
+      targets = {
         foo: 0,
       }
       onStartSpy = jest.fn()
       onUpdateSpy = jest.fn()
       onCompleteSpy = jest.fn()
       animation = cinderella().add({
-        target,
+        targets,
         transform: {
           foo: {
             to: 100,
@@ -78,7 +78,7 @@ describe('cinderella', () => {
     it('onComplete', () => {
       animation.play()
       waitForFrames(7)
-      expect(target.foo).toBeCloseTo(100)
+      expect(targets.foo).toBeCloseTo(100)
       expect(onCompleteSpy).toHaveBeenCalledTimes(1)
     })
 
@@ -87,7 +87,7 @@ describe('cinderella', () => {
       const delayOnStartSpy = jest.fn()
       cinderella()
         .add({
-          target: delayTarget,
+          targets: delayTarget,
           transform: {
             foo: {
               to: 100,
@@ -111,7 +111,7 @@ describe('cinderella', () => {
       const delayOnStartSpy = jest.fn()
       cinderella()
         .add({
-          target: delayTarget,
+          targets: delayTarget,
           transform: {
             foo: {
               to: 100,
@@ -185,7 +185,7 @@ describe('cinderella', () => {
         loop: true,
       })
         .add({
-          target: {},
+          targets: {},
           transform: {
             foo: {
               to: 10,
@@ -212,7 +212,7 @@ describe('cinderella', () => {
       )
       cinderella()
         .add({
-          target: unitTarget,
+          targets: unitTarget,
           transform: validUnits.reduce(
             (acc, unit) => ({
               ...acc,
@@ -233,7 +233,7 @@ describe('cinderella', () => {
       const lazyTarget = {}
       cinderella()
         .add({
-          target: lazyTarget,
+          targets: lazyTarget,
           transform: {
             foo: {
               delay: () => 1 * frameRate,
@@ -254,7 +254,7 @@ describe('cinderella', () => {
       }
       cinderella()
         .add({
-          target: multiTarget,
+          targets: multiTarget,
           transform: {
             foo: {
               to: 0,
@@ -277,19 +277,19 @@ describe('cinderella', () => {
     it('transform over time', () => {
       animation.play()
       waitForFrames(1)
-      expect(target.foo).toBeCloseTo(0)
+      expect(targets.foo).toBeCloseTo(0)
       waitForFrames(1)
-      expect(target.foo).toBeCloseTo(20)
+      expect(targets.foo).toBeCloseTo(20)
       waitForFrames(1)
-      expect(target.foo).toBeCloseTo(40)
+      expect(targets.foo).toBeCloseTo(40)
       waitForFrames(1)
-      expect(target.foo).toBeCloseTo(60)
+      expect(targets.foo).toBeCloseTo(60)
       waitForFrames(1)
-      expect(target.foo).toBeCloseTo(80)
+      expect(targets.foo).toBeCloseTo(80)
       waitForFrames(1)
-      expect(target.foo).toBeCloseTo(100)
+      expect(targets.foo).toBeCloseTo(100)
       waitForFrames(1)
-      expect(target.foo).toBe(100)
+      expect(targets.foo).toBe(100)
     })
 
     it('transform defaults', () => {
@@ -299,7 +299,7 @@ describe('cinderella', () => {
       }
       cinderella()
         .add({
-          target: defaultsTarget,
+          targets: defaultsTarget,
           transform: {
             foo: {
               to: 0,
@@ -327,7 +327,7 @@ describe('cinderella', () => {
       }
       cinderella()
         .add({
-          target: multiTweenTarget,
+          targets: multiTweenTarget,
           transform: {
             foo: [
               {
@@ -363,7 +363,7 @@ describe('cinderella', () => {
       }
       cinderella()
         .add({
-          target: multiTweenTarget,
+          targets: multiTweenTarget,
           transform: {
             foo: [
               {
@@ -423,7 +423,7 @@ describe('cinderella', () => {
         onStart: timelineOnStartSpy,
       })
         .add({
-          target: {},
+          targets: {},
           transform: {
             foo: {
               to: 100,
@@ -433,7 +433,7 @@ describe('cinderella', () => {
           onStart: animationOneOnStartSpy,
         })
         .add({
-          target: {},
+          targets: {},
           transform: {
             foo: {
               to: 100,
@@ -474,7 +474,7 @@ describe('cinderella', () => {
         onComplete: absoluteTimelineOnCompleteSpy,
       })
         .add({
-          target: {},
+          targets: {},
           transform: {
             foo: {
               to: 100,
@@ -485,7 +485,7 @@ describe('cinderella', () => {
           onUpdate: jest.fn(),
         })
         .add({
-          target: {},
+          targets: {},
           transform: {
             foo: {
               to: 100,
@@ -516,7 +516,7 @@ describe('cinderella', () => {
         onComplete: absoluteTimelineOnCompleteSpy,
       })
         .add({
-          target: relativeOffsetTarget,
+          targets: relativeOffsetTarget,
           transform: {
             foo: {
               to: 100,
@@ -527,7 +527,7 @@ describe('cinderella', () => {
           onUpdate: jest.fn(),
         })
         .add({
-          target: relativeOffsetTarget,
+          targets: relativeOffsetTarget,
           transform: {
             bar: {
               to: 100,
@@ -557,7 +557,7 @@ describe('cinderella', () => {
 
     beforeEach(() => {
       animation = cinderella().add({
-        target: {},
+        targets: {},
         transform: {
           foo: {
             to: 100,
