@@ -85,7 +85,10 @@ const defaultUnitForDOMValue = (propName: Prop): Unit | void => {
 
 const getDOMPropType = (el: HTMLElement, propName: Prop): DOMValueType => {
   if (isStyleTransformProp(propName)) {
-    return 'dom-transform'
+    return 'dom-css-transform'
+  }
+  if (el.getAttribute(propName) != null) {
+    return 'dom-attribute'
   }
   if (el.style[propName] != null) {
     return 'dom-css'
@@ -97,7 +100,7 @@ const getValueType = (
   resolvedTarget: ResolvedTarget,
   propName: Prop,
 ): ValueType =>
-  resolvedTarget === 'dom'
+  resolvedTarget.type === 'dom'
     ? getDOMPropType(resolvedTarget.actual, propName)
     : 'object'
 
@@ -214,13 +217,12 @@ export const resolveTargets = (animation: Animation): Array<ResolvedTarget> => {
     if (Array.isArray(targets)) {
       targets.forEach(resolve)
     } else if (typeof targets === 'string') {
-      const el = document.querySelector(targets)
-      if (!el) {
-        throw new Error(`Could not resolve target "${targets}"`)
-      }
-      result.push({
-        type: 'dom',
-        actual: el,
+      const els = [...document.querySelectorAll(targets)]
+      els.forEach(el => {
+        result.push({
+          type: 'dom',
+          actual: el,
+        })
       })
     } else if (targets instanceof HTMLElement) {
       result.push({

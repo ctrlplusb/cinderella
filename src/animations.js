@@ -268,6 +268,7 @@ export const process = (animation: Animation, time: Time) => {
             postBuffer -
             tween.bufferedFromNumber[idx]
         }
+
         // If the time has passed the tween run time then we just use the "to"
         // as our value.
         if (tweenRunDuration > tween.duration[idx] + tween.delay[idx]) {
