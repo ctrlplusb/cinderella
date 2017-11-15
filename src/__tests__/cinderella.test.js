@@ -297,7 +297,7 @@ describe('cinderella', () => {
         expect(delayTarget.foo).not.toBeUndefined()
       })
 
-      it('defaults', () => {
+      it.only('defaults', () => {
         const defaultsTarget = {}
         cinderella()
           .add({
@@ -315,7 +315,7 @@ describe('cinderella', () => {
             },
           })
           .play()
-        waitForFrames(3 + 6)
+        waitForFrames(3 + 7)
         expect(defaultsTarget).toMatchObject({
           foo: 100,
           bar: 100,
@@ -443,17 +443,44 @@ describe('cinderella', () => {
           waitForFrames(3)
           expect(multiTweenTarget.foo).toBeCloseTo(200)
         })
-
-        it.skip('function values')
       })
 
-      it.skip('from')
+      it('function values', () => {
+        const delayMock = jest.fn((target, i) => (i + 1) * frameRate)
+        const durationMock = jest.fn((target, i) => (i + 1) * frameRate)
+        const easingMock = jest.fn(
+          (target, i) => ((i + 1) % 2 === 0 ? 'linear' : 'easeInQuad'),
+        )
+        const fromMock = jest.fn((target, i) => i + 1)
+        const toMock = jest.fn((target, i) => i + 2)
+
+        const target1 = {}
+        const target2 = {}
+
+        cinderella()
+          .add({
+            targets: [target1, target2],
+            transform: {
+              foo: {
+                delay: delayMock,
+                duration: durationMock,
+                easing: easingMock,
+                from: fromMock,
+                to: toMock,
+              },
+            },
+          })
+          .play()
+
+        waitForFrames(3)
+        expect(target1.foo).toBeCloseTo(2)
+        expect(target2.foo).toBeUndefined()
+        waitForFrames(1)
+        expect(target2.foo).toBeCloseTo(3)
+        expect()
+      })
+
       it.skip('mixed from/to units')
-      it.skip('delay function resolver')
-      it.skip('duration function resolver')
-      it.skip('easing function resolver')
-      it.skip('from function resolver')
-      it.skip('to function resolver')
     })
 
     describe('targets', () => {

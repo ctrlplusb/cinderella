@@ -207,6 +207,10 @@ export const process = (animation: Animation, time: Time) => {
           return
         }
 
+        if (tween.startTime == null) {
+          tween.startTime = time
+        }
+
         // Resolve the to/from values for the tweens
         if (
           tween.toValues[idx] == null ||
@@ -288,18 +292,26 @@ export const process = (animation: Animation, time: Time) => {
             tween.bufferedFromNumber[idx]
         }
 
+        console.log(tween.startTime)
+        console.log(time - tween.startTime)
+        console.log(tween.duration[idx])
+
         // If the time has passed the tween run time then we just use the "to"
         // as our value.
-        if (tweenRunDuration > tween.duration[idx] + tween.delay[idx]) {
+        if (
+          tween.bufferedFromNumber[idx] != null
+            ? tweenRunDuration >= tween.duration[idx] + tween.delay[idx]
+            : time - tween.startTime >= tween.duration[idx]
+        ) {
           tween.complete = true
           tweenCurrentValues[idx] = tween.toValues[idx]
         } else {
           const easingFn: EasingFn =
             Easings[tween.easing[idx] || animation.easing]
           const runDuration =
-            tween.bufferedFromNumber != null
+            tween.bufferedFromNumber[idx] != null
               ? tweenRunDuration
-              : tweenRunDuration - tween.delay[idx]
+              : time - tween.startTime
           // const to =
           //   tween.bufferedFromNumber[idx] != null
           //     ? tween.bufferedToNumber[idx]
@@ -317,6 +329,7 @@ export const process = (animation: Animation, time: Time) => {
               ? animation.longestTweenDuration
               : tween.duration[idx]
           const easingResult = easingFn(runDuration, from, diff, duration)
+          console.log(easingResult)
           tweenCurrentValues[idx] = Object.assign({}, tween.toValues[idx], {
             number: easingResult,
           })
@@ -332,9 +345,12 @@ export const process = (animation: Animation, time: Time) => {
   resolvedTargets.forEach((resolvedTarget, idx) => {
     // TODO: Optimise this
     const targetValues = Object.keys(values).reduce((acc, propName) => {
-      acc[propName] = values[propName][idx]
+      if (values[propName][idx]) {
+        acc[propName] = values[propName][idx]
+      }
       return acc
     }, {})
+    console.log(targetValues)
     Utils.setValuesOnTarget(resolvedTarget, targetValues)
   })
   if (animation.onUpdate) {
