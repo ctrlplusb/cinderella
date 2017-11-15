@@ -129,8 +129,9 @@ export const initialize = (animation: Animation): Animation => {
           toValues: resolvedTargets.map(() => null),
         }
         resolvedTargets.forEach((_, idx) => {
-          subTweenAcc.prevFullDurations[idx] +=
-            initedSubTween.duration[idx] + initedSubTween.delay[idx]
+          subTweenAcc.prevFullDurations[idx] += Math.floor(
+            initedSubTween.duration[idx] + initedSubTween.delay[idx],
+          )
         })
         subTweenAcc.subTweens.push(initedSubTween)
         return subTweenAcc
@@ -193,9 +194,9 @@ export const process = (animation: Animation, time: Time) => {
   if (timePassed < delayValue) {
     return
   }
-  animation.complete = time >= startTime + delayValue + longestTweenDuration
-  const tweenRunDuration = timePassed - delayValue
-  const values = Object.keys(tweens).reduce((acc, propName) => {
+  const animationRunDuration = timePassed - delayValue
+  const propNames = Object.keys(tweens)
+  const values = propNames.reduce((acc, propName) => {
     const propTweens: Array<Tween> = tweens[propName]
     const tweenCurrentValues = resolvedTargets.map(() => null)
     propTweens.forEach(tween => {
@@ -203,13 +204,18 @@ export const process = (animation: Animation, time: Time) => {
         return
       }
       resolvedTargets.forEach((resolvedTarget, idx) => {
-        if (tweenRunDuration < tween.delay[idx]) {
+        console.log(time)
+        console.log(animationRunDuration)
+        if (animationRunDuration < tween.delay[idx]) {
+          1 /*?*/
           return
         }
 
         if (tween.startTime == null) {
-          tween.startTime = time
+          tween.startTime = time /*?*/
         }
+
+        tween.runDuration = time - tween.startTime /*?*/
 
         // Resolve the to/from values for the tweens
         if (
@@ -261,8 +267,6 @@ export const process = (animation: Animation, time: Time) => {
                 ''}"`,
             )
           }
-          tween.toValues[idx].number
-          tween.fromValues[idx].number
           tween.diff[idx] =
             tween.toValues[idx].number - tween.fromValues[idx].number
         }
@@ -293,15 +297,17 @@ export const process = (animation: Animation, time: Time) => {
         }
 
         console.log(tween.startTime)
-        console.log(time - tween.startTime)
-        console.log(tween.duration[idx])
+        console.log(Math.floor(animationRunDuration))
+        console.log(Math.floor(tween.runDuration))
+        console.log(Math.floor(tween.delay[idx]))
+        console.log(Math.floor(tween.duration[idx]))
 
         // If the time has passed the tween run time then we just use the "to"
         // as our value.
         if (
           tween.bufferedFromNumber[idx] != null
-            ? tweenRunDuration >= tween.duration[idx] + tween.delay[idx]
-            : time - tween.startTime >= tween.duration[idx]
+            ? animationRunDuration >= tween.duration[idx] + tween.delay[idx]
+            : tween.runDuration >= tween.duration[idx]
         ) {
           tween.complete = true
           tweenCurrentValues[idx] = tween.toValues[idx]
@@ -310,7 +316,7 @@ export const process = (animation: Animation, time: Time) => {
             Easings[tween.easing[idx] || animation.easing]
           const runDuration =
             tween.bufferedFromNumber[idx] != null
-              ? tweenRunDuration
+              ? animationRunDuration
               : time - tween.startTime
           // const to =
           //   tween.bufferedFromNumber[idx] != null
@@ -342,6 +348,10 @@ export const process = (animation: Animation, time: Time) => {
     }
     return acc
   }, {})
+  animation.complete = propNames.every(propName =>
+    tweens[propName].every(tween => tween.complete),
+  )
+
   resolvedTargets.forEach((resolvedTarget, idx) => {
     // TODO: Optimise this
     const targetValues = Object.keys(values).reduce((acc, propName) => {

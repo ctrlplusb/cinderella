@@ -233,6 +233,11 @@ describe('cinderella', () => {
           foo: 0,
           bar: 100,
         })
+        waitForFrames(1)
+        expect(multiTarget).toMatchObject({
+          foo: 0,
+          bar: 100,
+        })
       })
 
       it('transform over time', () => {
@@ -249,6 +254,12 @@ describe('cinderella', () => {
         expect(targets.foo).toBeCloseTo(80)
         waitForFrames(1)
         expect(targets.foo).toBeCloseTo(100)
+        waitForFrames(1)
+        expect(targets.foo).toBe(100)
+        waitForFrames(1)
+        expect(targets.foo).toBe(100)
+        waitForFrames(1)
+        expect(targets.foo).toBe(100)
         waitForFrames(1)
         expect(targets.foo).toBe(100)
       })
@@ -297,7 +308,7 @@ describe('cinderella', () => {
         expect(delayTarget.foo).not.toBeUndefined()
       })
 
-      it.only('defaults', () => {
+      it('defaults', () => {
         const defaultsTarget = {}
         cinderella()
           .add({
@@ -315,7 +326,7 @@ describe('cinderella', () => {
             },
           })
           .play()
-        waitForFrames(3 + 7)
+        waitForFrames(10)
         expect(defaultsTarget).toMatchObject({
           foo: 100,
           bar: 100,
@@ -353,9 +364,7 @@ describe('cinderella', () => {
           expect(multiTweenTarget.foo).toBeCloseTo(100)
           waitForFrames(1)
           expect(multiTweenTarget.foo).toBeCloseTo(100)
-          waitForFrames(1)
-          expect(multiTweenTarget.foo).toBeCloseTo(100)
-          waitForFrames(3)
+          waitForFrames(4)
           expect(multiTweenTarget.foo).toBeCloseTo(200)
         })
 
@@ -435,11 +444,11 @@ describe('cinderella', () => {
           // First tween runs for 2 frames
           waitForFrames(2)
           expect(multiTweenTarget.foo).toBeCloseTo(64)
-          waitForFrames(5)
+          waitForFrames(4)
           expect(multiTweenTarget.foo).toBeCloseTo(100)
           // Second tween runs for 2 frames
-          waitForFrames(2)
-          expect(multiTweenTarget.foo).toBeCloseTo(140)
+          waitForFrames(3)
+          expect(multiTweenTarget.foo).toBeCloseTo(140.399)
           waitForFrames(3)
           expect(multiTweenTarget.foo).toBeCloseTo(200)
         })
