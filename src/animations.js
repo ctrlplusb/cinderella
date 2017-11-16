@@ -174,6 +174,7 @@ export const process = (animation: Animation, time: Time) => {
       animation.onStart()
     }
   }
+
   const {
     startTime,
     longestTweenDuration,
@@ -190,10 +191,14 @@ export const process = (animation: Animation, time: Time) => {
   ) {
     throw new Error('Animation initialization failed')
   }
+
+  // Wait for animation delay to have been satisfied
   const timePassed = time - startTime
   if (timePassed < delayValue) {
     return
   }
+
+  // Run duration for the animation should not take into account the
   const animationRunDuration = timePassed - delayValue
   const propNames = Object.keys(tweens)
   const values = propNames.reduce((acc, propName) => {
@@ -204,18 +209,15 @@ export const process = (animation: Animation, time: Time) => {
         return
       }
       resolvedTargets.forEach((resolvedTarget, idx) => {
-        console.log(time)
-        console.log(animationRunDuration)
         if (animationRunDuration < tween.delay[idx]) {
-          1 /*?*/
           return
         }
 
         if (tween.startTime == null) {
-          tween.startTime = time /*?*/
+          tween.startTime = time
         }
 
-        tween.runDuration = time - tween.startTime /*?*/
+        tween.runDuration = time - tween.startTime
 
         // Resolve the to/from values for the tweens
         if (
@@ -270,6 +272,7 @@ export const process = (animation: Animation, time: Time) => {
           tween.diff[idx] =
             tween.toValues[idx].number - tween.fromValues[idx].number
         }
+
         // The below normalises our values so we can resolve a value that will
         // be correctly relative to the easing function that is being applied
         // across all of the values.
@@ -295,12 +298,6 @@ export const process = (animation: Animation, time: Time) => {
             postBuffer -
             tween.bufferedFromNumber[idx]
         }
-
-        console.log(tween.startTime)
-        console.log(Math.floor(animationRunDuration))
-        console.log(Math.floor(tween.runDuration))
-        console.log(Math.floor(tween.delay[idx]))
-        console.log(Math.floor(tween.duration[idx]))
 
         // If the time has passed the tween run time then we just use the "to"
         // as our value.
@@ -335,7 +332,6 @@ export const process = (animation: Animation, time: Time) => {
               ? animation.longestTweenDuration
               : tween.duration[idx]
           const easingResult = easingFn(runDuration, from, diff, duration)
-          console.log(easingResult)
           tweenCurrentValues[idx] = Object.assign({}, tween.toValues[idx], {
             number: easingResult,
           })
@@ -348,6 +344,7 @@ export const process = (animation: Animation, time: Time) => {
     }
     return acc
   }, {})
+
   animation.complete = propNames.every(propName =>
     tweens[propName].every(tween => tween.complete),
   )
@@ -360,12 +357,13 @@ export const process = (animation: Animation, time: Time) => {
       }
       return acc
     }, {})
-    console.log(targetValues)
     Utils.setValuesOnTarget(resolvedTarget, targetValues)
   })
+
   if (animation.onUpdate) {
     animation.onUpdate()
   }
+
   if (animation.complete && animation.onComplete) {
     animation.onComplete()
   }
