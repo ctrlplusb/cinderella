@@ -493,42 +493,44 @@ describe('cinderella', () => {
     })
 
     describe('targets', () => {
-      it.skip('multiple targets')
-
-      describe('dom targets', () => {
-        it('querySelectorAll', () => {
-          const els = [...new Array(5)].map(() => {
-            const el = window.document.createElement('div')
-            el.className = 'foo'
-            el.style.height = '200px'
-            el.setAttribute('width', '100px')
-            window.document.body.appendChild(el)
-            return el
-          })
-          cinderella()
-            .add({
-              targets: '.foo',
-              transform: {
-                width: {
-                  to: '200px',
-                  duration: 5 * frameRate,
-                },
-                height: {
-                  to: '100px',
-                  duration: 5 * frameRate,
-                },
-              },
-            })
-            .play()
-          waitForFrames(7)
-          els.forEach(el => {
-            expect(el.width).toBe('200px')
-            expect(el.style.height).toBe('100px')
-          })
+      it('dom targets', () => {
+        const els = [...new Array(5)].map(() => {
+          const el = window.document.createElement('div')
+          el.className = 'foo'
+          el.style.height = '200px'
+          el.setAttribute('width', '100px')
+          window.document.body.appendChild(el)
+          return el
         })
-        it.skip('css transform')
-        it.skip('css')
-        it.skip('attributes')
+        cinderella()
+          .add({
+            targets: '.foo',
+            transform: {
+              width: {
+                to: '200px',
+                duration: 5 * frameRate,
+              },
+              height: {
+                to: '100px',
+                duration: 5 * frameRate,
+              },
+              translateX: {
+                to: '50px',
+                duration: 5 * frameRate,
+              },
+              scale: {
+                to: 5,
+                duration: 5 * frameRate,
+              },
+            },
+          })
+          .play()
+        waitForFrames(7)
+        els.forEach(el => {
+          expect(el.width).toBe('200px')
+          expect(el.style.height).toBe('100px')
+          expect(el.style.transform).toBe('translateX(50px) scale(5)')
+        })
       })
     })
   })
@@ -705,5 +707,9 @@ describe('cinderella', () => {
       await waitForFrames(2)
       expect(listener).toHaveBeenCalledTimes(3)
     })
+  })
+
+  describe('easing functions', () => {
+    // TODO
   })
 })

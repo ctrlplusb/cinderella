@@ -75,6 +75,7 @@ export type Tween = {
   easing: Array<string | void>,
   from: RawValue | TweenRawValueResolver,
   fromValues: Array<Value | void>,
+  runDuration?: Time,
   startTime: Time,
   to: RawValue | TweenRawValueResolver,
   toValues: Array<Value | void>,

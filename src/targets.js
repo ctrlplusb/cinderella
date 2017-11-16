@@ -196,21 +196,6 @@ export const getValueFromTarget = (
   return extractValue(resolvedTarget, propName, resolvedTarget.actual[propName])
 }
 
-const relativeOffsetRegex = /^([+-]=)([0-9]+)$/
-
-export const resolveRelativeOffset = (offset: string): number | void => {
-  const match = relativeOffsetRegex.exec(offset)
-  if (!match) {
-    return undefined
-  }
-  const operator = match[1]
-  const offsetValue = match[2]
-  if (operator === '-=') {
-    return offsetValue * -1
-  }
-  return offsetValue
-}
-
 export const resolveTargets = (animation: Animation): Array<ResolvedTarget> => {
   const result = []
   const resolve = targets => {
@@ -262,13 +247,13 @@ export const setValuesOnTarget = (target: ResolvedTarget, values: Values) => {
   // Make sure we set the transform css prop for dom target
   if (target.type === 'dom') {
     target.actual.style.transform = Object.keys(values)
-      .filter(v => v.type === 'dom-css-transform')
-      .map(
-        propName =>
-          `${camelCaseToHyphens(propName)}(${values[propName].number}${values[
-            propName
-          ].unit || ''})`,
-      )
+      .reduce((acc, propName) => {
+        const value = values[propName]
+        if (target.type === 'dom' && value.type === 'dom-css-transform') {
+          acc.push(`${propName}(${value.number}${value.unit || ''})`)
+        }
+        return acc
+      }, [])
       .join(' ')
   }
 }

@@ -9,10 +9,24 @@ import type {
   EasingFn,
   Prop,
   Time,
-  Tween,
 } from './types'
 import * as Easings from './easings'
-import * as Utils from './utils'
+import * as Targets from './targets'
+
+const relativeOffsetRegex = /^([+-]=)([0-9]+)$/
+
+const resolveRelativeOffset = (offset: string): number | void => {
+  const match = relativeOffsetRegex.exec(offset)
+  if (!match) {
+    return undefined
+  }
+  const operator = match[1]
+  const offsetValue = match[2]
+  if (operator === '-=') {
+    return offsetValue * -1
+  }
+  return offsetValue
+}
 
 export const create = (definition: AnimationDefinition): Animation => {
   const { transformDefaults } = definition
@@ -59,7 +73,7 @@ export const create = (definition: AnimationDefinition): Animation => {
     onUpdate: definition.onUpdate,
     relativeOffset:
       typeof definition.offset === 'string'
-        ? Utils.resolveRelativeOffset(definition.offset)
+        ? resolveRelativeOffset(definition.offset)
         : undefined,
     state: null,
     targets: definition.targets,
@@ -93,7 +107,7 @@ export const initialize = (animation: Animation): Animation => {
     // already initialized
     return animation
   }
-  const resolvedTargets = Utils.resolveTargets(animation)
+  const resolvedTargets = Targets.resolveTargets(animation)
   const props: Array<Prop> = Object.keys(animation.transform)
   const tweens = props.reduce((tweenAcc, propName) => {
     const definition = animation.transform[propName]
@@ -200,9 +214,10 @@ export const process = (animation: Animation, time: Time) => {
 
   // Run duration for the animation should not take into account the
   const animationRunDuration = timePassed - delayValue
+
   const propNames = Object.keys(tweens)
   const values = propNames.reduce((acc, propName) => {
-    const propTweens: Array<Tween> = tweens[propName]
+    const propTweens = tweens[propName]
     const tweenCurrentValues = resolvedTargets.map(() => null)
     propTweens.forEach(tween => {
       if (tween.complete) {
@@ -226,33 +241,33 @@ export const process = (animation: Animation, time: Time) => {
           tween.diff[idx] == null
         ) {
           if (tween.from == null) {
-            tween.fromValues[idx] = Utils.getValueFromTarget(
+            tween.fromValues[idx] = Targets.getValueFromTarget(
               resolvedTarget,
               propName,
             )
           } else {
             tween.fromValues[idx] =
               typeof tween.from === 'function'
-                ? Utils.extractValue(
+                ? Targets.extractValue(
                     resolvedTarget,
                     propName,
                     tween.from(resolvedTarget, idx, resolvedTargets.length),
                   )
-                : Utils.extractValue(resolvedTarget, propName, tween.from)
+                : Targets.extractValue(resolvedTarget, propName, tween.from)
           }
           tween.toValues[idx] =
             typeof tween.to === 'function'
-              ? Utils.extractValue(
+              ? Targets.extractValue(
                   resolvedTarget,
                   propName,
                   tween.to(resolvedTarget, idx, resolvedTargets.length),
                 )
-              : Utils.extractValue(resolvedTarget, propName, tween.to)
+              : Targets.extractValue(resolvedTarget, propName, tween.to)
           if (tween.toValues[idx] == null) {
             return
           }
           if (tween.fromValues[idx] == null) {
-            tween.fromValues[idx] = Utils.getDefaultFromValue(
+            tween.fromValues[idx] = Targets.getDefaultFromValue(
               resolvedTarget,
               propName,
               tween.toValues[idx],
@@ -315,10 +330,6 @@ export const process = (animation: Animation, time: Time) => {
             tween.bufferedFromNumber[idx] != null
               ? animationRunDuration
               : time - tween.startTime
-          // const to =
-          //   tween.bufferedFromNumber[idx] != null
-          //     ? tween.bufferedToNumber[idx]
-          //     : tween.toValues[idx].number /*?*/
           const from =
             tween.bufferedFromNumber[idx] != null
               ? tween.bufferedFromNumber[idx]
@@ -335,7 +346,6 @@ export const process = (animation: Animation, time: Time) => {
           tweenCurrentValues[idx] = Object.assign({}, tween.toValues[idx], {
             number: easingResult,
           })
-          // TODO: Change forEach back to for so we can break early
         }
       })
     })
@@ -350,14 +360,13 @@ export const process = (animation: Animation, time: Time) => {
   )
 
   resolvedTargets.forEach((resolvedTarget, idx) => {
-    // TODO: Optimise this
     const targetValues = Object.keys(values).reduce((acc, propName) => {
       if (values[propName][idx]) {
         acc[propName] = values[propName][idx]
       }
       return acc
     }, {})
-    Utils.setValuesOnTarget(resolvedTarget, targetValues)
+    Targets.setValuesOnTarget(resolvedTarget, targetValues)
   })
 
   if (animation.onUpdate) {
