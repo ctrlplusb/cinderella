@@ -321,14 +321,16 @@ export const process = (animation: Animation, time: Time) => {
           const runPercentage = keyframe.duration / animDurPerc
           const postPercentage =
             postRunDuration > 0.001 ? postRunDuration / animDurPerc : 0
-          const val = keyframe.diff / runPercentage
+          // DO NOT REMOVE THIS MATH.ABS WE NEED IT TO AVOID FLOAT
+          // COMPUTE ISSUES ON OUR EASING FN!
+          //            👇  ❗️
+          const val = Math.abs(keyframe.diff) / runPercentage
           const beforeBuffer = prePercentage * val
           const postBuffer = postPercentage * val
           keyframe.bufferedFromNumber = keyframe.fromValue.number - beforeBuffer
           keyframe.bufferedDiff =
             keyframe.toValue.number + postBuffer - keyframe.bufferedFromNumber
         }
-
         // If the time has passed the tween run time then we just use the "to"
         // as our value.
         if (keyframe.runDuration >= keyframe.duration) {
@@ -364,20 +366,16 @@ export const process = (animation: Animation, time: Time) => {
       }
       return acc
     }, {})
-
     Targets.setValuesOnTarget(resolvedTarget, values)
   })
-
   if (animation.onUpdate) {
     animation.onUpdate()
   }
-
   animation.complete = targetsTweens.every(({ propTweens }) =>
     Object.keys(propTweens).every(propName =>
       propTweens[propName].keyframes.every(keyframe => keyframe.complete),
     ),
   )
-
   if (animation.complete && animation.onComplete) {
     animation.onComplete()
   }

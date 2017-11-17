@@ -384,6 +384,54 @@ describe('cinderella', () => {
           expect(multiTweenTarget.foo).toBeCloseTo(200)
         })
 
+        it('normalised easing to negative value', () => {
+          const keyFrameTarget = {
+            foo: 1,
+            bar: 200,
+          }
+          cinderella()
+            .add({
+              targets: keyFrameTarget,
+              transform: {
+                foo: [
+                  {
+                    from: 0,
+                    to: 1,
+                    duration: 2 * frameRate,
+                  },
+                  {
+                    from: 1,
+                    to: 0,
+                    duration: 5 * frameRate,
+                  },
+                ],
+              },
+            })
+            .play()
+          waitForFrames(1)
+          expect(keyFrameTarget.foo).toBe(0)
+          waitForFrames(1)
+          expect(keyFrameTarget.foo).toBeCloseTo(0.5)
+          waitForFrames(1)
+          expect(keyFrameTarget.foo).toBeCloseTo(1)
+          waitForFrames(1)
+          expect(keyFrameTarget.foo).toBeCloseTo(0.74)
+          waitForFrames(1)
+          expect(keyFrameTarget.foo).toBeCloseTo(0.657)
+          waitForFrames(1)
+          expect(keyFrameTarget.foo).toBeCloseTo(0.571)
+          waitForFrames(1)
+          expect(keyFrameTarget.foo).toBeCloseTo(0.485)
+          waitForFrames(1)
+          expect(keyFrameTarget.foo).toBeCloseTo(0.4)
+          waitForFrames(1)
+          expect(keyFrameTarget.foo).toBeCloseTo(0.314)
+          waitForFrames(1)
+          expect(keyFrameTarget.foo).toBeCloseTo(0)
+          waitForFrames(1)
+          expect(keyFrameTarget.foo).toBeCloseTo(0)
+        })
+
         it('unique easings', () => {
           const keyFrameTarget = {
             foo: 0,
