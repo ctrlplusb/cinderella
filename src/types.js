@@ -18,28 +18,31 @@ export type RawTarget = string | HTMLElement | Object
 export type DOMValueType = 'dom-css-transform' | 'dom-css' | 'dom-attribute'
 export type ValueType = 'object' | DOMValueType
 export type EasingFn = (t: number, b: number, c: number, d: number) => number
-export type TweenTimeResolver = (
+
+export type TimeResolver = (
   target?: ResolvedTarget,
   index?: number,
   targetCount?: number,
 ) => Time
-export type TweenRawValueResolver = (
+
+export type RawValueResolver = (
   target?: ResolvedTarget,
   index?: number,
   targetCount?: number,
 ) => RawValue
-export type TweenEasingResolver = (
+
+export type EasingResolver = (
   target?: ResolvedTarget,
   index?: number,
   targetCount?: number,
 ) => string
 
 export type TweenDefinition = {
-  delay?: Time | TweenTimeResolver,
-  duration?: Time | TweenTimeResolver,
-  easing?: string | TweenEasingResolver,
-  from?: RawValue | TweenRawValueResolver,
-  to?: RawValue | TweenRawValueResolver,
+  delay?: Time | TimeResolver,
+  duration?: Time | TimeResolver,
+  easing?: string | EasingResolver,
+  from?: RawValue | RawValueResolver,
+  to?: RawValue | RawValueResolver,
 }
 
 export type AnimationDefinition = {
@@ -64,21 +67,44 @@ export type Values = {
   [prop: Prop]: Value,
 }
 
-export type Tween = {
-  bufferedFromNumber: Array<number | void>,
-  bufferedDiff: Array<number | void>,
+export type KeyFrame = {
+  bufferedFromNumber?: number,
+  bufferedDiff?: number,
   complete: boolean,
-  currentNumber?: number,
-  delay: Array<Time>,
-  diff: Array<number | void>,
-  duration: Array<Time>,
-  easing: Array<string | void>,
-  from: RawValue | TweenRawValueResolver,
-  fromValues: Array<Value | void>,
+  currentVal?: number,
+  delay: Time,
+  diff?: number,
+  duration: Time,
+  easing?: string,
+  from?: RawValue | RawValueResolver,
+  fromValue?: Value,
   runDuration?: Time,
-  startTime: Time,
-  to: RawValue | TweenRawValueResolver,
-  toValues: Array<Value | void>,
+  startTime?: Time,
+  to: RawValue | RawValueResolver,
+  toValue?: Value,
+}
+
+export type Tween = {
+  duration: number,
+  keyframes: Array<KeyFrame>,
+}
+
+export type TargetTweens = {
+  resolvedTarget: ResolvedTarget,
+  propTweens: { [propName: Prop]: Tween },
+  duration: number,
+}
+
+export type KeyFrameDefinition = {
+  delay: Time | TimeResolver,
+  duration: Time | TimeResolver,
+  easing?: string | EasingResolver,
+  from?: RawValue | RawValueResolver,
+  to: RawValue | RawValueResolver,
+}
+
+export type PropKeyFrameDefinitions = {
+  [prop: Prop]: Array<KeyFrameDefinition>,
 }
 
 export type Animation = {
@@ -86,18 +112,17 @@ export type Animation = {
   complete: boolean,
   delay: Time | (() => Time),
   delayValue?: Time,
+  duration?: Time,
   easing: string,
   executionOffset?: Time,
-  longestTweenDuration?: Time,
   onComplete?: Noop,
   onStart?: Noop,
   onUpdate?: Noop,
   relativeOffset?: Time,
-  resolvedTargets?: Array<ResolvedTarget>,
   startTime?: Time,
   targets: RawTarget | Array<RawTarget>,
-  transform: { [prop: Prop]: Array<TweenDefinition> },
-  tweens?: { [prop: Prop]: Array<Tween> },
+  transform: PropKeyFrameDefinitions,
+  targetsTweens?: Array<TargetTweens>,
 }
 
 export type TimelineConfig = {

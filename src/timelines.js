@@ -105,8 +105,7 @@ export const process = (time: number) => {
             executionOffset = 0
           }
           animation.executionOffset = executionOffset
-          relativeExecutionTime =
-            animation.executionOffset + animation.longestTweenDuration
+          relativeExecutionTime = animation.executionOffset + animation.duration
         })
       timeline.initializedAnimations = true
     }

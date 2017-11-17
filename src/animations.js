@@ -7,6 +7,8 @@ import type {
   Animation,
   AnimationDefinition,
   EasingFn,
+  KeyFrame,
+  KeyFrameDefinition,
   Prop,
   Time,
 } from './types'
@@ -48,19 +50,20 @@ export const create = (definition: AnimationDefinition): Animation => {
         ? transformDefinition.easing
         : transformDefaults && transformDefaults.easing != null
           ? transformDefaults.easing
-          : null,
+          : undefined,
     from:
       transformDefinition.from != null
         ? transformDefinition.from
         : transformDefaults && transformDefaults.from != null
           ? transformDefaults.from
-          : null,
+          : undefined,
+    // TODO: We should not allow undefined "to"
     to:
       transformDefinition.to != null
         ? transformDefinition.to
         : transformDefaults && transformDefaults.to != null
           ? transformDefaults.to
-          : null,
+          : undefined,
   })
   return {
     absoluteOffset:
@@ -96,84 +99,89 @@ export const reset = (animation: Animation) => {
   animation.complete = false
   animation.delayValue = undefined
   animation.executionOffset = undefined
-  animation.longestTweenDuration = undefined
+  animation.duration = undefined
   animation.startTime = undefined
-  animation.resolvedTargets = undefined
-  animation.tweens = undefined
+  animation.targetsTweens = undefined
 }
+
+const max = (xs: Array<number>): number =>
+  xs.reduce((highest, next) => (highest > next ? highest : next), 0)
 
 export const initialize = (animation: Animation): Animation => {
   if (animation.tweens != null) {
     // already initialized
     return animation
   }
+
   const resolvedTargets = Targets.resolveTargets(animation)
   const props: Array<Prop> = Object.keys(animation.transform)
-  const tweens = props.reduce((tweenAcc, propName) => {
-    const definition = animation.transform[propName]
-    tweenAcc[propName] = definition.reduce(
-      (subTweenAcc, subTween) => {
-        const initedSubTween = {
-          bufferedFromNumber: resolvedTargets.map(() => null),
-          bufferedDiff: resolvedTargets.map(() => null),
+
+  const targetsTweens = resolvedTargets.reduce(
+    (targetsTweensAcc, resolvedTarget, targetIdx) => {
+      // Resolve the tweens for each prop
+      const propTweens = props.reduce((propTweensAcc, propName) => {
+        const keyFrameDefinitions: Array<KeyFrameDefinition> =
+          animation.transform[propName]
+
+        const resolveKeyframe = (
+          keyframeDefinition: KeyFrameDefinition,
+        ): KeyFrame => ({
           complete: false,
-          delay: resolvedTargets.map(
-            (resolvedTarget, idx) =>
-              subTweenAcc.prevFullDurations[idx] +
-              (typeof subTween.delay === 'function'
-                ? subTween.delay(resolvedTarget, idx, resolvedTargets.length)
-                : subTween.delay),
-          ),
-          diff: resolvedTargets.map(() => null),
-          duration: resolvedTargets.map(
-            (resolvedTarget, idx) =>
-              typeof subTween.duration === 'function'
-                ? subTween.duration(resolvedTarget, idx, resolvedTargets.length)
-                : subTween.duration,
-          ),
-          easing: resolvedTargets.map(
-            (resolvedTarget, idx) =>
-              typeof subTween.easing === 'function'
-                ? subTween.easing(resolvedTarget, idx, resolvedTargets.length)
-                : subTween.easing,
-          ),
-          from: subTween.from,
-          fromValues: resolvedTargets.map(() => null),
-          to: subTween.to,
-          toValues: resolvedTargets.map(() => null),
-        }
-        resolvedTargets.forEach((_, idx) => {
-          subTweenAcc.prevFullDurations[idx] += Math.floor(
-            initedSubTween.duration[idx] + initedSubTween.delay[idx],
-          )
+          delay:
+            typeof keyframeDefinition.delay === 'function'
+              ? keyframeDefinition.delay(
+                  resolvedTarget,
+                  targetIdx,
+                  resolvedTargets.length,
+                )
+              : keyframeDefinition.delay,
+          duration:
+            typeof keyframeDefinition.duration === 'function'
+              ? keyframeDefinition.duration(
+                  resolvedTarget,
+                  targetIdx,
+                  resolvedTargets.length,
+                )
+              : keyframeDefinition.duration,
+          easing:
+            typeof keyframeDefinition.easing === 'function'
+              ? keyframeDefinition.easing(
+                  resolvedTarget,
+                  targetIdx,
+                  resolvedTargets.length,
+                )
+              : keyframeDefinition.easing,
+          from: keyframeDefinition.from,
+          to: keyframeDefinition.to,
         })
-        subTweenAcc.subTweens.push(initedSubTween)
-        return subTweenAcc
-      },
-      {
-        subTweens: [],
-        prevFullDurations: resolvedTargets.map(() => 0),
-      },
-    ).subTweens
-    return tweenAcc
-  }, {})
-  let longestTweenDuration = 0
-  props.forEach(prop => {
-    tweens[prop].forEach(({ delay, duration }) => {
-      resolvedTargets.forEach((_, idx) => {
-        const tweenDuration = delay[idx] + duration[idx]
-        longestTweenDuration =
-          tweenDuration > longestTweenDuration
-            ? tweenDuration
-            : longestTweenDuration
+
+        // Resolve the keyframes for the tween
+        const keyframes = keyFrameDefinitions.map(resolveKeyframe)
+
+        propTweensAcc[propName] = {
+          keyframes,
+          duration: keyframes.reduce((total, cur) => total + cur.duration, 0),
+        }
+        return propTweensAcc
+      }, {})
+
+      targetsTweensAcc.push({
+        resolvedTarget,
+        propTweens,
+        duration: max(props.map(propName => propTweens[propName].duration)),
       })
-    })
-  })
+
+      return targetsTweensAcc
+    },
+    [],
+  )
+
   animation.delayValue =
     typeof animation.delay === 'function' ? animation.delay() : animation.delay
-  animation.longestTweenDuration = longestTweenDuration
-  animation.resolvedTargets = resolvedTargets
-  animation.tweens = tweens
+  animation.duration = max(
+    targetsTweens.map(targetTween => targetTween.duration),
+  )
+  animation.targetsTweens = targetsTweens
   return animation
 }
 
@@ -190,188 +198,185 @@ export const process = (animation: Animation, time: Time) => {
   }
 
   const {
-    startTime,
-    longestTweenDuration,
-    resolvedTargets,
-    tweens,
+    startTime: animationStartTime,
+    duration: animationDuration,
+    targetsTweens,
     delayValue,
   } = animation
   if (
-    startTime == null ||
-    longestTweenDuration == null ||
-    resolvedTargets == null ||
-    tweens == null ||
+    animationStartTime == null ||
+    animationDuration == null ||
+    targetsTweens == null ||
     delayValue == null
   ) {
     throw new Error('Animation initialization failed')
   }
 
   // Wait for animation delay to have been satisfied
-  const timePassed = time - startTime
-  if (timePassed < delayValue) {
+  if (time - animationStartTime < delayValue) {
     return
   }
 
   // Run duration for the animation should not take into account the
-  const animationRunDuration = timePassed - delayValue
+  const animationRunDuration = time - animationStartTime - delayValue
 
-  const propNames = Object.keys(tweens)
-  const values = propNames.reduce((acc, propName) => {
-    const propTweens = tweens[propName]
-    const tweenCurrentValues = resolvedTargets.map(() => null)
-    propTweens.forEach(tween => {
-      if (tween.complete) {
-        return
-      }
-      resolvedTargets.forEach((resolvedTarget, idx) => {
-        if (animationRunDuration < tween.delay[idx]) {
+  targetsTweens.forEach((targetTweens, targetIdx) => {
+    const { resolvedTarget, propTweens } = targetTweens
+    const propNames = Object.keys(propTweens)
+    const values = propNames.reduce((acc, propName) => {
+      let tweenCurrentValue
+      const { keyframes } = propTweens[propName]
+      keyframes.forEach((keyframe, keyframedIdx) => {
+        // Skip if this keyframe has already completed
+        if (keyframe.complete) {
           return
         }
 
-        if (tween.startTime == null) {
-          tween.startTime = time
+        // The previous keyframe MUST be complete prior to this keyframe running
+        if (keyframedIdx > 0 && !keyframes[keyframedIdx - 1].complete) {
+          return
         }
 
-        tween.runDuration = time - tween.startTime
+        // Set the keyframe start time if not set already
+        if (keyframe.startTime == null) {
+          keyframe.startTime = time
+        }
+
+        // We must wait for the keyframes' delay to be hit prior to us running
+        // it
+        if (time - keyframe.startTime < keyframe.delay) {
+          return
+        }
+
+        keyframe.runDuration = time - keyframe.startTime - keyframe.delay
 
         // Resolve the to/from values for the tweens
         if (
-          tween.toValues[idx] == null ||
-          tween.fromValues[idx] == null ||
-          tween.diff[idx] == null
+          keyframe.toValue == null ||
+          keyframe.fromValue == null ||
+          keyframe.diff == null
         ) {
-          if (tween.from == null) {
-            tween.fromValues[idx] = Targets.getValueFromTarget(
+          if (keyframe.from == null) {
+            keyframe.fromValue = Targets.getValueFromTarget(
               resolvedTarget,
               propName,
             )
           } else {
-            tween.fromValues[idx] =
-              typeof tween.from === 'function'
+            keyframe.fromValue =
+              typeof keyframe.from === 'function'
                 ? Targets.extractValue(
                     resolvedTarget,
                     propName,
-                    tween.from(resolvedTarget, idx, resolvedTargets.length),
+                    keyframe.from(
+                      resolvedTarget,
+                      targetIdx,
+                      targetsTweens.length,
+                    ),
                   )
-                : Targets.extractValue(resolvedTarget, propName, tween.from)
+                : Targets.extractValue(resolvedTarget, propName, keyframe.from)
           }
-          tween.toValues[idx] =
-            typeof tween.to === 'function'
+          keyframe.toValue =
+            typeof keyframe.to === 'function'
               ? Targets.extractValue(
                   resolvedTarget,
                   propName,
-                  tween.to(resolvedTarget, idx, resolvedTargets.length),
+                  keyframe.to(resolvedTarget, targetIdx, targetsTweens.length),
                 )
-              : Targets.extractValue(resolvedTarget, propName, tween.to)
-          if (tween.toValues[idx] == null) {
+              : Targets.extractValue(resolvedTarget, propName, keyframe.to)
+          if (keyframe.toValue == null) {
             return
           }
-          if (tween.fromValues[idx] == null) {
-            tween.fromValues[idx] = Targets.getDefaultFromValue(
+          if (keyframe.fromValue == null) {
+            keyframe.fromValue = Targets.getDefaultFromValue(
               resolvedTarget,
               propName,
-              tween.toValues[idx],
+              keyframe.toValue,
             )
           }
-          if (tween.fromValues[idx] == null) {
+          if (keyframe.fromValue == null) {
             return
           }
-          if (tween.fromValues[idx].unit !== tween.toValues[idx].unit) {
+          if (keyframe.fromValue.unit !== keyframe.toValue.unit) {
             // eslint-disable-next-line no-console
             console.warn(
-              `Mixed units from from/to of ${propName}. from: ${tween
-                .fromValues[idx].unit || ''}, to: "${tween.toValues[idx].unit ||
-                ''}"`,
+              `Mixed units from from/to of ${propName}. from: ${keyframe
+                .fromValue.unit || ''}, to: "${keyframe.toValue.unit || ''}"`,
             )
           }
-          tween.diff[idx] =
-            tween.toValues[idx].number - tween.fromValues[idx].number
+          keyframe.diff = keyframe.toValue.number - keyframe.fromValue.number
         }
 
         // The below normalises our values so we can resolve a value that will
         // be correctly relative to the easing function that is being applied
         // across all of the values.
         if (
-          tween.easing[idx] == null &&
-          tween.duration[idx] + tween.delay[idx] !== animation.fullDuration &&
-          tween.bufferedFromNumber[idx] == null
+          keyframe.easing == null &&
+          keyframe.duration + keyframe.delay !== animationDuration &&
+          keyframe.bufferedFromNumber == null
         ) {
-          const animDurPerc = longestTweenDuration / 100
+          const animDurPerc = animationDuration / 100
           const postRunDuration =
-            longestTweenDuration - tween.duration[idx] - tween.delay[idx]
-          const prePercentage = tween.delay[idx] / animDurPerc
-          const runPercentage = tween.duration[idx] / animDurPerc
+            animationDuration - keyframe.duration - keyframe.delay
+          const prePercentage = keyframe.delay / animDurPerc
+          const runPercentage = keyframe.duration / animDurPerc
           const postPercentage =
             postRunDuration > 0.001 ? postRunDuration / animDurPerc : 0
-          const val = Math.abs(tween.diff[idx]) / runPercentage
+          const val = keyframe.diff / runPercentage
           const beforeBuffer = prePercentage * val
           const postBuffer = postPercentage * val
-          tween.bufferedFromNumber[idx] =
-            tween.fromValues[idx].number - beforeBuffer
-          tween.bufferedDiff[idx] =
-            tween.toValues[idx].number +
-            postBuffer -
-            tween.bufferedFromNumber[idx]
+          keyframe.bufferedFromNumber = keyframe.fromValue.number - beforeBuffer
+          keyframe.bufferedDiff =
+            keyframe.toValue.number + postBuffer - keyframe.bufferedFromNumber
         }
 
         // If the time has passed the tween run time then we just use the "to"
         // as our value.
-        if (
-          tween.bufferedFromNumber[idx] != null
-            ? animationRunDuration >= tween.duration[idx] + tween.delay[idx]
-            : tween.runDuration >= tween.duration[idx]
-        ) {
-          tween.complete = true
-          tweenCurrentValues[idx] = tween.toValues[idx]
+        if (keyframe.runDuration >= keyframe.duration) {
+          keyframe.complete = true
+          tweenCurrentValue = keyframe.toValue
         } else {
           const easingFn: EasingFn =
-            Easings[tween.easing[idx] || animation.easing]
+            Easings[keyframe.easing || animation.easing]
           const runDuration =
-            tween.bufferedFromNumber[idx] != null
+            keyframe.bufferedFromNumber != null
               ? animationRunDuration
-              : time - tween.startTime
+              : keyframe.runDuration
           const from =
-            tween.bufferedFromNumber[idx] != null
-              ? tween.bufferedFromNumber[idx]
-              : tween.fromValues[idx].number
+            keyframe.bufferedFromNumber != null
+              ? keyframe.bufferedFromNumber
+              : keyframe.fromValue.number
           const diff =
-            tween.bufferedDiff[idx] != null
-              ? tween.bufferedDiff[idx]
-              : tween.diff[idx]
+            keyframe.bufferedDiff != null
+              ? keyframe.bufferedDiff
+              : keyframe.diff
           const duration =
-            tween.bufferedFromNumber[idx] != null
-              ? animation.longestTweenDuration
-              : tween.duration[idx]
+            keyframe.bufferedFromNumber != null
+              ? animation.duration
+              : keyframe.duration
           const easingResult = easingFn(runDuration, from, diff, duration)
-          tweenCurrentValues[idx] = Object.assign({}, tween.toValues[idx], {
+          tweenCurrentValue = Object.assign({}, keyframe.toValue, {
             number: easingResult,
           })
         }
       })
-    })
-    if (tweenCurrentValues.filter(x => x != null).length > 0) {
-      acc[propName] = tweenCurrentValues
-    }
-    return acc
-  }, {})
-
-  animation.complete = propNames.every(propName =>
-    tweens[propName].every(tween => tween.complete),
-  )
-
-  resolvedTargets.forEach((resolvedTarget, idx) => {
-    const targetValues = Object.keys(values).reduce((acc, propName) => {
-      if (values[propName][idx]) {
-        acc[propName] = values[propName][idx]
+      if (tweenCurrentValue) {
+        acc[propName] = tweenCurrentValue
       }
       return acc
     }, {})
-    Targets.setValuesOnTarget(resolvedTarget, targetValues)
+
+    Targets.setValuesOnTarget(resolvedTarget, values)
   })
 
   if (animation.onUpdate) {
     animation.onUpdate()
   }
+
+  animation.complete = targetsTweens.every(({ propTweens }) =>
+    Object.keys(propTweens).every(propName =>
+      propTweens[propName].keyframes.every(keyframe => keyframe.complete),
+    ),
+  )
 
   if (animation.complete && animation.onComplete) {
     animation.onComplete()

@@ -60,7 +60,7 @@
     "leakage": "^0.3.0",
     "lint-staged": "^5.0.0",
     "prettier": "^1.8.2",
-    "prettier-eslint": "^8.2.1",
+    "prettier-eslint": "^8.2.2",
     "pretty-bytes": "^4.0.2",
     "ramda": "^0.25.0",
     "readline-sync": "^1.4.7",

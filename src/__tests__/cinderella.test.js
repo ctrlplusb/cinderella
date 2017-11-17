@@ -334,7 +334,7 @@ describe('cinderella', () => {
       })
 
       describe('keyframes', () => {
-        it('basic', () => {
+        it('normalised easing', () => {
           const multiTweenTarget = {
             foo: 0,
           }
@@ -350,7 +350,7 @@ describe('cinderella', () => {
                   {
                     to: 200,
                     delay: 2 * frameRate,
-                    duration: 3 * frameRate,
+                    duration: 5 * frameRate,
                   },
                 ],
               },
@@ -360,12 +360,87 @@ describe('cinderella', () => {
           expect(multiTweenTarget).toMatchObject({
             foo: 0,
           })
-          waitForFrames(2)
-          expect(multiTweenTarget.foo).toBeCloseTo(100)
+          waitForFrames(1)
+          expect(multiTweenTarget.foo).toBeCloseTo(50)
           waitForFrames(1)
           expect(multiTweenTarget.foo).toBeCloseTo(100)
-          waitForFrames(4)
+          waitForFrames(1)
+          expect(multiTweenTarget.foo).toBe(100)
+          // KeyFrame 2 delay
+          waitForFrames(1)
+          expect(multiTweenTarget.foo).toBe(100)
+          waitForFrames(1)
+          expect(multiTweenTarget.foo).toBe(100)
+          // KeyFrame 2 actual run
+          waitForFrames(1)
+          expect(multiTweenTarget.foo).toBeCloseTo(120)
+          waitForFrames(1)
+          expect(multiTweenTarget.foo).toBeCloseTo(140)
+          waitForFrames(1)
+          expect(multiTweenTarget.foo).toBeCloseTo(160)
+          waitForFrames(1)
+          expect(multiTweenTarget.foo).toBeCloseTo(180)
+          waitForFrames(1)
           expect(multiTweenTarget.foo).toBeCloseTo(200)
+        })
+
+        it('unique easings', () => {
+          const keyFrameTarget = {
+            foo: 0,
+          }
+          cinderella()
+            .add({
+              targets: keyFrameTarget,
+              transform: {
+                foo: [
+                  {
+                    to: 100,
+                    easing: 'linear',
+                    duration: 5 * frameRate,
+                  },
+                  {
+                    to: 200,
+                    easing: 'linear',
+                    delay: 2 * frameRate,
+                    duration: 5 * frameRate,
+                  },
+                ],
+              },
+            })
+            .play()
+          waitForFrames(1)
+          expect(keyFrameTarget.foo).toBeCloseTo(0)
+          // First keyframe runs for 2 frames
+          waitForFrames(1)
+          expect(keyFrameTarget.foo).toBeCloseTo(20)
+          waitForFrames(1)
+          expect(keyFrameTarget.foo).toBeCloseTo(40)
+          waitForFrames(1)
+          expect(keyFrameTarget.foo).toBeCloseTo(60)
+          waitForFrames(1)
+          expect(keyFrameTarget.foo).toBeCloseTo(80)
+          waitForFrames(1)
+          expect(keyFrameTarget.foo).toBeCloseTo(100)
+          waitForFrames(1)
+          expect(keyFrameTarget.foo).toBe(100)
+          // Second keyframe has delay for 2 frames
+          waitForFrames(1)
+          expect(keyFrameTarget.foo).toBe(100)
+          waitForFrames(1)
+          expect(keyFrameTarget.foo).toBe(100)
+          // Second keyframe runs for 5 frames
+          waitForFrames(1)
+          expect(keyFrameTarget.foo).toBeCloseTo(120)
+          waitForFrames(1)
+          expect(keyFrameTarget.foo).toBeCloseTo(140)
+          waitForFrames(1)
+          expect(keyFrameTarget.foo).toBeCloseTo(160)
+          waitForFrames(1)
+          expect(keyFrameTarget.foo).toBeCloseTo(180)
+          waitForFrames(1)
+          expect(keyFrameTarget.foo).toBeCloseTo(200)
+          waitForFrames(1)
+          expect(keyFrameTarget.foo).toBe(200)
         })
 
         it('negative easing', () => {
@@ -413,45 +488,6 @@ describe('cinderella', () => {
           expect(keyFrameTarget.foo * 100).toBeCloseTo(0)
           expect(keyFrameTarget.bar).toBeCloseTo(100)
         })
-
-        it('unique easings', () => {
-          const multiTweenTarget = {
-            foo: 0,
-          }
-          cinderella()
-            .add({
-              targets: multiTweenTarget,
-              transform: {
-                foo: [
-                  {
-                    to: 100,
-                    easing: 'easeOutQuad',
-                    duration: 5 * frameRate,
-                  },
-                  {
-                    to: 200,
-                    delay: 2 * frameRate,
-                    duration: 5 * frameRate,
-                  },
-                ],
-              },
-            })
-            .play()
-          waitForFrames(1)
-          expect(multiTweenTarget).toMatchObject({
-            foo: 0,
-          })
-          // First tween runs for 2 frames
-          waitForFrames(2)
-          expect(multiTweenTarget.foo).toBeCloseTo(64)
-          waitForFrames(4)
-          expect(multiTweenTarget.foo).toBeCloseTo(100)
-          // Second tween runs for 2 frames
-          waitForFrames(3)
-          expect(multiTweenTarget.foo).toBeCloseTo(140.399)
-          waitForFrames(3)
-          expect(multiTweenTarget.foo).toBeCloseTo(200)
-        })
       })
 
       it('function values', () => {
@@ -462,10 +498,8 @@ describe('cinderella', () => {
         )
         const fromMock = jest.fn((target, i) => i + 1)
         const toMock = jest.fn((target, i) => i + 2)
-
         const target1 = {}
         const target2 = {}
-
         cinderella()
           .add({
             targets: [target1, target2],
@@ -480,13 +514,13 @@ describe('cinderella', () => {
             },
           })
           .play()
-
         waitForFrames(3)
         expect(target1.foo).toBeCloseTo(2)
         expect(target2.foo).toBeUndefined()
         waitForFrames(1)
+        expect(target2.foo).toBeCloseTo(2.5)
+        waitForFrames(1)
         expect(target2.foo).toBeCloseTo(3)
-        expect()
       })
 
       it.skip('mixed from/to units')
@@ -547,7 +581,6 @@ describe('cinderella', () => {
       animationTwoOnStartSpy = jest.fn()
       timelineOnCompleteSpy = jest.fn()
       timelineOnStartSpy = jest.fn()
-
       timeline = cinderella({
         onComplete: timelineOnCompleteSpy,
         onStart: timelineOnStartSpy,
@@ -574,9 +607,9 @@ describe('cinderella', () => {
         })
     })
 
-    it('onComplete', async () => {
+    it('onComplete', () => {
       timeline.play()
-      await waitForFrames(9)
+      waitForFrames(9)
       expect(timelineOnCompleteSpy).toHaveBeenCalledTimes(1)
     })
 
@@ -684,7 +717,6 @@ describe('cinderella', () => {
 
   describe('frame listeners', () => {
     let animation
-
     beforeEach(() => {
       animation = cinderella().add({
         targets: {},
