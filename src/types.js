@@ -78,6 +78,7 @@ export type KeyFrame = {
   easing?: string,
   from?: RawValue | RawValueResolver,
   fromValue?: Value,
+  prevFramesFullDuration?: Time,
   runDuration?: Time,
   startTime?: Time,
   to: RawValue | RawValueResolver,
@@ -85,14 +86,14 @@ export type KeyFrame = {
 }
 
 export type Tween = {
-  duration: number,
+  fullDuration: number,
   keyframes: Array<KeyFrame>,
 }
 
 export type TargetTweens = {
   resolvedTarget: ResolvedTarget,
   propTweens: { [propName: Prop]: Tween },
-  duration: number,
+  fullDuration: number,
 }
 
 export type KeyFrameDefinition = {
@@ -112,7 +113,7 @@ export type Animation = {
   complete: boolean,
   delay: Time | (() => Time),
   delayValue?: Time,
-  duration?: Time,
+  fullDuration?: Time, // excluding the delay on the animation itself
   easing: string,
   executionOffset?: Time,
   onComplete?: Noop,

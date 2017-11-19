@@ -15,6 +15,9 @@ import type {
 import * as Easings from './easings'
 import * as Targets from './targets'
 
+const strip = (number: number, precision = 4): number =>
+  parseFloat(number.toFixed(precision))
+
 const relativeOffsetRegex = /^([+-]=)([0-9]+)$/
 
 const resolveRelativeOffset = (offset: string): number | void => {
@@ -99,7 +102,7 @@ export const reset = (animation: Animation) => {
   animation.complete = false
   animation.delayValue = undefined
   animation.executionOffset = undefined
-  animation.duration = undefined
+  animation.fullDuration = undefined
   animation.startTime = undefined
   animation.targetsTweens = undefined
 }
@@ -127,7 +130,7 @@ export const initialize = (animation: Animation): Animation => {
           keyframeDefinition: KeyFrameDefinition,
         ): KeyFrame => ({
           complete: false,
-          delay:
+          delay: strip(
             typeof keyframeDefinition.delay === 'function'
               ? keyframeDefinition.delay(
                   resolvedTarget,
@@ -135,7 +138,8 @@ export const initialize = (animation: Animation): Animation => {
                   resolvedTargets.length,
                 )
               : keyframeDefinition.delay,
-          duration:
+          ),
+          duration: strip(
             typeof keyframeDefinition.duration === 'function'
               ? keyframeDefinition.duration(
                   resolvedTarget,
@@ -143,6 +147,7 @@ export const initialize = (animation: Animation): Animation => {
                   resolvedTargets.length,
                 )
               : keyframeDefinition.duration,
+          ),
           easing:
             typeof keyframeDefinition.easing === 'function'
               ? keyframeDefinition.easing(
@@ -158,9 +163,24 @@ export const initialize = (animation: Animation): Animation => {
         // Resolve the keyframes for the tween
         const keyframes = keyFrameDefinitions.map(resolveKeyframe)
 
+        keyframes.forEach((keyframe, keyframeIdx) => {
+          keyframe.prevFramesFullDuration = strip(
+            (keyframeIdx > 0
+              ? keyframes[keyframeIdx - 1].delay +
+                keyframes[keyframeIdx - 1].duration
+              : 0) +
+              (keyframeIdx > 1
+                ? keyframes[keyframeIdx - 2].prevFramesFullDuration
+                : 0),
+          ) /*?*/
+        })
+
         propTweensAcc[propName] = {
           keyframes,
-          duration: keyframes.reduce((total, cur) => total + cur.duration, 0),
+          fullDuration: keyframes.reduce(
+            (total, cur) => total + cur.delay + cur.duration,
+            0,
+          ),
         }
         return propTweensAcc
       }, {})
@@ -168,7 +188,9 @@ export const initialize = (animation: Animation): Animation => {
       targetsTweensAcc.push({
         resolvedTarget,
         propTweens,
-        duration: max(props.map(propName => propTweens[propName].duration)),
+        fullDuration: max(
+          props.map(propName => propTweens[propName].fullDuration),
+        ),
       })
 
       return targetsTweensAcc
@@ -178,8 +200,8 @@ export const initialize = (animation: Animation): Animation => {
 
   animation.delayValue =
     typeof animation.delay === 'function' ? animation.delay() : animation.delay
-  animation.duration = max(
-    targetsTweens.map(targetTween => targetTween.duration),
+  animation.fullDuration = max(
+    targetsTweens.map(targetTween => targetTween.fullDuration),
   )
   animation.targetsTweens = targetsTweens
   return animation
@@ -199,13 +221,13 @@ export const process = (animation: Animation, time: Time) => {
 
   const {
     startTime: animationStartTime,
-    duration: animationDuration,
+    fullDuration: animationFullDuration,
     targetsTweens,
     delayValue,
   } = animation
   if (
     animationStartTime == null ||
-    animationDuration == null ||
+    animationFullDuration == null ||
     targetsTweens == null ||
     delayValue == null
   ) {
@@ -217,8 +239,8 @@ export const process = (animation: Animation, time: Time) => {
     return
   }
 
-  // Run duration for the animation should not take into account the
-  const animationRunDuration = time - animationStartTime - delayValue
+  // Run duration for the animation should not take into account the delay
+  const animationRunDuration = strip(time - animationStartTime - delayValue)
 
   targetsTweens.forEach((targetTweens, targetIdx) => {
     const { resolvedTarget, propTweens } = targetTweens
@@ -226,14 +248,19 @@ export const process = (animation: Animation, time: Time) => {
     const values = propNames.reduce((acc, propName) => {
       let tweenCurrentValue
       const { keyframes } = propTweens[propName]
-      keyframes.forEach((keyframe, keyframedIdx) => {
+      keyframes.forEach((keyframe, keyframeIdx) => {
         // Skip if this keyframe has already completed
         if (keyframe.complete) {
           return
         }
 
         // The previous keyframe MUST be complete prior to this keyframe running
-        if (keyframedIdx > 0 && !keyframes[keyframedIdx - 1].complete) {
+        if (
+          keyframeIdx > 0 &&
+          (!keyframes[keyframeIdx - 1].complete ||
+            animationRunDuration <= keyframe.prevFramesFullDuration)
+        ) {
+          console.log(keyframeIdx)
           return
         }
 
@@ -244,7 +271,7 @@ export const process = (animation: Animation, time: Time) => {
 
         // We must wait for the keyframes' delay to be hit prior to us running
         // it
-        if (time - keyframe.startTime < keyframe.delay) {
+        if (time - keyframe.startTime <= keyframe.delay) {
           return
         }
 
@@ -311,29 +338,46 @@ export const process = (animation: Animation, time: Time) => {
         // across all of the values.
         if (
           keyframe.easing == null &&
-          keyframe.duration + keyframe.delay !== animationDuration &&
+          keyframe.duration + keyframe.delay !== animationFullDuration &&
           keyframe.bufferedFromNumber == null
         ) {
-          const animDurPerc = animationDuration / 100
-          const postRunDuration =
-            animationDuration - keyframe.duration - keyframe.delay
-          const prePercentage = keyframe.delay / animDurPerc
-          const runPercentage = keyframe.duration / animDurPerc
+          const animDurPerc = animationFullDuration / 100 /*?*/
+          let postRunDuration = strip(
+            animationFullDuration -
+              keyframe.duration -
+              keyframe.delay -
+              keyframe.prevFramesFullDuration,
+          ) /*?*/
+          postRunDuration = postRunDuration < 0 ? 0 : postRunDuration /*?*/
+          const prePercentage =
+            (keyframe.prevFramesFullDuration +
+              keyframe.delay +
+              (keyframeIdx > 0 ? 16.6667 : 0)) /
+            animDurPerc /*?*/
           const postPercentage =
-            postRunDuration > 0.001 ? postRunDuration / animDurPerc : 0
+            postRunDuration > 0 ? postRunDuration / animDurPerc : 0 /*?*/
+          const runPercentage = 100 - prePercentage - postPercentage /*?*/
+
           // DO NOT REMOVE THIS MATH.ABS WE NEED IT TO AVOID FLOAT
           // COMPUTE ISSUES ON OUR EASING FN!
           //            👇  ❗️
-          const val = Math.abs(keyframe.diff) / runPercentage
-          const beforeBuffer = prePercentage * val
-          const postBuffer = postPercentage * val
-          keyframe.bufferedFromNumber = keyframe.fromValue.number - beforeBuffer
+          const val = strip(Math.abs(keyframe.diff) / runPercentage) /*?*/
+          const beforeBuffer = prePercentage * val /*?*/
+          const postBuffer = postPercentage * val /*?*/
+          keyframe.bufferedFromNumber =
+            keyframe.fromValue.number -
+            (keyframe.fromValue.number > keyframe.toValue.number
+              ? -1 * beforeBuffer
+              : beforeBuffer) /*?*/
           keyframe.bufferedDiff =
-            keyframe.toValue.number + postBuffer - keyframe.bufferedFromNumber
+            keyframe.toValue.number +
+            postBuffer -
+            keyframe.bufferedFromNumber /*?*/
         }
         // If the time has passed the tween run time then we just use the "to"
         // as our value.
         if (keyframe.runDuration >= keyframe.duration) {
+          console.log(keyframeIdx)
           keyframe.complete = true
           tweenCurrentValue = keyframe.toValue
         } else {
@@ -341,21 +385,23 @@ export const process = (animation: Animation, time: Time) => {
             Easings[keyframe.easing || animation.easing]
           const runDuration =
             keyframe.bufferedFromNumber != null
-              ? animationRunDuration
-              : keyframe.runDuration
+              ? keyframe.prevFramesFullDuration +
+                keyframe.delay +
+                keyframe.runDuration
+              : keyframe.runDuration /*?*/
           const from =
             keyframe.bufferedFromNumber != null
               ? keyframe.bufferedFromNumber
-              : keyframe.fromValue.number
+              : keyframe.fromValue.number /*?*/
           const diff =
             keyframe.bufferedDiff != null
               ? keyframe.bufferedDiff
-              : keyframe.diff
+              : keyframe.diff /*?*/
           const duration =
             keyframe.bufferedFromNumber != null
-              ? animation.duration
-              : keyframe.duration
-          const easingResult = easingFn(runDuration, from, diff, duration)
+              ? animationFullDuration
+              : keyframe.duration /*?*/
+          const easingResult = easingFn(runDuration, from, diff, duration) /*?*/
           tweenCurrentValue = Object.assign({}, keyframe.toValue, {
             number: easingResult,
           })
