@@ -1,6 +1,6 @@
 {
   "name": "cinderella",
-  "version": "0.13.0",
+  "version": "0.13.1",
   "description": "A tiny transformation library.",
   "license": "MIT",
   "main": "commonjs/index.js",
