@@ -2,11 +2,11 @@
 /* eslint-disable no-param-reassign */
 
 import type {
-  Animation,
+  AnimationDefinition,
   DOMValueType,
   Prop,
   RawValue,
-  ResolvedTarget,
+  Target,
   Unit,
   Value,
   Values,
@@ -120,7 +120,7 @@ export const getDefaultFromValue = (
 })
 
 export const extractValue = (
-  resolvedTarget: ResolvedTarget,
+  target: Target,
   propName: Prop,
   raw: RawValue,
 ): Value => {
@@ -128,11 +128,9 @@ export const extractValue = (
     return {
       number: raw == null ? defaultNumberForProp(propName) : raw,
       unit:
-        resolvedTarget.type === 'dom'
-          ? defaultUnitForDOMValue(propName)
-          : undefined,
+        target.type === 'dom' ? defaultUnitForDOMValue(propName) : undefined,
       originType: 'number',
-      type: getValueType(resolvedTarget, propName),
+      type: getValueType(target, propName),
     }
   }
   if (typeof raw === 'string') {
@@ -142,11 +140,11 @@ export const extractValue = (
         number: parseInt(match[1], 10) || defaultNumberForProp(propName),
         unit:
           match[2] ||
-          (resolvedTarget.type === 'dom'
+          (target.type === 'dom'
             ? defaultUnitForDOMValue(propName)
             : undefined),
         originType: 'string',
-        type: getValueType(resolvedTarget, propName),
+        type: getValueType(target, propName),
       }
     }
   }
@@ -177,26 +175,21 @@ const getStyleTransformValues = (el: HTMLElement): Values => {
   return result
 }
 
-export const getValueFromTarget = (
-  resolvedTarget: ResolvedTarget,
-  propName: Prop,
-): Value => {
-  if (resolvedTarget.type === 'dom') {
-    const propType = getDOMPropType(resolvedTarget.actual, propName)
+export const getValueFromTarget = (target: Target, propName: Prop): Value => {
+  if (target.type === 'dom') {
+    const propType = getDOMPropType(target.actual, propName)
     if (propType === 'dom-css-transform') {
-      return getStyleTransformValues(resolvedTarget.actual)[propName]
+      return getStyleTransformValues(target.actual)[propName]
     } else if (propType === 'dom-css') {
-      return extractValue(
-        resolvedTarget,
-        propName,
-        resolvedTarget.actual.style[propName],
-      )
+      return extractValue(target, propName, target.actual.style[propName])
     }
   }
-  return extractValue(resolvedTarget, propName, resolvedTarget.actual[propName])
+  return extractValue(target, propName, target.actual[propName])
 }
 
-export const resolveTargets = (animation: Animation): Array<ResolvedTarget> => {
+export const resolveTargets = (
+  animation: AnimationDefinition,
+): Array<Target> => {
   const result = []
   const resolve = targets => {
     if (Array.isArray(targets)) {
@@ -225,7 +218,7 @@ export const resolveTargets = (animation: Animation): Array<ResolvedTarget> => {
   return result
 }
 
-export const setValuesOnTarget = (target: ResolvedTarget, values: Values) => {
+export const setValuesOnTarget = (target: Target, values: Values) => {
   Object.keys(values).forEach(propName => {
     const value = values[propName]
     if (target.type === 'dom' && value.type === 'dom-css-transform') {
