@@ -222,6 +222,7 @@ const processTween = (
   }
   if (executionTime >= tween.executionEnd) {
     tween.complete = true
+    return undefined
   }
   const tweenRunTime =
     executionTime > tween.executionEnd

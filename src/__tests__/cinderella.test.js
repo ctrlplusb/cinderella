@@ -195,14 +195,14 @@ describe('cinderella', () => {
                 ...acc,
                 [unit]: {
                   to: `20${unit}`,
-                  duration: 1 * frameRate,
+                  duration: 2 * frameRate,
                 },
               }),
               {},
             ),
           })
           .play()
-        waitForFrames(2)
+        waitForFrames(3)
         validUnits.forEach(unit => expect(unitTarget[unit]).toBe(`20${unit}`))
       })
 
@@ -433,8 +433,6 @@ describe('cinderella', () => {
           expect(target.foo).toBeCloseTo(192.841)
           waitForFrames(1)
           expect(target.foo).toBeCloseTo(199.977)
-          waitForFrames(1)
-          expect(target.foo).toBeCloseTo(200)
         })
 
         it('normalised easing to negative value', () => {
@@ -587,8 +585,6 @@ describe('cinderella', () => {
           expect(keyFrameTarget.foo).toBeCloseTo(178.8)
           waitForFrames(1)
           expect(keyFrameTarget.foo).toBeCloseTo(198.799)
-          waitForFrames(1)
-          expect(keyFrameTarget.foo).toBe(200)
         })
 
         it('negative easing', () => {
@@ -704,8 +700,8 @@ describe('cinderella', () => {
         expect(target.foo).toBeCloseTo(131.333)
         expect(target.bar).toBeCloseTo(31.333)
         waitForFrames(3)
-        expect(target.foo).toBeCloseTo(200)
-        expect(target.bar).toBeCloseTo(100)
+        expect(target.foo).toBeCloseTo(198)
+        expect(target.bar).toBeCloseTo(98)
       })
 
       it('absolute offset', () => {
@@ -797,7 +793,7 @@ describe('cinderella', () => {
         expect(target.bar).toBeCloseTo(31.333)
         waitForFrames(3)
         expect(target.foo).toBe(100)
-        expect(target.bar).toBe(100)
+        expect(target.bar).toBeCloseTo(98)
         waitForFrames(1)
         expect(onCompleteSpy).toHaveBeenCalledTimes(1)
       })

@@ -50,9 +50,6 @@ const defaultNumberForProp = (propName: Prop): number => {
   return 0
 }
 
-const camelCaseToHyphens = (x: string): string =>
-  x.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase()
-
 const defaultUnitForDOMValue = (propName: Prop): Unit | void => {
   switch (propName) {
     case 'translateX':
@@ -83,68 +80,58 @@ const defaultUnitForDOMValue = (propName: Prop): Unit | void => {
   }
 }
 
-const getDOMPropType = (el: HTMLElement, propName: Prop): DOMValueType => {
-  if (isStyleTransformProp(propName)) {
+const getDOMPropType = (el: HTMLElement, prop: Prop): DOMValueType => {
+  if (isStyleTransformProp(prop)) {
     return 'dom-css-transform'
   }
-  if (el.getAttribute(propName) != null) {
+  if (el.getAttribute(prop) != null) {
     return 'dom-attribute'
   }
-  if (el.style[propName] != null) {
+  if (el.style[prop] != null) {
     return 'dom-css'
   }
   return 'dom-attribute'
 }
 
-const getValueType = (
-  resolvedTarget: ResolvedTarget,
-  propName: Prop,
-): ValueType =>
-  resolvedTarget.type === 'dom'
-    ? getDOMPropType(resolvedTarget.actual, propName)
-    : 'object'
+const getValueType = (target: Target, prop: Prop): ValueType =>
+  target.type === 'dom' ? getDOMPropType(target.actual, prop) : 'object'
 
 export const getDefaultFromValue = (
-  resolvedTarget: ResolvedTarget,
-  propName: Prop,
+  target: Target,
+  prop: Prop,
   toValue: Value,
 ): Value => ({
-  number: defaultNumberForProp(propName),
+  number: defaultNumberForProp(prop),
   unit:
     toValue.unit ||
-    (resolvedTarget.type === 'dom'
-      ? defaultUnitForDOMValue(propName)
-      : undefined),
+    (target.type === 'dom' ? defaultUnitForDOMValue(prop) : undefined),
   originType: toValue.originType,
-  type: getValueType(resolvedTarget, propName),
+  type: getValueType(target, prop),
 })
 
 export const extractValue = (
   target: Target,
-  propName: Prop,
+  prop: Prop,
   raw: RawValue,
 ): Value => {
   if (raw == null || typeof raw === 'number') {
     return {
-      number: raw == null ? defaultNumberForProp(propName) : raw,
-      unit:
-        target.type === 'dom' ? defaultUnitForDOMValue(propName) : undefined,
+      number: raw == null ? defaultNumberForProp(prop) : raw,
+      unit: target.type === 'dom' ? defaultUnitForDOMValue(prop) : undefined,
       originType: 'number',
-      type: getValueType(target, propName),
+      type: getValueType(target, prop),
     }
   }
   if (typeof raw === 'string') {
     const match = rawValueRegex.exec(raw)
     if (match) {
       return {
-        number: parseInt(match[1], 10) || defaultNumberForProp(propName),
+        number: parseInt(match[1], 10) || defaultNumberForProp(prop),
         unit:
           match[2] ||
-          (target.type === 'dom'
-            ? defaultUnitForDOMValue(propName)
-            : undefined),
+          (target.type === 'dom' ? defaultUnitForDOMValue(prop) : undefined),
         originType: 'string',
-        type: getValueType(target, propName),
+        type: getValueType(target, prop),
       }
     }
   }
@@ -175,16 +162,16 @@ const getStyleTransformValues = (el: HTMLElement): Values => {
   return result
 }
 
-export const getValueFromTarget = (target: Target, propName: Prop): Value => {
+export const getValueFromTarget = (target: Target, prop: Prop): Value => {
   if (target.type === 'dom') {
-    const propType = getDOMPropType(target.actual, propName)
+    const propType = getDOMPropType(target.actual, prop)
     if (propType === 'dom-css-transform') {
-      return getStyleTransformValues(target.actual)[propName]
+      return getStyleTransformValues(target.actual)[prop]
     } else if (propType === 'dom-css') {
-      return extractValue(target, propName, target.actual.style[propName])
+      return extractValue(target, prop, target.actual.style[prop])
     }
   }
-  return extractValue(target, propName, target.actual[propName])
+  return extractValue(target, prop, target.actual[prop])
 }
 
 export const resolveTargets = (

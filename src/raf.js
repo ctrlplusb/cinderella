@@ -22,7 +22,7 @@ export const run = () => {
     return
   }
   const frame = time => {
-    Timelines.process(time)
+    Timelines.process(time) /*?.*/
     frameListeners.forEach(listener => {
       listener(time)
     })

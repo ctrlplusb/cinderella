@@ -63,7 +63,6 @@ export type AnimationDefinition = {
   easing?: string,
   onComplete?: Noop,
   onStart?: Noop,
-  onUpdate?: Noop,
   offset?: number | string,
   targets: TargetResolver,
   transform: {
@@ -99,9 +98,6 @@ export type Tween = {
   name?: string,
   normalisedFromNumber?: number,
   normalisedDiff?: number,
-  onComplete?: Noop,
-  onStart?: Noop,
-  onUpdate?: Noop,
   prop: Prop,
   targetId: string,
   to?: Value,
@@ -114,6 +110,8 @@ export type Animation = {
   startTime: Time,
   endTime: Time,
   duration: Time,
+  onComplete?: Noop,
+  onStart?: Noop,
 }
 
 export type Timeline = {
