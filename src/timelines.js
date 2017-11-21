@@ -284,13 +284,17 @@ const processTween = (
     const postPercentage = postRunDuration / animDurationPerc
     const runPercentage = 100 - prePercentage - postPercentage
     const val = Math.abs(tween.diff) / runPercentage
-    const beforeBuffer = prePercentage * val
-    const postBuffer = postPercentage * val
+    const beforeBuffer = toPrecision(prePercentage * val)
+    const postBuffer = toPrecision(postPercentage * val)
     tween.normalisedFromNumber =
-      tween.from.number -
-      (tween.from.number > tween.to.number ? -1 * beforeBuffer : beforeBuffer)
-    tween.normalisedDiff =
-      tween.to.number + postBuffer - tween.normalisedFromNumber
+      tween.from.number < tween.to.number
+        ? tween.from.number - beforeBuffer
+        : tween.from.number + beforeBuffer
+    tween.normalisedToNumber =
+      tween.to.number > tween.from.number
+        ? tween.to.number + postBuffer
+        : tween.to.number - postBuffer
+    tween.normalisedDiff = tween.normalisedToNumber - tween.normalisedFromNumber
   }
   const easingFn: EasingFn = Easings[tween.easing]
   const runDuration = tween.useNormalisedEasing

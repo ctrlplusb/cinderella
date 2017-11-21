@@ -399,12 +399,12 @@ describe('cinderella', () => {
                   },
                   {
                     to: 200,
-                    delay: 2 * frameRate,
+                    delay: 3 * frameRate,
                     duration: 5 * frameRate,
                   },
                 ],
               },
-              easing: 'linear',
+              easing: 'easeInOutQuad',
             })
             .play()
           waitForFrames(1)
@@ -412,25 +412,27 @@ describe('cinderella', () => {
             foo: 0,
           })
           waitForFrames(1)
-          expect(target.foo).toBeCloseTo(50)
+          expect(target.foo).toBeCloseTo(9.94)
           waitForFrames(1)
-          expect(target.foo).toBeCloseTo(100)
+          expect(target.foo).toBeCloseTo(39.76)
           // KeyFrame 2 delay
           waitForFrames(1)
-          expect(target.foo).toBeCloseTo(100)
+          expect(target.foo).toBeCloseTo(39.76)
           waitForFrames(1)
-          expect(target.foo).toBeCloseTo(100)
+          expect(target.foo).toBeCloseTo(39.76)
+          waitForFrames(1)
+          expect(target.foo).toBeCloseTo(39.76)
           // KeyFrame 2 actual run
           waitForFrames(1)
-          expect(target.foo).toBeCloseTo(118.799)
+          expect(target.foo).toBeCloseTo(94.977)
           waitForFrames(1)
-          expect(target.foo).toBeCloseTo(138.799)
+          expect(target.foo).toBeCloseTo(140.341)
           waitForFrames(1)
-          expect(target.foo).toBeCloseTo(158.799)
+          expect(target.foo).toBeCloseTo(172.962)
           waitForFrames(1)
-          expect(target.foo).toBeCloseTo(178.799)
+          expect(target.foo).toBeCloseTo(192.841)
           waitForFrames(1)
-          expect(target.foo).toBeCloseTo(198.799)
+          expect(target.foo).toBeCloseTo(199.977)
           waitForFrames(1)
           expect(target.foo).toBeCloseTo(200)
         })
@@ -456,24 +458,25 @@ describe('cinderella', () => {
                   },
                 ],
               },
+              easing: 'easeInOutQuad',
             })
             .play()
           waitForFrames(1)
           expect(keyFrameTarget.foo).toBe(0)
           waitForFrames(1)
-          expect(keyFrameTarget.foo).toBeCloseTo(0.5)
+          expect(keyFrameTarget.foo).toBeCloseTo(0.14)
           waitForFrames(1)
-          expect(keyFrameTarget.foo).toBeCloseTo(1)
+          expect(keyFrameTarget.foo).toBeCloseTo(0.566)
           waitForFrames(1)
-          expect(keyFrameTarget.foo).toBeCloseTo(0.81)
+          expect(keyFrameTarget.foo).toBeCloseTo(0.9)
           waitForFrames(1)
-          expect(keyFrameTarget.foo).toBeCloseTo(0.61)
+          expect(keyFrameTarget.foo).toBeCloseTo(0.53)
           waitForFrames(1)
-          expect(keyFrameTarget.foo).toBeCloseTo(0.41)
+          expect(keyFrameTarget.foo).toBeCloseTo(0.24)
           waitForFrames(1)
-          expect(keyFrameTarget.foo).toBeCloseTo(0.21)
+          expect(keyFrameTarget.foo).toBeCloseTo(0.063)
           waitForFrames(1)
-          expect(keyFrameTarget.foo).toBeCloseTo(0.01)
+          expect(keyFrameTarget.foo).toBeCloseTo(0.0002)
           waitForFrames(1)
           expect(keyFrameTarget.foo).toBeCloseTo(0)
         })
@@ -500,32 +503,33 @@ describe('cinderella', () => {
                   },
                 ],
               },
+              easing: 'easeInOutQuad',
             })
             .play()
           waitForFrames(1)
           expect(keyFrameTarget.foo).toBe(0.1)
           waitForFrames(1)
-          expect(keyFrameTarget.foo).toBeCloseTo(0.55)
+          expect(keyFrameTarget.foo).toBeCloseTo(0.189)
           waitForFrames(1)
-          expect(keyFrameTarget.foo).toBeCloseTo(1)
+          expect(keyFrameTarget.foo).toBeCloseTo(0.457)
           // 2nd frame delay for 3 frames
           waitForFrames(1)
-          expect(keyFrameTarget.foo).toBeCloseTo(1)
+          expect(keyFrameTarget.foo).toBeCloseTo(0.457)
           waitForFrames(1)
-          expect(keyFrameTarget.foo).toBeCloseTo(1)
+          expect(keyFrameTarget.foo).toBeCloseTo(0.457)
           waitForFrames(1)
-          expect(keyFrameTarget.foo).toBeCloseTo(1)
+          expect(keyFrameTarget.foo).toBeCloseTo(0.457)
           // 2nd frame run
           waitForFrames(1)
-          expect(keyFrameTarget.foo).toBeCloseTo(1.376)
+          expect(keyFrameTarget.foo).toBeCloseTo(1.689)
           waitForFrames(1)
-          expect(keyFrameTarget.foo).toBeCloseTo(1.775)
+          expect(keyFrameTarget.foo).toBeCloseTo(2.255)
           waitForFrames(1)
-          expect(keyFrameTarget.foo).toBeCloseTo(2.176)
+          expect(keyFrameTarget.foo).toBeCloseTo(2.662)
           waitForFrames(1)
-          expect(keyFrameTarget.foo).toBeCloseTo(2.576)
+          expect(keyFrameTarget.foo).toBeCloseTo(2.91)
           waitForFrames(1)
-          expect(keyFrameTarget.foo).toBeCloseTo(2.975)
+          expect(keyFrameTarget.foo).toBeCloseTo(2.999)
           waitForFrames(1)
           expect(keyFrameTarget.foo).toBeCloseTo(3)
         })
