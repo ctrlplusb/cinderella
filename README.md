@@ -8,7 +8,7 @@ A tiny transformation library.
 import cinderella from 'cinderella'
 
 cinderella().add({
-  target: '#foo',
+  targets: '.foo',
   transform: {
     width: {
       to: '200px',
@@ -41,7 +41,7 @@ cinderella().add({
 
 ## Introduction
 
-`cinderella` is _heavily_ inspired by [`animejs`](http://animejs.com/) - a wildly popular, well maintained, and just all out badass library - so if you are a sane person you'll likely want to check them out first. I created `cinderella` out of a selfishly desire for specific timeline semantics.
+`cinderella` is _heavily_ inspired by [`animejs`](http://animejs.com/) - a wildly popular, well maintained, and just all out badass library - so if you are a sane person you'll likely want to check them out first. I created `cinderella` out of a selfish desire for specific timeline semantics.
 
 ## Tutorial
 
@@ -50,26 +50,39 @@ cinderella().add({
 ## API
 
 ```javascript
-cinderella().add({
-  targets: '#foo',
-  transform: {
-    opacity: {
-      to: 50
+cinderella({ onStart: () => 'started', onComplete: () => 'completed' })
+  .add({
+    targets: '.foo',
+    transform: {
+      opacity: {
+        to: 50,
+        easing: 'easeOutQuad',
+      },
+      scale: {
+        to: 2,
+        delay: 500,
+        easing: 'easeInQuad',
+      },
+      // Keyframes via array
+      translateX: [ // 👈
+        { to: 250, duration: 250 },
+        { to: 0, delay: 500, duration: 250 }
+      ]
     },
-    scale: {
-      to: 2, 
-      delay: 500,
-      easing: 'linear',
-    },
-    translateX: [
-      { to: 250, duration: 250 },
-      { to: 0, delay: 500, duration: 250 }
-    ]
-  },
-  transformDefaults: { 
-    duration: 1000
-  }
-}).play()
+    transformDefaults: {
+      duration: 1000
+    }
+  })
+  .add({
+    targets: '.bar',
+    transform: {
+      width: {
+        to: '200px',
+        duration: 500
+      }
+    }
+  })
+  .play()
 ```
 
 ## Development Tools
