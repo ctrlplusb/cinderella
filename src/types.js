@@ -121,6 +121,7 @@ export type Timeline = {
   complete: boolean,
   config: TimelineConfig,
   definitions: Array<AnimationDefinition>,
+  endTime: number,
   executionTime?: Time,
   id: number,
   initializedTweens: boolean,

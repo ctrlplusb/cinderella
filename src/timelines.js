@@ -14,6 +14,7 @@ import type {
 } from './types'
 import * as Easings from './easings'
 import * as Targets from './targets'
+import * as Utils from './utils'
 
 let timelineIdIdx = 0
 let targetIdIdx = 0
@@ -22,9 +23,6 @@ let animationIdIdx = 0
 // Maintains a list of timelines that have been queued to "executed"
 let queuedTimelines: TimelineQueue = {}
 
-const toPrecision = (number: number, precision = 4): number =>
-  parseFloat(number.toFixed(precision))
-
 const defaultConfig: TimelineConfig = {
   loop: false,
 }
@@ -32,6 +30,7 @@ const defaultConfig: TimelineConfig = {
 const timelineDefaultState = {
   animations: {},
   complete: false,
+  endTime: 0,
   executionTime: undefined,
   initializedTweens: false,
   paused: false,
@@ -91,20 +90,22 @@ const getResolver = (animation, transform, type) => {
 }
 
 const createTweens = (timeline: Timeline) => {
-  let timelineExecutionTime: number = -1
+  const negOne = Utils.scaleUp(-1)
+  const posOne = Utils.scaleUp(1)
+  let timelineExecutionTime: number = negOne
   timeline.definitions.forEach((definition: AnimationDefinition) => {
     const { transformDefaults } = definition
     let animationExecutionTime: number = timelineExecutionTime
     const isAbsolute = typeof definition.offset === 'number'
     if (isAbsolute) {
-      animationExecutionTime = definition.offset - 1
+      animationExecutionTime = Utils.scaleUp(definition.offset)
     }
     if (typeof definition.offset === 'string') {
       const relativeOffset = resolveRelativeOffset(definition.offset)
       if (relativeOffset != null) {
-        animationExecutionTime += relativeOffset
-        if (animationExecutionTime < -1) {
-          animationExecutionTime = -1
+        animationExecutionTime += Utils.scaleUp(relativeOffset)
+        if (animationExecutionTime < negOne) {
+          animationExecutionTime = negOne
         }
       }
     }
@@ -135,17 +136,19 @@ const createTweens = (timeline: Timeline) => {
             'duration',
           )
           const easingResolver = getResolver(definition, transform, 'easing')
-          const delay: number =
+          const delay: number = Utils.scaleUp(
             typeof delayResolver === 'function'
               ? delayResolver(target, targetIdx, targets.length)
               : typeof delayResolver === 'number'
                 ? delayResolver
-                : 0 + (definition.delay || 0)
-          const duration: number =
+                : 0 + (definition.delay || 0),
+          )
+          const duration: number = Utils.scaleUp(
             typeof durationResolver === 'function'
               ? durationResolver(target, targetIdx, targets.length)
-              : typeof durationResolver === 'number' ? durationResolver : 0
-          const executionStart: number = propExecutionOffset + delay + 1
+              : typeof durationResolver === 'number' ? durationResolver : 0,
+          )
+          const executionStart: number = propExecutionOffset + delay + posOne
           const easing: string =
             typeof easingResolver === 'function'
               ? easingResolver(target, targetIdx, targets.length)
@@ -209,6 +212,9 @@ const createTweens = (timeline: Timeline) => {
       })
     })
     timeline.animations[animationIdIdx.toString()] = animation
+    if (animation.endTime > timeline.endTime) {
+      timeline.endTime = animation.endTime
+    }
   })
 }
 
@@ -222,7 +228,7 @@ const processTween = (
   }
   if (executionTime >= tween.executionEnd) {
     tween.complete = true
-    return undefined
+    // return undefined
   }
   const tweenRunTime =
     executionTime > tween.executionEnd
@@ -278,15 +284,17 @@ const processTween = (
   // be correctly relative to the easing function that is being applied
   // across all of the values.
   if (tween.useNormalisedEasing && tween.normalisedFromNumber == null) {
-    const animDurationPerc = (animation.endTime - animation.startTime) / 100
+    const animDurationPerc = Utils.toInt(
+      (animation.endTime - animation.startTime) / 100,
+    )
     const preRunDuration = tween.executionStart - animation.startTime
     const postRunDuration = animation.endTime - tween.executionEnd
     const prePercentage = preRunDuration / animDurationPerc
     const postPercentage = postRunDuration / animDurationPerc
     const runPercentage = 100 - prePercentage - postPercentage
-    const val = Math.abs(tween.diff) / runPercentage
-    const beforeBuffer = toPrecision(prePercentage * val)
-    const postBuffer = toPrecision(postPercentage * val)
+    const val = Utils.toInt(Math.abs(tween.diff) / runPercentage)
+    const beforeBuffer = prePercentage * val
+    const postBuffer = postPercentage * val
     tween.normalisedFromNumber =
       tween.from.number < tween.to.number
         ? tween.from.number - beforeBuffer
@@ -308,12 +316,7 @@ const processTween = (
   const duration = tween.useNormalisedEasing
     ? animation.endTime - animation.startTime
     : tween.duration
-  const easingResult = easingFn(
-    toPrecision(runDuration),
-    from,
-    diff,
-    toPrecision(duration),
-  )
+  const easingResult = Utils.toInt(easingFn(runDuration, from, diff, duration))
   return {
     targetId: tween.targetId,
     prop: tween.prop,
@@ -322,7 +325,8 @@ const processTween = (
     }),
   }
 }
-export const process = (time: number) => {
+export const process = (t: number) => {
+  const time = Utils.scaleUp(t)
   Object.keys(queuedTimelines).forEach(id => {
     const timeline = queuedTimelines[id]
     if (timeline.complete) {
@@ -365,7 +369,7 @@ export const process = (time: number) => {
     if (timeline.config.onFrame) {
       timeline.config.onFrame()
     }
-    timeline.complete = timeline.tweens.every(a => a.complete)
+    timeline.complete = timeline.executionTime >= timeline.endTime
     if (timeline.complete) {
       if (timeline.config.onComplete) {
         timeline.config.onComplete()

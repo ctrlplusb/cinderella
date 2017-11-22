@@ -12,6 +12,7 @@ import type {
   Values,
   ValueType,
 } from './types'
+import * as Utils from './utils'
 
 // e.g. matches <translateX>(<25px>)
 // 1 = translateX
@@ -101,7 +102,7 @@ export const getDefaultFromValue = (
   prop: Prop,
   toValue: Value,
 ): Value => ({
-  number: defaultNumberForProp(prop),
+  number: Utils.scaleUp(defaultNumberForProp(prop)),
   unit:
     toValue.unit ||
     (target.type === 'dom' ? defaultUnitForDOMValue(prop) : undefined),
@@ -116,7 +117,7 @@ export const extractValue = (
 ): Value => {
   if (raw == null || typeof raw === 'number') {
     return {
-      number: raw == null ? defaultNumberForProp(prop) : raw,
+      number: Utils.scaleUp(raw == null ? defaultNumberForProp(prop) : raw),
       unit: target.type === 'dom' ? defaultUnitForDOMValue(prop) : undefined,
       originType: 'number',
       type: getValueType(target, prop),
@@ -126,7 +127,9 @@ export const extractValue = (
     const match = rawValueRegex.exec(raw)
     if (match) {
       return {
-        number: parseInt(match[1], 10) || defaultNumberForProp(prop),
+        number: Utils.scaleUp(
+          parseFloat(match[1]) || defaultNumberForProp(prop),
+        ),
         unit:
           match[2] ||
           (target.type === 'dom' ? defaultUnitForDOMValue(prop) : undefined),
@@ -151,7 +154,7 @@ const getStyleTransformValues = (el: HTMLElement): Values => {
     const splitValue = rawValueRegex.exec(value)
     if (splitValue) {
       result[propName] = {
-        number: parseInt(splitValue[1], 10),
+        number: Utils.scaleUp(parseFloat(splitValue[1])),
         unit: splitValue[2],
         originType: 'string',
         type: 'dom-css-transform',
@@ -212,10 +215,12 @@ export const setValuesOnTarget = (target: Target, values: Values) => {
       return
     }
 
+    const scaledDownNumber = Utils.scaleDown(value.number)
+
     const resolvedValue =
       value.originType === 'number'
-        ? value.number
-        : `${value.number}${value.unit || ''}`
+        ? scaledDownNumber
+        : `${scaledDownNumber}${value.unit || ''}`
 
     if (target.type === 'dom' && value.type === 'dom-css') {
       target.actual.style[propName] = resolvedValue
@@ -229,8 +234,9 @@ export const setValuesOnTarget = (target: Target, values: Values) => {
     target.actual.style.transform = Object.keys(values)
       .reduce((acc, propName) => {
         const value = values[propName]
+        const scaledDown = Utils.scaleDown(value.number)
         if (target.type === 'dom' && value.type === 'dom-css-transform') {
-          acc.push(`${propName}(${value.number}${value.unit || ''})`)
+          acc.push(`${propName}(${scaledDown}${value.unit || ''})`)
         }
         return acc
       }, [])

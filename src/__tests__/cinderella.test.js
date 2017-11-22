@@ -316,11 +316,11 @@ describe('cinderella', () => {
         expect(target1.foo).toBeUndefined()
         expect(target2.foo).toBeUndefined()
         waitForFrames(1)
-        expect(target1.foo).toBe(0)
+        expect(target1.foo).toBeCloseTo(0.0)
         expect(target2.foo).toBeUndefined()
         waitForFrames(1)
         expect(target1.foo).toBeCloseTo(50)
-        expect(target2.foo).toBeUndefined()
+        expect(target2.foo).toBeCloseTo(199.999)
         waitForFrames(1)
         expect(target1.foo).toBeCloseTo(100)
         expect(target2.foo).toBeCloseTo(166.666)
@@ -349,7 +349,7 @@ describe('cinderella', () => {
         waitForFrames(1)
         expect(delayTarget.foo).toBeUndefined()
         waitForFrames(1)
-        expect(delayTarget.foo).toBe(0)
+        expect(delayTarget.foo).toBeCloseTo(0.0)
         waitForFrames(1)
         expect(delayTarget.foo).toBeCloseTo(33.333)
         waitForFrames(1)
@@ -384,6 +384,58 @@ describe('cinderella', () => {
       })
 
       describe('keyframes', () => {
+        it('normalised easing', () => {
+          const target = {
+            foo: 0,
+          }
+          cinderella()
+            .add({
+              targets: target,
+              transform: {
+                foo: [
+                  {
+                    from: 0.5,
+                    to: 1,
+                    duration: 5 * frameRate,
+                  },
+                  {
+                    to: 3,
+                    duration: 5 * frameRate,
+                  },
+                ],
+              },
+              easing: 'easeInOutCubic',
+            })
+            .play()
+          // KeyFrame 1
+          waitForFrames(1)
+          expect(target.foo).toBe(0.5)
+          waitForFrames(1)
+          expect(target.foo).toBeCloseTo(0.503)
+          waitForFrames(1)
+          expect(target.foo).toBeCloseTo(0.531)
+          waitForFrames(1)
+          expect(target.foo).toBeCloseTo(0.606)
+          waitForFrames(1)
+          expect(target.foo).toBeCloseTo(0.75)
+          waitForFrames(1)
+          expect(target.foo).toBeCloseTo(0.99)
+          // KeyFrame 2
+          waitForFrames(1)
+          expect(target.foo).toBeCloseTo(1.938)
+          waitForFrames(1)
+          expect(target.foo).toBeCloseTo(2.545)
+          waitForFrames(1)
+          expect(target.foo).toBeCloseTo(2.861)
+          waitForFrames(1)
+          expect(target.foo).toBeCloseTo(2.981)
+          waitForFrames(1)
+          expect(target.foo).toBeCloseTo(2.999)
+          // Complete
+          waitForFrames(1)
+          expect(target.foo).toBe(3)
+        })
+
         it('normalised easing', () => {
           const target = {
             foo: 0,
@@ -700,8 +752,8 @@ describe('cinderella', () => {
         expect(target.foo).toBeCloseTo(131.333)
         expect(target.bar).toBeCloseTo(31.333)
         waitForFrames(3)
-        expect(target.foo).toBeCloseTo(198)
-        expect(target.bar).toBeCloseTo(98)
+        expect(target.foo).toBeCloseTo(200)
+        expect(target.bar).toBeCloseTo(100)
       })
 
       it('absolute offset', () => {
@@ -739,13 +791,13 @@ describe('cinderella', () => {
         expect(target.bar).toBe(0)
         waitForFrames(1)
         expect(target.foo).toBeCloseTo(33.333)
-        expect(target.bar).toBeCloseTo(33.333)
+        expect(target.bar).toBeCloseTo(31.333)
         waitForFrames(1)
         expect(target.foo).toBeCloseTo(66.666)
-        expect(target.bar).toBeCloseTo(66.666)
+        expect(target.bar).toBeCloseTo(64.666)
         waitForFrames(1)
         expect(target.foo).toBeCloseTo(99.999)
-        expect(target.bar).toBeCloseTo(99.999)
+        expect(target.bar).toBeCloseTo(98)
         waitForFrames(1)
         expect(target.foo).toBe(100)
         expect(target.bar).toBe(100)
@@ -793,7 +845,7 @@ describe('cinderella', () => {
         expect(target.bar).toBeCloseTo(31.333)
         waitForFrames(3)
         expect(target.foo).toBe(100)
-        expect(target.bar).toBeCloseTo(98)
+        expect(target.bar).toBeCloseTo(100)
         waitForFrames(1)
         expect(onCompleteSpy).toHaveBeenCalledTimes(1)
       })
