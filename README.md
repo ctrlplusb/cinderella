@@ -10,9 +10,10 @@ import cinderella from 'cinderella'
 cinderella().add({
   targets: '.foo',
   transform: {
-    width: {
-      to: '200px',
-      duration: 1000
+    translateY: {
+      to: '-200px',
+      duration: 1000,
+      easing: 'easeInOutQuad',
     }
   }
 }).play()
