@@ -384,206 +384,6 @@ describe('cinderella', () => {
       })
 
       describe('keyframes', () => {
-        it('normalised easing', () => {
-          const target = {
-            foo: 0,
-          }
-          cinderella()
-            .add({
-              targets: target,
-              transform: {
-                foo: [
-                  {
-                    from: 0.5,
-                    to: 1,
-                    duration: 5 * frameRate,
-                  },
-                  {
-                    to: 3,
-                    duration: 5 * frameRate,
-                  },
-                ],
-              },
-              easing: 'easeInOutCubic',
-            })
-            .play()
-          // KeyFrame 1
-          waitForFrames(1)
-          expect(target.foo).toBe(0.5)
-          waitForFrames(1)
-          expect(target.foo).toBeCloseTo(0.503)
-          waitForFrames(1)
-          expect(target.foo).toBeCloseTo(0.531)
-          waitForFrames(1)
-          expect(target.foo).toBeCloseTo(0.606)
-          waitForFrames(1)
-          expect(target.foo).toBeCloseTo(0.75)
-          waitForFrames(1)
-          expect(target.foo).toBeCloseTo(0.99)
-          // KeyFrame 2
-          waitForFrames(1)
-          expect(target.foo).toBeCloseTo(1.938)
-          waitForFrames(1)
-          expect(target.foo).toBeCloseTo(2.545)
-          waitForFrames(1)
-          expect(target.foo).toBeCloseTo(2.861)
-          waitForFrames(1)
-          expect(target.foo).toBeCloseTo(2.981)
-          waitForFrames(1)
-          expect(target.foo).toBeCloseTo(2.999)
-          // Complete
-          waitForFrames(1)
-          expect(target.foo).toBe(3)
-        })
-
-        it('normalised easing', () => {
-          const target = {
-            foo: 0,
-          }
-          cinderella()
-            .add({
-              targets: target,
-              transform: {
-                foo: [
-                  {
-                    to: 100,
-                    duration: 2 * frameRate,
-                  },
-                  {
-                    to: 200,
-                    delay: 3 * frameRate,
-                    duration: 5 * frameRate,
-                  },
-                ],
-              },
-              easing: 'easeInOutQuad',
-            })
-            .play()
-          waitForFrames(1)
-          expect(target).toMatchObject({
-            foo: 0,
-          })
-          waitForFrames(1)
-          expect(target.foo).toBeCloseTo(9.94)
-          waitForFrames(1)
-          expect(target.foo).toBeCloseTo(39.76)
-          // KeyFrame 2 delay
-          waitForFrames(1)
-          expect(target.foo).toBeCloseTo(39.76)
-          waitForFrames(1)
-          expect(target.foo).toBeCloseTo(39.76)
-          waitForFrames(1)
-          expect(target.foo).toBeCloseTo(39.76)
-          // KeyFrame 2 actual run
-          waitForFrames(1)
-          expect(target.foo).toBeCloseTo(94.977)
-          waitForFrames(1)
-          expect(target.foo).toBeCloseTo(140.341)
-          waitForFrames(1)
-          expect(target.foo).toBeCloseTo(172.962)
-          waitForFrames(1)
-          expect(target.foo).toBeCloseTo(192.841)
-          waitForFrames(1)
-          expect(target.foo).toBeCloseTo(199.977)
-        })
-
-        it('normalised easing to negative value', () => {
-          const keyFrameTarget = {
-            foo: 1,
-          }
-          cinderella()
-            .add({
-              targets: keyFrameTarget,
-              transform: {
-                foo: [
-                  {
-                    from: 0,
-                    to: 1,
-                    duration: 2 * frameRate,
-                  },
-                  {
-                    from: 1,
-                    to: 0,
-                    duration: 5 * frameRate,
-                  },
-                ],
-              },
-              easing: 'easeInOutQuad',
-            })
-            .play()
-          waitForFrames(1)
-          expect(keyFrameTarget.foo).toBe(0)
-          waitForFrames(1)
-          expect(keyFrameTarget.foo).toBeCloseTo(0.14)
-          waitForFrames(1)
-          expect(keyFrameTarget.foo).toBeCloseTo(0.566)
-          waitForFrames(1)
-          expect(keyFrameTarget.foo).toBeCloseTo(0.9)
-          waitForFrames(1)
-          expect(keyFrameTarget.foo).toBeCloseTo(0.53)
-          waitForFrames(1)
-          expect(keyFrameTarget.foo).toBeCloseTo(0.24)
-          waitForFrames(1)
-          expect(keyFrameTarget.foo).toBeCloseTo(0.063)
-          waitForFrames(1)
-          expect(keyFrameTarget.foo).toBeCloseTo(0.0002)
-          waitForFrames(1)
-          expect(keyFrameTarget.foo).toBeCloseTo(0)
-        })
-
-        it('normalised easing to positive value', () => {
-          const keyFrameTarget = {
-            foo: 1,
-          }
-          cinderella()
-            .add({
-              targets: keyFrameTarget,
-              transform: {
-                foo: [
-                  {
-                    from: 0.1,
-                    to: 1,
-                    duration: 2 * frameRate,
-                  },
-                  {
-                    from: 1,
-                    to: 3,
-                    delay: 3 * frameRate,
-                    duration: 5 * frameRate,
-                  },
-                ],
-              },
-              easing: 'easeInOutQuad',
-            })
-            .play()
-          waitForFrames(1)
-          expect(keyFrameTarget.foo).toBe(0.1)
-          waitForFrames(1)
-          expect(keyFrameTarget.foo).toBeCloseTo(0.189)
-          waitForFrames(1)
-          expect(keyFrameTarget.foo).toBeCloseTo(0.457)
-          // 2nd frame delay for 3 frames
-          waitForFrames(1)
-          expect(keyFrameTarget.foo).toBeCloseTo(0.457)
-          waitForFrames(1)
-          expect(keyFrameTarget.foo).toBeCloseTo(0.457)
-          waitForFrames(1)
-          expect(keyFrameTarget.foo).toBeCloseTo(0.457)
-          // 2nd frame run
-          waitForFrames(1)
-          expect(keyFrameTarget.foo).toBeCloseTo(1.689)
-          waitForFrames(1)
-          expect(keyFrameTarget.foo).toBeCloseTo(2.255)
-          waitForFrames(1)
-          expect(keyFrameTarget.foo).toBeCloseTo(2.662)
-          waitForFrames(1)
-          expect(keyFrameTarget.foo).toBeCloseTo(2.91)
-          waitForFrames(1)
-          expect(keyFrameTarget.foo).toBeCloseTo(2.999)
-          waitForFrames(1)
-          expect(keyFrameTarget.foo).toBeCloseTo(3)
-        })
-
         it('unique easings', () => {
           const keyFrameTarget = {
             foo: 0,
@@ -600,7 +400,7 @@ describe('cinderella', () => {
                   },
                   {
                     to: 200,
-                    easing: 'linear',
+                    easing: 'easeOutQuad',
                     delay: 2 * frameRate,
                     duration: 5 * frameRate,
                   },
@@ -628,15 +428,15 @@ describe('cinderella', () => {
           expect(keyFrameTarget.foo).toBe(100)
           // Second keyframe runs for 5 frames
           waitForFrames(1)
-          expect(keyFrameTarget.foo).toBeCloseTo(118.8)
+          expect(keyFrameTarget.foo).toBeCloseTo(134.065)
           waitForFrames(1)
-          expect(keyFrameTarget.foo).toBeCloseTo(138.799)
+          expect(keyFrameTarget.foo).toBeCloseTo(162.545)
           waitForFrames(1)
-          expect(keyFrameTarget.foo).toBeCloseTo(158.8)
+          expect(keyFrameTarget.foo).toBeCloseTo(183.025)
           waitForFrames(1)
-          expect(keyFrameTarget.foo).toBeCloseTo(178.8)
+          expect(keyFrameTarget.foo).toBeCloseTo(195.505)
           waitForFrames(1)
-          expect(keyFrameTarget.foo).toBeCloseTo(198.799)
+          expect(keyFrameTarget.foo).toBeCloseTo(199.985)
         })
 
         it('negative easing', () => {

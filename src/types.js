@@ -60,7 +60,6 @@ export type TweenDefinition = {
 
 export type AnimationDefinition = {
   delay?: Time | (() => Time),
-  easing?: string,
   onComplete?: Noop,
   onStart?: Noop,
   offset?: number | string,
@@ -96,13 +95,10 @@ export type Tween = {
   from?: Value,
   fromResolver?: RawValue | RawValueResolver,
   name?: string,
-  normalisedFromNumber?: number,
-  normalisedDiff?: number,
   prop: Prop,
   targetId: string,
   to?: Value,
   toResolver: RawValue | RawValueResolver,
-  useNormalisedEasing: boolean,
 }
 
 export type Animation = {

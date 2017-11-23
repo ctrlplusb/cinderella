@@ -3,7 +3,6 @@
 
 import type {
   AnimationDefinition,
-  EasingFn,
   Time,
   Timeline,
   TimelineAPI,
@@ -152,7 +151,7 @@ const createTweens = (timeline: Timeline) => {
           const easing: string =
             typeof easingResolver === 'function'
               ? easingResolver(target, targetIdx, targets.length)
-              : typeof easingResolver === 'string' ? easingResolver : undefined
+              : typeof easingResolver === 'string' ? easingResolver : 'linear'
           const toResolver =
             transform.to != null
               ? transform.to
@@ -167,7 +166,7 @@ const createTweens = (timeline: Timeline) => {
             complete: false,
             delay,
             duration,
-            easing: easing || definition.easing || 'linear',
+            easing,
             executionStart,
             executionEnd: executionStart + duration,
             fromResolver:
@@ -179,7 +178,6 @@ const createTweens = (timeline: Timeline) => {
             prop: propName,
             targetId: targetIdIdx.toString(),
             toResolver,
-            useNormalisedEasing: definition.easing != null && easing == null,
           }
           // We set this so that the next prop "keyframe" will be directly
           // relative in execution to the previous "keyframe"
@@ -279,44 +277,15 @@ const processTween = (
     }
     tween.diff = tween.to.number - tween.from.number
   }
-  const animation = timeline.animations[tween.animationId]
-  // The below normalises our values so we can resolve a value that will
-  // be correctly relative to the easing function that is being applied
-  // across all of the values.
-  if (tween.useNormalisedEasing && tween.normalisedFromNumber == null) {
-    const animDurationPerc = Utils.toInt(
-      (animation.endTime - animation.startTime) / 100,
-    )
-    const preRunDuration = tween.executionStart - animation.startTime
-    const postRunDuration = animation.endTime - tween.executionEnd
-    const prePercentage = preRunDuration / animDurationPerc
-    const postPercentage = postRunDuration / animDurationPerc
-    const runPercentage = 100 - prePercentage - postPercentage
-    const val = Utils.toInt(Math.abs(tween.diff) / runPercentage)
-    const beforeBuffer = prePercentage * val
-    const postBuffer = postPercentage * val
-    tween.normalisedFromNumber =
-      tween.from.number < tween.to.number
-        ? tween.from.number - beforeBuffer
-        : tween.from.number + beforeBuffer
-    tween.normalisedToNumber =
-      tween.to.number > tween.from.number
-        ? tween.to.number + postBuffer
-        : tween.to.number - postBuffer
-    tween.normalisedDiff = tween.normalisedToNumber - tween.normalisedFromNumber
-  }
-  const easingFn: EasingFn = Easings[tween.easing]
-  const runDuration = tween.useNormalisedEasing
-    ? tweenRunTime + (tween.executionStart - animation.startTime)
-    : tweenRunTime
-  const from = tween.useNormalisedEasing
-    ? tween.normalisedFromNumber
-    : tween.from.number
-  const diff = tween.useNormalisedEasing ? tween.normalisedDiff : tween.diff
-  const duration = tween.useNormalisedEasing
-    ? animation.endTime - animation.startTime
-    : tween.duration
-  const easingResult = Utils.toInt(easingFn(runDuration, from, diff, duration))
+  const easingResult = Utils.toInt(
+    Easings[tween.easing](
+      tweenRunTime,
+      tween.from.number,
+      tween.diff,
+      tween.duration,
+    ),
+  )
+
   return {
     targetId: tween.targetId,
     prop: tween.prop,
