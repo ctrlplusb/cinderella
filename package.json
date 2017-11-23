@@ -3,12 +3,11 @@
   "version": "0.13.5",
   "description": "A tiny transformation library.",
   "license": "MIT",
-  "main": "commonjs/index.js",
+  "main": "dist/cinderella.js",
   "files": [
     "*.js",
     "*.md",
-    "umd",
-    "commonjs"
+    "dist"
   ],
   "repository": {
     "type": "git",
@@ -20,7 +19,7 @@
     "library"
   ],
   "scripts": {
-    "build": "babel-node ./tools/scripts/build.js",
+    "build": "node ./tools/scripts/build.js",
     "check": "npm run test",
     "clean": "rimraf ./commonjs && rimraf ./umd && rimraf ./coverage && rimraf ./umd",
     "lint": "eslint src",
@@ -39,6 +38,7 @@
     "babel-eslint": "^8.0.2",
     "babel-jest": "^21.2.0",
     "babel-loader": "^7.1.2",
+    "babel-plugin-external-helpers": "^6.22.0",
     "babel-polyfill": "^6.26.0",
     "babel-preset-env": "^1.6.1",
     "babel-preset-react": "^6.24.1",
@@ -65,14 +65,17 @@
     "ramda": "^0.25.0",
     "readline-sync": "^1.4.7",
     "rimraf": "^2.6.2",
-    "webpack": "^3.8.1"
+    "rollup": "^0.51.8",
+    "rollup-plugin-babel": "^3.0.2",
+    "rollup-plugin-flow": "^1.1.1",
+    "rollup-plugin-uglify": "^2.0.1"
   },
   "jest": {
     "collectCoverageFrom": [
       "src/**/*.{js,jsx}"
     ],
     "testPathIgnorePatterns": [
-      "<rootDir>/(commonjs|coverage|node_modules|tools|umd)/"
+      "<rootDir>/(coverage|dist|node_modules|tools)/"
     ]
   },
   "eslintConfig": {
@@ -104,9 +107,8 @@
   },
   "eslintIgnoreConfig": [
     "node_modules/",
-    "commonjs/",
     "coverage/",
-    "umd/"
+    "dist/"
   ],
   "prettier": {
     "semi": false,

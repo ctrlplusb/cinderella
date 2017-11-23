@@ -12,9 +12,7 @@ npm-debug.log
 coverage
 
 # Build output
-umd
-commonjs
-build
+dist
 
 # Flow
 flow-coverage

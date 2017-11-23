@@ -14,9 +14,7 @@ export const stopAll = () => {
   Timelines.unqueueAll()
 }
 
-const cinderella: Cinderella = config => {
+export const timeline: Cinderella = config => {
   RAF.run()
   return Timelines.create(config)
 }
-
-export default cinderella

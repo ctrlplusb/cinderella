@@ -1,9 +1,7 @@
-import { execSync } from 'child_process'
-import appRootDir from 'app-root-dir'
-import { resolve as resolvePath } from 'path'
-import { readFileSync } from 'fs'
+const { execSync } = require('child_process')
+const appRootDir = require('app-root-dir')
 
-export function removeEmpty(x) {
+function removeEmpty(x) {
   return x.filter(y => y != null)
 }
 
@@ -33,19 +31,19 @@ export function removeEmpty(x) {
 // then this function will only be interpretted after the ifElse has run. This
 // can be handy for values that require some complex initialization process.
 // e.g. ifDev(() => 'lazy', 'not lazy');
-export function ifElse(condition) {
+function ifElse(condition) {
   return function ifElseResolver(then, or) {
     const execIfFuc = x => (typeof x === 'function' ? x() : x)
     return condition ? execIfFuc(then) : or
   }
 }
 
-export function getPackageJson() {
-  return JSON.parse(
-    readFileSync(resolvePath(appRootDir.get(), './package.json'), 'utf-8'),
-  )
+function exec(command) {
+  execSync(command, { stdio: 'inherit', cwd: appRootDir.get() })
 }
 
-export function exec(command) {
-  execSync(command, { stdio: 'inherit', cwd: appRootDir.get() })
+module.exports = {
+  removeEmpty,
+  ifElse,
+  exec,
 }

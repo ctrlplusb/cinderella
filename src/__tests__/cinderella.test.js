@@ -1,10 +1,13 @@
 /* @flow */
 
-import cinderella, {
+import {
+  timeline,
   stopAll,
   addFrameListener,
   removeFrameListener,
 } from '../index'
+
+console.log(timeline)
 
 const frameRate = 1000 / 60
 
@@ -45,7 +48,7 @@ describe('cinderella', () => {
         onStartSpy = jest.fn()
         onFrameSpy = jest.fn()
         onCompleteSpy = jest.fn()
-        animation = cinderella({
+        animation = timeline({
           onStart: onStartSpy,
           onFrame: onFrameSpy,
           onComplete: onCompleteSpy,
@@ -86,7 +89,7 @@ describe('cinderella', () => {
       it('delay on animation', () => {
         const delayTarget = {}
         const delayOnStartSpy = jest.fn()
-        cinderella()
+        timeline()
           .add({
             targets: delayTarget,
             transform: {
@@ -156,7 +159,7 @@ describe('cinderella', () => {
 
       it('loop', () => {
         const loopStartSpy = jest.fn()
-        cinderella({
+        timeline({
           loop: true,
           onStart: loopStartSpy,
         })
@@ -187,7 +190,7 @@ describe('cinderella', () => {
           }),
           {},
         )
-        cinderella()
+        timeline()
           .add({
             targets: unitTarget,
             transform: validUnits.reduce(
@@ -211,7 +214,7 @@ describe('cinderella', () => {
           foo: 100,
           bar: 0,
         }
-        cinderella()
+        timeline()
           .add({
             targets: multiTarget,
             transform: {
@@ -240,7 +243,7 @@ describe('cinderella', () => {
 
       it('transform over time', () => {
         const target = {}
-        cinderella()
+        timeline()
           .add({
             targets: target,
             transform: {
@@ -298,7 +301,7 @@ describe('cinderella', () => {
         const toMock = jest.fn((target, i) => values[i].to)
         const target1 = {}
         const target2 = {}
-        cinderella()
+        timeline()
           .add({
             targets: [target1, target2],
             transform: {
@@ -334,7 +337,7 @@ describe('cinderella', () => {
 
       it('delay', () => {
         const delayTarget = {}
-        cinderella()
+        timeline()
           .add({
             targets: delayTarget,
             transform: {
@@ -360,7 +363,7 @@ describe('cinderella', () => {
 
       it('defaults', () => {
         const defaultsTarget = {}
-        cinderella()
+        timeline()
           .add({
             targets: defaultsTarget,
             transform: {
@@ -388,7 +391,7 @@ describe('cinderella', () => {
           const keyFrameTarget = {
             foo: 0,
           }
-          cinderella()
+          timeline()
             .add({
               targets: keyFrameTarget,
               transform: {
@@ -444,7 +447,7 @@ describe('cinderella', () => {
             foo: 1,
             bar: 200,
           }
-          cinderella()
+          timeline()
             .add({
               targets: keyFrameTarget,
               transform: {
@@ -491,7 +494,7 @@ describe('cinderella', () => {
 
     describe('multiple animations', () => {
       let target
-      let timeline
+      let animation
       let timelineOnCompleteSpy
       let timelineOnStartSpy
 
@@ -499,7 +502,7 @@ describe('cinderella', () => {
         target = {}
         timelineOnCompleteSpy = jest.fn()
         timelineOnStartSpy = jest.fn()
-        timeline = cinderella({
+        animation = timeline({
           onComplete: timelineOnCompleteSpy,
           onStart: timelineOnStartSpy,
         })
@@ -528,19 +531,19 @@ describe('cinderella', () => {
       })
 
       it('onComplete', () => {
-        timeline.play()
+        animation.play()
         waitForFrames(9)
         expect(timelineOnCompleteSpy).toHaveBeenCalledTimes(1)
       })
 
       it('onStart', () => {
-        timeline.play()
+        animation.play()
         waitForFrames(1)
         expect(timelineOnStartSpy).toHaveBeenCalledTimes(1)
       })
 
       it('relative execution', () => {
-        timeline.play()
+        animation.play()
         waitForFrames(1)
         expect(target.foo).toBe(0)
         waitForFrames(2)
@@ -562,7 +565,7 @@ describe('cinderella', () => {
           bar: 0,
         }
         const onCompleteSpy = jest.fn()
-        cinderella({
+        timeline({
           onComplete: onCompleteSpy,
         })
           .add({
@@ -611,7 +614,7 @@ describe('cinderella', () => {
           foo: 0,
           bar: 0,
         }
-        cinderella({
+        timeline({
           onComplete: onCompleteSpy,
         })
           .add({
@@ -661,7 +664,7 @@ describe('cinderella', () => {
           window.document.body.appendChild(el)
           return el
         })
-        cinderella()
+        timeline()
           .add({
             targets: '.foo',
             transform: {
@@ -697,7 +700,7 @@ describe('cinderella', () => {
   describe('frame listeners', () => {
     let animation
     beforeEach(() => {
-      animation = cinderella().add({
+      animation = timeline().add({
         targets: {},
         transform: {
           foo: {
