@@ -370,7 +370,7 @@ describe('cinderella', () => {
               foo: {},
               bar: {},
             },
-            transformDefaults: {
+            defaults: {
               delay: 2 * frameRate,
               duration: 5 * frameRate,
               easing: 'linear',

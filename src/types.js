@@ -67,7 +67,7 @@ export type AnimationDefinition = {
   transform: {
     [prop: Prop]: TweenDefinition | Array<TweenDefinition>,
   },
-  transformDefaults?: TweenDefinition,
+  defaults?: TweenDefinition,
 }
 
 export type TweenRunValue = {

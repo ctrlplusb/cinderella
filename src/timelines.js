@@ -80,12 +80,10 @@ const resolveRelativeOffset = (offset: string): number | void => {
 }
 
 const getResolver = (animation, transform, type) => {
-  const { transformDefaults } = animation
+  const { defaults } = animation
   return transform[type] != null
     ? transform[type]
-    : transformDefaults && transformDefaults[type] != null
-      ? transformDefaults[type]
-      : undefined
+    : defaults && defaults[type] != null ? defaults[type] : undefined
 }
 
 const createTweens = (timeline: Timeline) => {
@@ -93,7 +91,7 @@ const createTweens = (timeline: Timeline) => {
   const posOne = Utils.scaleUp(1)
   let timelineExecutionTime: number = negOne
   timeline.definitions.forEach((definition: AnimationDefinition) => {
-    const { transformDefaults } = definition
+    const { defaults } = definition
     let animationExecutionTime: number = timelineExecutionTime
     const isAbsolute = typeof definition.offset === 'number'
     if (isAbsolute) {
@@ -155,9 +153,7 @@ const createTweens = (timeline: Timeline) => {
           const toResolver =
             transform.to != null
               ? transform.to
-              : transformDefaults && transformDefaults.to != null
-                ? transformDefaults.to
-                : undefined
+              : defaults && defaults.to != null ? defaults.to : undefined
           if (toResolver == null) {
             throw new Error('Invalid/missing "to" on transform')
           }
@@ -172,9 +168,7 @@ const createTweens = (timeline: Timeline) => {
             fromResolver:
               transform.from != null
                 ? transform.from
-                : transformDefaults && transformDefaults.from != null
-                  ? transformDefaults.from
-                  : undefined,
+                : defaults && defaults.from != null ? defaults.from : undefined,
             prop: propName,
             targetId: targetIdIdx.toString(),
             toResolver,

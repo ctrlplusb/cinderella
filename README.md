@@ -70,7 +70,7 @@ timeline({ onStart: () => 'started', onComplete: () => 'completed' })
         { to: 0, delay: 500, duration: 250 }
       ]
     },
-    transformDefaults: {
+    defaults: {
       duration: 1000
     }
   })
