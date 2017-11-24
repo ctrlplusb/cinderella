@@ -5,9 +5,9 @@
 A tiny transformation library.
 
 ```javascript
-import cinderella from 'cinderella'
+import { timeline } from 'cinderella'
 
-cinderella().add({
+timeline().add({
   targets: '.foo',
   transform: {
     translateY: {
@@ -51,7 +51,7 @@ cinderella().add({
 ## API
 
 ```javascript
-cinderella({ onStart: () => 'started', onComplete: () => 'completed' })
+timeline({ onStart: () => 'started', onComplete: () => 'completed' })
   .add({
     targets: '.foo',
     transform: {
@@ -92,5 +92,6 @@ cinderella({ onStart: () => 'started', onComplete: () => 'completed' })
 
 ## Credits
 
-Humongous 😘 to Julian Garnier for the amazement that is `animejs`.  ️
+Humongous 😘 to Julian Garnier for the amazement that is `animejs`.
+
 Massive ❤️ to Mark O'Connor for donating the npm package name `cinderella`.  ️
