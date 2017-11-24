@@ -1,6 +1,6 @@
 {
   "name": "cinderella",
-  "version": "0.13.5",
+  "version": "0.13.6",
   "description": "A tiny transformation library.",
   "license": "MIT",
   "main": "dist/cinderella.js",
@@ -72,7 +72,7 @@
   },
   "jest": {
     "collectCoverageFrom": [
-      "src/**/*.{js,jsx}"
+      "src/**/*.js"
     ],
     "testPathIgnorePatterns": [
       "<rootDir>/(coverage|dist|node_modules|tools)/"
