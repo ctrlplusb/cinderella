@@ -174,6 +174,44 @@ describe('cinderella', () => {
         waitForFrames(12)
         expect(loopStartSpy).toHaveBeenCalledTimes(3)
       })
+
+      it('speed faster', () => {
+        const target = {}
+        timeline({
+          speed: 2,
+        })
+          .add({
+            targets: target,
+            transform: {
+              foo: {
+                to: 10,
+                duration: 10 * frameRate,
+              },
+            },
+          })
+          .play()
+        waitForFrames(6)
+        expect(target.foo).toBe(10)
+      })
+
+      it('speed slower', () => {
+        const target = {}
+        timeline({
+          speed: 0.5,
+        })
+          .add({
+            targets: target,
+            transform: {
+              foo: {
+                to: 10,
+                duration: 10 * frameRate,
+              },
+            },
+          })
+          .play()
+        waitForFrames(21)
+        expect(target.foo).toBe(10)
+      })
     })
 
     describe('tweens', () => {

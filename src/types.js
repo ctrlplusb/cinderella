@@ -81,6 +81,7 @@ export type TimelineConfig = {
   onComplete?: Noop,
   onFrame?: Noop,
   onStart?: Noop,
+  speed?: number,
 }
 
 export type Tween = {

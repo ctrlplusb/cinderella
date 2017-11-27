@@ -24,6 +24,7 @@ let queuedTimelines: TimelineQueue = {}
 
 const defaultConfig: TimelineConfig = {
   loop: false,
+  speed: 1,
 }
 
 const timelineDefaultState = {
@@ -142,11 +143,12 @@ const createTweens = (timeline: Timeline) => {
                 ? delayResolver
                 : 0 + (definition.delay || 0),
           )
-          const duration: number = Utils.scaleUp(
-            typeof durationResolver === 'function'
-              ? durationResolver(target, targetIdx, targets.length)
-              : typeof durationResolver === 'number' ? durationResolver : 0,
-          )
+          const duration: number =
+            Utils.scaleUp(
+              typeof durationResolver === 'function'
+                ? durationResolver(target, targetIdx, targets.length)
+                : typeof durationResolver === 'number' ? durationResolver : 0,
+            ) / timeline.config.speed
           const executionStart: number = propExecutionOffset + delay + posOne
           const easing: string =
             typeof easingResolver === 'function'
