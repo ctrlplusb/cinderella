@@ -11,6 +11,7 @@ timeline().add({
   targets: '.foo',
   transform: {
     translateY: {
+      from: 0,
       to: '-200px',
       duration: 1000,
       easing: 'easeInOutQuad',
@@ -42,7 +43,12 @@ timeline().add({
 
 ## Introduction
 
-`cinderella` is _heavily_ inspired by [`animejs`](http://animejs.com/) - a wildly popular, well maintained, and just all out badass library - so if you are a sane person you'll likely want to check them out first. I created `cinderella` out of a selfish desire for specific timeline semantics.
+`cinderella` is _heavily_ inspired by [`animejs`](http://animejs.com/) - a wildly popular, well maintained, and just all out badass library - so if you are a sane person you'll likely want to check them out first.
+
+I created `cinderella` for the following reasons:
+
+ - a selfish desire for specific timeline semantics
+ - a more rigid API so that I could provide some guarantees
 
 ## Tutorial
 
@@ -56,17 +62,19 @@ timeline({ onStart: () => 'started', onComplete: () => 'completed' })
     targets: '.foo',
     transform: {
       opacity: {
-        to: 50,
+        from: 1,
+        to: 0,
         easing: 'easeOutQuad',
       },
       scale: {
+        from: 1,
         to: 2,
         delay: 500,
         easing: 'easeInQuad',
       },
       // Keyframes via array
       translateX: [ // 👈
-        { to: 250, duration: 250 },
+        { from: 0, to: 250, duration: 250 },
         { to: 0, delay: 500, duration: 250 }
       ]
     },

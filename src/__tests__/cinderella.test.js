@@ -7,8 +7,6 @@ import {
   removeFrameListener,
 } from '../index'
 
-console.log(timeline)
-
 const frameRate = 1000 / 60
 
 describe('cinderella', () => {
@@ -386,111 +384,108 @@ describe('cinderella', () => {
         })
       })
 
-      describe('keyframes', () => {
-        it('unique easings', () => {
-          const keyFrameTarget = {
-            foo: 0,
-          }
-          timeline()
-            .add({
-              targets: keyFrameTarget,
-              transform: {
-                foo: [
-                  {
-                    to: 100,
-                    easing: 'linear',
-                    duration: 5 * frameRate,
-                  },
-                  {
-                    to: 200,
-                    easing: 'easeOutQuad',
-                    delay: 2 * frameRate,
-                    duration: 5 * frameRate,
-                  },
-                ],
-              },
-            })
-            .play()
-          waitForFrames(1)
-          expect(keyFrameTarget.foo).toBeCloseTo(0)
-          // First keyframe runs for 2 frames
-          waitForFrames(1)
-          expect(keyFrameTarget.foo).toBeCloseTo(20)
-          waitForFrames(1)
-          expect(keyFrameTarget.foo).toBeCloseTo(40)
-          waitForFrames(1)
-          expect(keyFrameTarget.foo).toBeCloseTo(60)
-          waitForFrames(1)
-          expect(keyFrameTarget.foo).toBeCloseTo(80)
-          waitForFrames(1)
-          expect(keyFrameTarget.foo).toBeCloseTo(100)
-          // Second keyframe has delay for 2 frames
-          waitForFrames(1)
-          expect(keyFrameTarget.foo).toBe(100)
-          waitForFrames(1)
-          expect(keyFrameTarget.foo).toBe(100)
-          // Second keyframe runs for 5 frames
-          waitForFrames(1)
-          expect(keyFrameTarget.foo).toBeCloseTo(134.065)
-          waitForFrames(1)
-          expect(keyFrameTarget.foo).toBeCloseTo(162.545)
-          waitForFrames(1)
-          expect(keyFrameTarget.foo).toBeCloseTo(183.025)
-          waitForFrames(1)
-          expect(keyFrameTarget.foo).toBeCloseTo(195.505)
-          waitForFrames(1)
-          expect(keyFrameTarget.foo).toBeCloseTo(199.985)
-        })
-
-        it('negative easing', () => {
-          const keyFrameTarget = {
-            foo: 1,
-            bar: 200,
-          }
-          timeline()
-            .add({
-              targets: keyFrameTarget,
-              transform: {
-                foo: {
-                  to: 0,
-                  easing: 'linear',
-                  duration: 5 * frameRate,
-                },
-                bar: {
+      it('keyframes', () => {
+        const keyFrameTarget = {
+          foo: 0,
+        }
+        timeline()
+          .add({
+            targets: keyFrameTarget,
+            transform: {
+              foo: [
+                {
                   to: 100,
                   easing: 'linear',
                   duration: 5 * frameRate,
                 },
-              },
-            })
-            .play()
-          waitForFrames(1)
-          expect(keyFrameTarget).toMatchObject({
-            foo: 1,
-            bar: 200,
+                {
+                  to: 200,
+                  easing: 'easeOutQuad',
+                  delay: 2 * frameRate,
+                  duration: 5 * frameRate,
+                },
+              ],
+            },
           })
-          expect(keyFrameTarget.foo * 100).toBeCloseTo(100)
-          expect(keyFrameTarget.bar).toBeCloseTo(200)
-          waitForFrames(1)
-          expect(keyFrameTarget.foo * 100).toBeCloseTo(80)
-          expect(keyFrameTarget.bar).toBeCloseTo(180)
-          waitForFrames(1)
-          expect(keyFrameTarget.foo * 100).toBeCloseTo(60)
-          expect(keyFrameTarget.bar).toBeCloseTo(160)
-          waitForFrames(1)
-          expect(keyFrameTarget.foo * 100).toBeCloseTo(40)
-          expect(keyFrameTarget.bar).toBeCloseTo(140)
-          waitForFrames(1)
-          expect(keyFrameTarget.foo * 100).toBeCloseTo(20)
-          expect(keyFrameTarget.bar).toBeCloseTo(120)
-          waitForFrames(1)
-          expect(keyFrameTarget.foo * 100).toBeCloseTo(0)
-          expect(keyFrameTarget.bar).toBeCloseTo(100)
-        })
+          .play()
+        waitForFrames(1)
+        expect(keyFrameTarget.foo).toBeCloseTo(0)
+        // First keyframe runs for 2 frames
+        waitForFrames(1)
+        expect(keyFrameTarget.foo).toBeCloseTo(20)
+        waitForFrames(1)
+        expect(keyFrameTarget.foo).toBeCloseTo(40)
+        waitForFrames(1)
+        expect(keyFrameTarget.foo).toBeCloseTo(60)
+        waitForFrames(1)
+        expect(keyFrameTarget.foo).toBeCloseTo(80)
+        waitForFrames(1)
+        expect(keyFrameTarget.foo).toBeCloseTo(100)
+        // Second keyframe has delay for 2 frames
+        waitForFrames(1)
+        expect(keyFrameTarget.foo).toBe(100)
+        waitForFrames(1)
+        expect(keyFrameTarget.foo).toBe(100)
+        // Second keyframe runs for 5 frames
+        waitForFrames(1)
+        expect(keyFrameTarget.foo).toBeCloseTo(134.065)
+        waitForFrames(1)
+        expect(keyFrameTarget.foo).toBeCloseTo(162.545)
+        waitForFrames(1)
+        expect(keyFrameTarget.foo).toBeCloseTo(183.025)
+        waitForFrames(1)
+        expect(keyFrameTarget.foo).toBeCloseTo(195.505)
+        waitForFrames(1)
+        expect(keyFrameTarget.foo).toBeCloseTo(199.985)
       })
 
-      it.skip('mixed from/to units')
+      it('negative easing', () => {
+        const target = {}
+        timeline()
+          .add({
+            targets: target,
+            transform: {
+              foo: {
+                from: 1,
+                to: 0,
+                easing: 'linear',
+                duration: 5 * frameRate,
+              },
+              bar: {
+                from: 200,
+                to: 100,
+                easing: 'linear',
+                duration: 5 * frameRate,
+              },
+            },
+          })
+          .play()
+        waitForFrames(1)
+        expect(target).toMatchObject({
+          foo: 1,
+          bar: 200,
+        })
+        expect(target.foo * 100).toBeCloseTo(100)
+        expect(target.bar).toBeCloseTo(200)
+        waitForFrames(1)
+        expect(target.foo * 100).toBeCloseTo(80)
+        expect(target.bar).toBeCloseTo(180)
+        waitForFrames(1)
+        expect(target.foo * 100).toBeCloseTo(60)
+        expect(target.bar).toBeCloseTo(160)
+        waitForFrames(1)
+        expect(target.foo * 100).toBeCloseTo(40)
+        expect(target.bar).toBeCloseTo(140)
+        waitForFrames(1)
+        expect(target.foo * 100).toBeCloseTo(20)
+        expect(target.bar).toBeCloseTo(120)
+        waitForFrames(1)
+        expect(target.foo * 100).toBeCloseTo(0)
+        expect(target.bar).toBeCloseTo(100)
+      })
     })
+
+    it.skip('mixed from/to units')
 
     describe('multiple animations', () => {
       let target
@@ -510,6 +505,7 @@ describe('cinderella', () => {
             targets: target,
             transform: {
               foo: {
+                from: 0,
                 to: 100,
                 duration: 3 * frameRate,
               },
@@ -519,10 +515,12 @@ describe('cinderella', () => {
             targets: target,
             transform: {
               foo: {
+                from: 100,
                 to: 200,
                 duration: 3 * frameRate,
               },
               bar: {
+                from: 0,
                 to: 100,
                 duration: 3 * frameRate,
               },

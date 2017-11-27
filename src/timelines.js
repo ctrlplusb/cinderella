@@ -58,9 +58,6 @@ const resetTimeline = t => {
   t = Object.assign(t, timelineDefaultState)
   t.tweens.forEach(tween => {
     tween.complete = false
-    tween.diff = undefined
-    tween.from = undefined
-    tween.to = undefined
   })
 }
 
@@ -125,7 +122,12 @@ const createTweens = (timeline: Timeline) => {
       }
       Object.keys(definition.transform).forEach(propName => {
         let propExecutionOffset = animationExecutionTime
-        const createTween = (propName, transform, transformIdx = 0): Tween => {
+        const createTween = (
+          propName,
+          transform,
+          transformIdx = 0,
+          prev,
+        ): Tween => {
           const delayResolver = getResolver(definition, transform, 'delay')
           const durationResolver = getResolver(
             definition,
@@ -150,28 +152,55 @@ const createTweens = (timeline: Timeline) => {
             typeof easingResolver === 'function'
               ? easingResolver(target, targetIdx, targets.length)
               : typeof easingResolver === 'string' ? easingResolver : 'linear'
+          const fromResolver =
+            transform.from != null
+              ? transform.from
+              : defaults && defaults.from != null ? defaults.from : undefined
           const toResolver =
             transform.to != null
               ? transform.to
               : defaults && defaults.to != null ? defaults.to : undefined
-          if (toResolver == null) {
-            throw new Error('Invalid/missing "to" on transform')
+          const from =
+            prev != null
+              ? prev.to
+              : typeof fromResolver === 'function'
+                ? Targets.extractValue(
+                    target,
+                    propName,
+                    fromResolver(target, targetIdx, targets.length),
+                  )
+                : Targets.extractValue(target, propName, fromResolver)
+          const to =
+            typeof toResolver === 'function'
+              ? Targets.extractValue(
+                  target,
+                  propName,
+                  toResolver(target, targetIdx, targets.length),
+                )
+              : Targets.extractValue(target, propName, toResolver)
+          if (to == null || from == null) {
+            throw new Error('Invalid/missing from/to data on transform')
+          }
+          if (from.unit !== to.unit) {
+            // eslint-disable-next-line no-console
+            console.warn(
+              `Mixed units from from/to of ${propName}. from: ${from.unit ||
+                ''}, to: "${to.unit || ''}"`,
+            )
           }
           const tween = {
             animationId: animationIdIdx,
             complete: false,
             delay,
+            diff: to.number - from.number,
             duration,
             easing,
             executionStart,
             executionEnd: executionStart + duration,
-            fromResolver:
-              transform.from != null
-                ? transform.from
-                : defaults && defaults.from != null ? defaults.from : undefined,
+            from,
             prop: propName,
             targetId: targetIdIdx.toString(),
-            toResolver,
+            to,
           }
           // We set this so that the next prop "keyframe" will be directly
           // relative in execution to the previous "keyframe"
@@ -192,9 +221,20 @@ const createTweens = (timeline: Timeline) => {
         }
         const propTransform = definition.transform[propName]
         const tweens = Array.isArray(propTransform)
-          ? propTransform.map((transform, transformIdx) =>
-              createTween(propName, transform, transformIdx),
-            )
+          ? propTransform.reduce(
+              (acc, transform, transformIdx) => {
+                const tween = createTween(
+                  propName,
+                  transform,
+                  transformIdx,
+                  acc.prev,
+                )
+                acc.tweens.push(tween)
+                acc.prev = tween
+                return acc
+              },
+              { tweens: [], prev: null },
+            ).tweens
           : typeof propTransform === 'object'
             ? [createTween(propName, propTransform)]
             : []
@@ -220,57 +260,11 @@ const processTween = (
   }
   if (executionTime >= tween.executionEnd) {
     tween.complete = true
-    // return undefined
   }
   const tweenRunTime =
     executionTime > tween.executionEnd
       ? tween.duration
       : executionTime - tween.executionStart
-  const { target, idx: targetIdx, length: targetsLength } = timeline.targets[
-    tween.targetId
-  ]
-  // Resolve the to/from/diff values for the tween
-  if (tween.to == null || tween.from == null || tween.diff == null) {
-    if (tween.fromResolver == null) {
-      tween.from = Targets.getValueFromTarget(target, tween.prop)
-    } else {
-      tween.from =
-        typeof tween.fromResolver === 'function'
-          ? Targets.extractValue(
-              target,
-              tween.prop,
-              tween.fromResolver(target, targetIdx, targetsLength),
-            )
-          : Targets.extractValue(target, tween.prop, tween.fromResolver)
-    }
-    tween.to =
-      typeof tween.toResolver === 'function'
-        ? Targets.extractValue(
-            target,
-            tween.prop,
-            tween.toResolver(target, targetIdx, targetsLength),
-          )
-        : Targets.extractValue(target, tween.prop, tween.toResolver)
-    if (tween.to == null) {
-      // Do nothing as we have no destination value
-      return undefined
-    }
-    if (tween.from == null) {
-      tween.from = Targets.getDefaultFromValue(target, tween.prop, tween.to)
-    }
-    if (tween.from == null) {
-      // Do nothing as we have no source value
-      return undefined
-    }
-    if (tween.from.unit !== tween.to.unit) {
-      // eslint-disable-next-line no-console
-      console.warn(
-        `Mixed units from from/to of ${tween.prop}. from: ${tween.from.unit ||
-          ''}, to: "${tween.to.unit || ''}"`,
-      )
-    }
-    tween.diff = tween.to.number - tween.from.number
-  }
   const easingResult = Utils.toInt(
     Easings[tween.easing](
       tweenRunTime,
@@ -279,7 +273,6 @@ const processTween = (
       tween.duration,
     ),
   )
-
   return {
     targetId: tween.targetId,
     prop: tween.prop,
@@ -288,6 +281,7 @@ const processTween = (
     }),
   }
 }
+
 export const process = (t: number) => {
   const time = Utils.scaleUp(t)
   Object.keys(queuedTimelines).forEach(id => {
@@ -343,6 +337,7 @@ export const process = (t: number) => {
     }
   })
 }
+
 export const create = (config?: TimelineConfig): TimelineAPI => {
   timelineIdIdx += 1
   const timeline: Timeline = Object.assign(

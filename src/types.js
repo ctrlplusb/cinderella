@@ -59,7 +59,7 @@ export type TweenDefinition = {
 }
 
 export type AnimationDefinition = {
-  delay?: Time | (() => Time),
+  delay?: Time,
   onComplete?: Noop,
   onStart?: Noop,
   offset?: number | string,
@@ -86,26 +86,23 @@ export type TimelineConfig = {
 export type Tween = {
   animationId: number,
   complete: boolean,
-  diff?: number,
+  diff: number,
   delay: Time,
   duration: Time,
   easing: string,
   executionStart: Time,
   executionEnd: Time,
-  from?: Value,
-  fromResolver?: RawValue | RawValueResolver,
+  from: Value,
   name?: string,
   prop: Prop,
   targetId: string,
-  to?: Value,
-  toResolver: RawValue | RawValueResolver,
+  to: Value,
 }
 
 export type Animation = {
   id: number,
   startTime: Time,
   endTime: Time,
-  duration: Time,
   onComplete?: Noop,
   onStart?: Noop,
 }
