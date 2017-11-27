@@ -181,20 +181,15 @@ describe('cinderella', () => {
         const validUnits = '%,px,pt,em,rem,in,cm,mm,ex,ch,pc,vw,vh,vmin,vmax,deg,rad,turn'.split(
           ',',
         )
-        const unitTarget = validUnits.reduce(
-          (acc, unit) => ({
-            ...acc,
-            [unit]: `10${unit}`,
-          }),
-          {},
-        )
+        const target = {}
         timeline()
           .add({
-            targets: unitTarget,
+            targets: target,
             transform: validUnits.reduce(
               (acc, unit) => ({
                 ...acc,
                 [unit]: {
+                  from: `10${unit}`,
                   to: `20${unit}`,
                   duration: 2 * frameRate,
                 },
@@ -204,7 +199,7 @@ describe('cinderella', () => {
           })
           .play()
         waitForFrames(3)
-        validUnits.forEach(unit => expect(unitTarget[unit]).toBe(`20${unit}`))
+        validUnits.forEach(unit => expect(target[unit]).toBe(`20${unit}`))
       })
 
       it('multiple', () => {
