@@ -52,11 +52,17 @@ export const unqueueAll = () => {
   queuedTimelines = {}
 }
 
-const resetTimeline = t => {
+const setDefaultState = t => {
   t = Object.assign(t, timelineDefaultState)
   t.tweens.forEach(tween => {
     tween.complete = false
   })
+  return t
+}
+
+const setLoopIndex = t => {
+  t.loopIndex = typeof t.config.loop === 'number' ? t.config.loop : undefined
+  return t
 }
 
 const relativeOffsetRegex = /^([+-]=)([0-9]+)$/
@@ -338,7 +344,13 @@ export const process = (t: number) => {
         timeline.config.onComplete()
       }
       if (timeline.config.loop) {
-        resetTimeline(timeline)
+        if (typeof timeline.loopIndex === 'number') {
+          timeline.loopIndex -= 1
+          if (timeline.loopIndex <= 0) {
+            return
+          }
+        }
+        setDefaultState(timeline)
         if (timeline.config.direction === 'alternate') {
           timeline.reverse = !timeline.reverse
         }
@@ -350,17 +362,19 @@ export const process = (t: number) => {
 export const create = (config?: TimelineConfig): TimelineAPI => {
   timelineIdIdx += 1
   const resolvedConfig = Object.assign({}, defaultConfig, config || {})
-  const timeline: Timeline = Object.assign({}, timelineDefaultState, {
-    animations: {},
-    config: resolvedConfig,
-    definitions: [],
-    endTime: 0,
-    id: timelineIdIdx,
-    reverse: resolvedConfig.direction === 'reverse',
-    reversed: undefined,
-    targets: {},
-    tweens: [],
-  })
+  const timeline: Timeline = setLoopIndex(
+    setDefaultState({
+      animations: {},
+      config: resolvedConfig,
+      definitions: [],
+      endTime: 0,
+      id: timelineIdIdx,
+      reverse: resolvedConfig.direction === 'reverse',
+      reversed: undefined,
+      targets: {},
+      tweens: [],
+    }),
+  )
   const api = {}
   Object.assign(api, {
     add: animation => {
@@ -371,7 +385,8 @@ export const create = (config?: TimelineConfig): TimelineAPI => {
       if (timeline.paused) {
         timeline.paused = false
       } else if (timeline.complete) {
-        resetTimeline(timeline)
+        setDefaultState(timeline)
+        setLoopIndex(timeline)
       }
       queue(timeline)
       return api

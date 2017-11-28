@@ -120,6 +120,7 @@ export type Timeline = {
   executionTime?: Time,
   id: number,
   initializedTweens: boolean,
+  loopIndex?: number,
   paused: boolean,
   prevTime?: Time,
   reverse: boolean,

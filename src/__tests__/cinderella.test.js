@@ -175,6 +175,49 @@ describe('cinderella', () => {
         expect(loopStartSpy).toHaveBeenCalledTimes(3)
       })
 
+      it('loop count', () => {
+        const loopStartSpy = jest.fn()
+        timeline({
+          loop: 2,
+          onStart: loopStartSpy,
+        })
+          .add({
+            targets: {},
+            transform: {
+              foo: {
+                to: 10,
+                duration: 3 * frameRate,
+              },
+            },
+          })
+          .play()
+        waitForFrames(12)
+        expect(loopStartSpy).toHaveBeenCalledTimes(2)
+      })
+
+      it('loop count play again', () => {
+        const loopStartSpy = jest.fn()
+        const animation = timeline({
+          loop: 2,
+          onStart: loopStartSpy,
+        })
+          .add({
+            targets: {},
+            transform: {
+              foo: {
+                to: 10,
+                duration: 3 * frameRate,
+              },
+            },
+          })
+          .play()
+        waitForFrames(12)
+        expect(loopStartSpy).toHaveBeenCalledTimes(2)
+        animation.play()
+        waitForFrames(12)
+        expect(loopStartSpy).toHaveBeenCalledTimes(4)
+      })
+
       it('speed faster', () => {
         const target = {}
         timeline({
