@@ -14,11 +14,6 @@ import type {
 } from './types'
 import * as Utils from './utils'
 
-// e.g. matches <translateX>(<25px>)
-// 1 = translateX
-// 2 = px
-const styleTransformItemRegex = /(\w+)\((.+?)\)/g
-
 // e.g. matches <25><px>
 // 1 = 25
 // 2 = px
@@ -97,19 +92,6 @@ const getDOMPropType = (el: HTMLElement, prop: Prop): DOMValueType => {
 const getValueType = (target: Target, prop: Prop): ValueType =>
   target.type === 'dom' ? getDOMPropType(target.actual, prop) : 'object'
 
-export const getDefaultFromValue = (
-  target: Target,
-  prop: Prop,
-  toValue: Value,
-): Value => ({
-  number: Utils.scaleUp(defaultNumberForProp(prop)),
-  unit:
-    toValue.unit ||
-    (target.type === 'dom' ? defaultUnitForDOMValue(prop) : undefined),
-  originType: toValue.originType,
-  type: getValueType(target, prop),
-})
-
 export const extractValue = (
   target: Target,
   prop: Prop,
@@ -138,43 +120,7 @@ export const extractValue = (
       }
     }
   }
-  throw new Error(`Unsupported value type: ${raw}`)
-}
-
-const getStyleTransformValues = (el: HTMLElement): Values => {
-  const result: Values = {}
-  if (!el.style.transform) {
-    return result
-  }
-  const transformStr = el.style.transform
-  let match = styleTransformItemRegex.exec(transformStr)
-  while (match) {
-    const propName = match[1]
-    const value = match[2]
-    const splitValue = rawValueRegex.exec(value)
-    if (splitValue) {
-      result[propName] = {
-        number: Utils.scaleUp(parseFloat(splitValue[1])),
-        unit: splitValue[2],
-        originType: 'string',
-        type: 'dom-css-transform',
-      }
-    }
-    match = styleTransformItemRegex.exec(transformStr)
-  }
-  return result
-}
-
-export const getValueFromTarget = (target: Target, prop: Prop): Value => {
-  if (target.type === 'dom') {
-    const propType = getDOMPropType(target.actual, prop)
-    if (propType === 'dom-css-transform') {
-      return getStyleTransformValues(target.actual)[prop]
-    } else if (propType === 'dom-css') {
-      return extractValue(target, prop, target.actual.style[prop])
-    }
-  }
-  return extractValue(target, prop, target.actual[prop])
+  throw new Error(`Unsupported value: ${raw}`)
 }
 
 export const resolveTargets = (

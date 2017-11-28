@@ -119,12 +119,12 @@ export type Timeline = {
   endTime: number,
   executionTime?: Time,
   id: number,
-  initializedTweens: boolean,
+  initialized: boolean,
   loopIndex?: number,
   paused: boolean,
-  prevTime?: Time,
   reverse: boolean,
   reversed?: Array<Tween>,
+  seek?: Time,
   startTime?: Time,
   targets: {
     [id: string]: {
@@ -144,6 +144,8 @@ export type TimelineAPI = {
   add: AnimationDefinition => TimelineAPI,
   play: (config?: TimelineConfig) => TimelineAPI,
   pause: () => TimelineAPI,
+  seek: number => TimelineAPI,
+  seekTime: number => TimelineAPI,
   stop: () => TimelineAPI,
 }
 

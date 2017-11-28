@@ -28,12 +28,10 @@ const defaultConfig: TimelineConfig = {
   speed: 1,
 }
 
-const timelineDefaultState = {
+const timelineDefaultRunState = {
   complete: false,
   executionTime: undefined,
-  initializedTweens: false,
   paused: false,
-  prevTime: undefined,
   startTime: undefined,
 }
 
@@ -53,7 +51,7 @@ export const unqueueAll = () => {
 }
 
 const setDefaultState = t => {
-  t = Object.assign(t, timelineDefaultState)
+  t = Object.assign(t, timelineDefaultRunState)
   t.tweens.forEach(tween => {
     tween.complete = false
   })
@@ -87,7 +85,46 @@ const getResolver = (animation, transform, type) => {
     : defaults && defaults[type] != null ? defaults[type] : undefined
 }
 
-const createTweens = (timeline: Timeline) => {
+const processTween = (
+  timeline: Timeline,
+  tween: Tween,
+  executionTime: Time,
+): TweenRunValue | void => {
+  if (tween.complete || executionTime < tween.executionStart) {
+    return undefined
+  }
+  if (executionTime >= tween.executionEnd) {
+    tween.complete = true
+  }
+  const baseRunTime =
+    executionTime > tween.executionEnd
+      ? tween.duration
+      : executionTime - tween.executionStart
+  const tweenRunTime = timeline.reverse
+    ? tween.duration - baseRunTime
+    : baseRunTime
+
+  const easingResult = Utils.toInt(
+    Easings[tween.easing](
+      tweenRunTime,
+      tween.from.number,
+      tween.diff,
+      tween.duration,
+    ),
+  )
+  return {
+    targetId: tween.targetId,
+    prop: tween.prop,
+    value: Object.assign({}, tween.to, {
+      number: easingResult,
+    }),
+  }
+}
+
+const ensureInitialized = timeline => {
+  if (timeline.initialized) {
+    return
+  }
   const negOne = Utils.scaleUp(-1)
   const posOne = Utils.scaleUp(1)
   let timelineExecutionTime: number = negOne
@@ -186,6 +223,9 @@ const createTweens = (timeline: Timeline) => {
           if (to == null || from == null) {
             throw new Error('Invalid/missing from/to data on transform')
           }
+          if (from.unit == null) {
+            from.unit = to.unit
+          }
           if (from.unit !== to.unit) {
             // eslint-disable-next-line no-console
             console.warn(
@@ -238,7 +278,10 @@ const createTweens = (timeline: Timeline) => {
                 acc.prev = tween
                 return acc
               },
-              { tweens: [], prev: null },
+              {
+                tweens: [],
+                prev: null,
+              },
             ).tweens
           : typeof propTransform === 'object'
             ? [createTween(propName, propTransform)]
@@ -253,88 +296,56 @@ const createTweens = (timeline: Timeline) => {
       timeline.endTime = animation.endTime
     }
   })
+  timeline.initialized = true
 }
 
-const processTween = (
-  timeline: Timeline,
-  tween: Tween,
-  executionTime: Time,
-): TweenRunValue | void => {
-  if (tween.complete || executionTime < tween.executionStart) {
-    return undefined
+const runTimeline = (timeline: Timeline, time: Time = 0) => {
+  if (timeline.complete) {
+    return
   }
-  if (executionTime >= tween.executionEnd) {
-    tween.complete = true
+  ensureInitialized(timeline)
+  if (
+    timeline.seek == null &&
+    timeline.startTime == null &&
+    timeline.executionTime == null
+  ) {
+    // No seeking has occurred, the timeline is starting naturally
+    timeline.startTime = time
+    if (timeline.config.onStart != null) {
+      timeline.config.onStart()
+    }
+  } else if (timeline.startTime == null && timeline.executionTime != null) {
+    // We have seeked to this point
+    timeline.startTime = time - timeline.executionTime
   }
-  const baseRunTime =
-    executionTime > tween.executionEnd
-      ? tween.duration
-      : executionTime - tween.executionStart
-  const tweenRunTime = timeline.reverse
-    ? tween.duration - baseRunTime
-    : baseRunTime
-
-  const easingResult = Utils.toInt(
-    Easings[tween.easing](
-      tweenRunTime,
-      tween.from.number,
-      tween.diff,
-      tween.duration,
-    ),
-  )
-  return {
-    targetId: tween.targetId,
-    prop: tween.prop,
-    value: Object.assign({}, tween.to, {
-      number: easingResult,
-    }),
+  if (timeline.reverse && timeline.reversed == null) {
+    timeline.reversed = timeline.tweens.reverse()
   }
-}
-
-export const process = (t: number) => {
-  const time = Utils.scaleUp(t)
-  Object.keys(queuedTimelines).forEach(id => {
-    const timeline = queuedTimelines[id]
-    if (timeline.complete) {
-      return
-    }
-    if (!timeline.initializedTweens) {
-      createTweens(timeline)
-      timeline.initializedTweens = true
-    }
-    if (timeline.startTime == null) {
-      timeline.startTime = time
-      if (timeline.reverse && timeline.reversed == null) {
-        timeline.reversed = timeline.tweens.reverse()
-      }
-      if (timeline.config.onStart != null) {
-        timeline.config.onStart()
-      }
-    }
-    if (timeline.paused && timeline.startTime != null) {
-      timeline.startTime += time - timeline.startTime
-    } else {
-      timeline.executionTime = time - timeline.startTime
-      const targetsValues = timeline[timeline.reverse ? 'reversed' : 'tweens']
-        .map(tween => processTween(timeline, tween, timeline.executionTime))
-        .reduce((acc, tweenValue) => {
-          if (tweenValue == null) {
-            return acc
-          }
-          const { targetId, prop, value } = tweenValue
-          if (acc[targetId] == null) {
-            acc[targetId] = {}
-          }
-          acc[targetId][prop] = value
+  if (timeline.paused && timeline.startTime != null) {
+    timeline.startTime += time - timeline.startTime
+  } else {
+    timeline.executionTime =
+      timeline.seek != null ? timeline.seek : time - timeline.startTime
+    const targetsValues = timeline[timeline.reverse ? 'reversed' : 'tweens']
+      .map(tween => processTween(timeline, tween, timeline.executionTime))
+      .reduce((acc, tweenValue) => {
+        if (tweenValue == null) {
           return acc
-        }, {})
-      Object.keys(targetsValues).forEach(targetId => {
-        const { target } = timeline.targets[targetId]
-        const values = targetsValues[targetId]
-        Targets.setValuesOnTarget(target, values)
-      })
-    }
-    timeline.prevTime = time
+        }
+        const { targetId, prop, value } = tweenValue
+        if (acc[targetId] == null) {
+          acc[targetId] = {}
+        }
+        acc[targetId][prop] = value
+        return acc
+      }, {})
+    Object.keys(targetsValues).forEach(targetId => {
+      const { target } = timeline.targets[targetId]
+      const values = targetsValues[targetId]
+      Targets.setValuesOnTarget(target, values)
+    })
+  }
+  if (timeline.seek == null) {
     if (timeline.config.onFrame) {
       timeline.config.onFrame()
     }
@@ -356,6 +367,16 @@ export const process = (t: number) => {
         }
       }
     }
+  } else {
+    timeline.seek = undefined
+  }
+}
+
+export const run = (t: number) => {
+  const time = Utils.scaleUp(t)
+  Object.keys(queuedTimelines).forEach(id => {
+    const timeline = queuedTimelines[id]
+    runTimeline(timeline, time)
   })
 }
 
@@ -369,6 +390,7 @@ export const create = (config?: TimelineConfig): TimelineAPI => {
       definitions: [],
       endTime: 0,
       id: timelineIdIdx,
+      initialized: false,
       reverse: resolvedConfig.direction === 'reverse',
       reversed: undefined,
       targets: {},
@@ -393,6 +415,23 @@ export const create = (config?: TimelineConfig): TimelineAPI => {
     },
     pause: () => {
       timeline.paused = true
+      return api
+    },
+    seek: perc => {
+      setDefaultState(timeline)
+      ensureInitialized(timeline)
+      const targetPerc = perc < 0 ? 0 : perc > 100 ? 100 : perc
+      timeline.seek = timeline.endTime / 100 * targetPerc
+      runTimeline(timeline)
+      return api
+    },
+    seekTime: time => {
+      setDefaultState(timeline)
+      ensureInitialized(timeline)
+      const endTime = Utils.scaleUp(timeline.endTime)
+      const scaledTime = Utils.scaleUp(time)
+      timeline.seek = time < 0 ? 0 : scaledTime > endTime ? endTime : scaledTime
+      runTimeline(timeline)
       return api
     },
     stop: () => {

@@ -26,18 +26,19 @@ timeline().add({
 [![Codecov](https://img.shields.io/codecov/c/github/ctrlplusb/cinderella.svg?style=flat-square)](https://codecov.io/github/ctrlplusb/cinderella)
 
  - Simple API
- - Play, pause, loop, stop, reverse, alternate
- - Compose animations to create timelines
- - Easing functions
- - Devtools to visualise and debug
- - Optimised over requestAnimationFrame
- - 3.5kB gzipped
+ - Play, pause, seek, stop, loop, reverse, alternate
+ - Easily compose animations to create timelines
+ - Ton of easings
+ - Devtools to visualise and debug your animations
+ - Optimised over requestAnimationFrame for 60FPS performance
+ - 3.6kB (min + gzip)
 
 ## TOCs
 
   - [Introduction](#introduction)
   - [Tutorial](#tutorial)
   - [API](#api)
+  - [Easings](#easings)
   - [Development Tools](#development-tools)
   - [Credits](#credits)
 
@@ -93,6 +94,43 @@ timeline({ onStart: () => 'started', onComplete: () => 'completed' })
   })
   .play()
 ```
+
+## Easings
+
+Linear animation is bland. Give some life to your animations by using one of
+our built in easing functions.
+
+ - [easeInQuad](http://easings.net/#easeInQuad)
+ - [easeOutQuad](http://easings.net/#easeOutQuad)
+ - [easeInOutQuad](http://easings.net/#easeInOutQuad)
+ - [easeInCubic](http://easings.net/#easeInCubic)
+ - [easeOutCubic](http://easings.net/#easeOutCubic)
+ - [easeInOutCubic](http://easings.net/#easeInOutCubic)
+ - [easeInQuart](http://easings.net/#easeInQuart)
+ - [easeOutQuart](http://easings.net/#easeOutQuart)
+ - [easeInOutQuart](http://easings.net/#easeInOutQuart)
+ - [easeInQuint](http://easings.net/#easeInQuint)
+ - [easeOutQuint](http://easings.net/#easeOutQuint)
+ - [easeInOutQuint](http://easings.net/#easeInOutQuint)
+ - [easeInSine](http://easings.net/#easeInSine)
+ - [easeOutSine](http://easings.net/#easeOutSine)
+ - [easeInOutSine](http://easings.net/#easeInOutSine)
+ - [easeInExpo](http://easings.net/#easeInExpo)
+ - [easeOutExpo](http://easings.net/#easeOutExpo)
+ - [easeInOutExpo](http://easings.net/#easeInOutExpo)
+ - [easeInCirc](http://easings.net/#easeInCirc)
+ - [easeOutCirc](http://easings.net/#easeOutCirc)
+ - [easeInOutCirc](http://easings.net/#easeInOutCirc)
+ - [easeInElastic](http://easings.net/#easeInElastic)
+ - [easeOutElastic](http://easings.net/#easeOutElastic)
+ - [easeInOutElastic](http://easings.net/#easeInOutElastic)
+ - [easeInBack](http://easings.net/#easeInBack)
+ - [easeOutBack](http://easings.net/#easeOutBack)
+ - [easeInOutBack](http://easings.net/#easeInOutBack)
+ - [easeOutBounce](http://easings.net/#easeOutBounce)
+ - [easeInBounce](http://easings.net/#easeInBounce)
+ - [easeInOutBounce](http://easings.net/#easeInOutBounce)
+ - [linear](http://easings.net/#linear)
 
 ## Development Tools
 

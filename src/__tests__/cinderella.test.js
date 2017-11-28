@@ -33,16 +33,14 @@ describe('cinderella', () => {
 
   describe('timelines', () => {
     describe('execution', () => {
-      let targets
+      let target
       let onStartSpy
       let onFrameSpy
       let onCompleteSpy
       let animation
 
       beforeEach(() => {
-        targets = {
-          foo: 0,
-        }
+        target = {}
         onStartSpy = jest.fn()
         onFrameSpy = jest.fn()
         onCompleteSpy = jest.fn()
@@ -51,9 +49,10 @@ describe('cinderella', () => {
           onFrame: onFrameSpy,
           onComplete: onCompleteSpy,
         }).add({
-          targets,
+          targets: target,
           transform: {
             foo: {
+              from: 0,
               to: 100,
               duration: 5 * frameRate,
             },
@@ -153,6 +152,32 @@ describe('cinderella', () => {
         animation.play()
         waitForFrames(5)
         expect(onCompleteSpy).toHaveBeenCalledTimes(1)
+      })
+
+      it('seek', () => {
+        animation.seek(50)
+        expect(target.foo).toBe(50)
+      })
+
+      it('seek time', () => {
+        animation.seekTime(5 * frameRate / 2)
+        expect(target.foo).toBeCloseTo(50)
+      })
+
+      it('seek and play', () => {
+        animation.seek(50)
+        expect(target.foo).toBe(50)
+        animation.play()
+        waitForFrames(1)
+        expect(target.foo).toBe(50)
+        waitForFrames(1)
+        expect(target.foo).toBe(70)
+        waitForFrames(1)
+        expect(target.foo).toBe(90)
+        waitForFrames(1)
+        expect(target.foo).toBe(100)
+        waitForFrames(1)
+        expect(target.foo).toBe(100)
       })
 
       it('loop', () => {
