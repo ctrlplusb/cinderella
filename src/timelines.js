@@ -357,7 +357,7 @@ const runTimeline = (timeline: Timeline, time: Time = 0) => {
       if (timeline.config.loop) {
         if (typeof timeline.loopIndex === 'number') {
           timeline.loopIndex -= 1
-          if (timeline.loopIndex <= 0) {
+          if (timeline.loopIndex < 0) {
             return
           }
         }

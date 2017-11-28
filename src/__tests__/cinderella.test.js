@@ -203,7 +203,7 @@ describe('cinderella', () => {
       it('loop count', () => {
         const loopStartSpy = jest.fn()
         timeline({
-          loop: 2,
+          loop: 1,
           onStart: loopStartSpy,
         })
           .add({
@@ -223,7 +223,7 @@ describe('cinderella', () => {
       it('loop count play again', () => {
         const loopStartSpy = jest.fn()
         const animation = timeline({
-          loop: 2,
+          loop: 1,
           onStart: loopStartSpy,
         })
           .add({
