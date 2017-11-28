@@ -212,6 +212,88 @@ describe('cinderella', () => {
         waitForFrames(21)
         expect(target.foo).toBe(10)
       })
+
+      it('direction "reverse"', () => {
+        const target = {}
+        timeline({
+          direction: 'reverse',
+        })
+          .add({
+            targets: target,
+            transform: {
+              foo: {
+                from: 0,
+                to: 10,
+                duration: 10 * frameRate,
+              },
+            },
+          })
+          .play()
+        waitForFrames(3)
+        expect(target.foo).toBeCloseTo(8)
+        waitForFrames(1)
+        expect(target.foo).toBeCloseTo(7)
+        waitForFrames(1)
+        expect(target.foo).toBeCloseTo(6)
+        waitForFrames(6)
+        expect(target.foo).toBe(0)
+      })
+
+      it('direction "alternate"', () => {
+        const target = {}
+        timeline({
+          direction: 'alternate',
+          loop: true,
+        })
+          .add({
+            targets: target,
+            transform: {
+              foo: {
+                from: 0,
+                to: 10,
+                duration: 10 * frameRate,
+              },
+            },
+          })
+          .play()
+        waitForFrames(3)
+        expect(target.foo).toBeCloseTo(2)
+        waitForFrames(1)
+        expect(target.foo).toBeCloseTo(3)
+        waitForFrames(7)
+        expect(target.foo).toBe(10)
+        waitForFrames(3)
+        expect(target.foo).toBeCloseTo(8)
+        waitForFrames(1)
+        expect(target.foo).toBeCloseTo(7)
+        waitForFrames(1)
+        expect(target.foo).toBeCloseTo(6)
+        waitForFrames(6)
+      })
+
+      it('direction "normal"', () => {
+        const target = {}
+        timeline({
+          direction: 'normal',
+        })
+          .add({
+            targets: target,
+            transform: {
+              foo: {
+                from: 0,
+                to: 10,
+                duration: 10 * frameRate,
+              },
+            },
+          })
+          .play()
+        waitForFrames(3)
+        expect(target.foo).toBeCloseTo(2)
+        waitForFrames(1)
+        expect(target.foo).toBeCloseTo(3)
+        waitForFrames(7)
+        expect(target.foo).toBe(10)
+      })
     })
 
     describe('tweens', () => {

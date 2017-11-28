@@ -23,21 +23,18 @@ let animationIdIdx = 0
 let queuedTimelines: TimelineQueue = {}
 
 const defaultConfig: TimelineConfig = {
+  direction: 'normal',
   loop: false,
   speed: 1,
 }
 
 const timelineDefaultState = {
-  animations: {},
   complete: false,
-  endTime: 0,
   executionTime: undefined,
   initializedTweens: false,
   paused: false,
   prevTime: undefined,
   startTime: undefined,
-  targets: {},
-  tweens: [],
 }
 
 const queue = t => {
@@ -263,10 +260,14 @@ const processTween = (
   if (executionTime >= tween.executionEnd) {
     tween.complete = true
   }
-  const tweenRunTime =
+  const baseRunTime =
     executionTime > tween.executionEnd
       ? tween.duration
       : executionTime - tween.executionStart
+  const tweenRunTime = timeline.reverse
+    ? tween.duration - baseRunTime
+    : baseRunTime
+
   const easingResult = Utils.toInt(
     Easings[tween.easing](
       tweenRunTime,
@@ -297,6 +298,9 @@ export const process = (t: number) => {
     }
     if (timeline.startTime == null) {
       timeline.startTime = time
+      if (timeline.reverse && timeline.reversed == null) {
+        timeline.reversed = timeline.tweens.reverse()
+      }
       if (timeline.config.onStart != null) {
         timeline.config.onStart()
       }
@@ -305,7 +309,7 @@ export const process = (t: number) => {
       timeline.startTime += time - timeline.startTime
     } else {
       timeline.executionTime = time - timeline.startTime
-      const targetsValues = timeline.tweens
+      const targetsValues = timeline[timeline.reverse ? 'reversed' : 'tweens']
         .map(tween => processTween(timeline, tween, timeline.executionTime))
         .reduce((acc, tweenValue) => {
           if (tweenValue == null) {
@@ -335,6 +339,9 @@ export const process = (t: number) => {
       }
       if (timeline.config.loop) {
         resetTimeline(timeline)
+        if (timeline.config.direction === 'alternate') {
+          timeline.reverse = !timeline.reverse
+        }
       }
     }
   })
@@ -342,15 +349,18 @@ export const process = (t: number) => {
 
 export const create = (config?: TimelineConfig): TimelineAPI => {
   timelineIdIdx += 1
-  const timeline: Timeline = Object.assign(
-    {},
-    {
-      config: Object.assign({}, defaultConfig, config || {}),
-      definitions: [],
-      id: timelineIdIdx,
-    },
-    timelineDefaultState,
-  )
+  const resolvedConfig = Object.assign({}, defaultConfig, config || {})
+  const timeline: Timeline = Object.assign({}, timelineDefaultState, {
+    animations: {},
+    config: resolvedConfig,
+    definitions: [],
+    endTime: 0,
+    id: timelineIdIdx,
+    reverse: resolvedConfig.direction === 'reverse',
+    reversed: undefined,
+    targets: {},
+    tweens: [],
+  })
   const api = {}
   Object.assign(api, {
     add: animation => {

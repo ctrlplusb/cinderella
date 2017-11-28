@@ -77,6 +77,7 @@ export type TweenRunValue = {
 }
 
 export type TimelineConfig = {
+  direction: 'normal' | 'reverse' | 'alternate',
   loop?: boolean,
   onComplete?: Noop,
   onFrame?: Noop,
@@ -121,6 +122,8 @@ export type Timeline = {
   initializedTweens: boolean,
   paused: boolean,
   prevTime?: Time,
+  reverse: boolean,
+  reversed?: Array<Tween>,
   startTime?: Time,
   targets: {
     [id: string]: {

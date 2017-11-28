@@ -26,12 +26,12 @@ timeline().add({
 [![Codecov](https://img.shields.io/codecov/c/github/ctrlplusb/cinderella.svg?style=flat-square)](https://codecov.io/github/ctrlplusb/cinderella)
 
  - Simple API
- - Play, pause, loop, stop
+ - Play, pause, loop, stop, reverse, alternate
  - Compose animations to create timelines
  - Easing functions
  - Devtools to visualise and debug
  - Optimised over requestAnimationFrame
- - 4kB gzipped
+ - 3.5kB gzipped
 
 ## TOCs
 
