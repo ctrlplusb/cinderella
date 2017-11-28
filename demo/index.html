@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>cinderella - examples</title>
+  <link href="https://unpkg.com/normalize.css@7.0.0/normalize.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css?family=Share+Tech+Mono" rel="stylesheet">
+  <style>
+    .container {
+      display: flex;
+      font-size: 16px;
+      font-family: 'Share Tech Mono', monospace;
+      min-height: 100vh;
+    }
+
+    .column {
+      width: 200px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .main {
+      flex-grow: 1;
+      display: flex;
+    }
+
+    .menu {
+      padding: 15px;
+      flex-grow: 1;
+    }
+
+    .spotify {
+      height: 80px;
+      overflow: hidden;
+    }
+
+    .title {
+      font-size: 18px;
+    }
+
+    .iframe {
+      flex-grow: 1;
+      border: 0;
+    }
+
+    .list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .list>li {
+      margin: 5px 0;
+    }
+
+    a {
+      text-decoration: none;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="column">
+      <div class="menu">
+        <ul class="list">
+          <li>
+            <a href="#01" data-href="/01.html">01 - simple</a>
+          </li>
+          <li>
+            <a href="#02" data-href="/02.html">02 - loop</a>
+          </li>
+          <li>
+            <a href="#03" data-href="/03.html">03 - keyframes</a>
+          </li>
+          <li>
+            <a href="#xx" data-href="/XX.html">XX - load</a>
+          </li>
+        </ul>
+      </div>
+      <div class="spotify">
+        <iframe src="https://open.spotify.com/embed/album/5lyHJBlOAZZPl6KWwtnui6" width="100%" height="100%" frameborder="0" allowtransparency="true">
+        </iframe>
+      </div>
+    </div>
+    <div class="main">
+      <iframe class="iframe"></iframe>
+    </div>
+  </div>
+
+  <script type="text/javascript">
+    (function () {
+      var iframe = document.querySelector('.iframe')
+      document.querySelectorAll('.column a').forEach(function (a) {
+        a.addEventListener('click', function (e) {
+          iframe.src = e.target.getAttribute('data-href')
+        })
+      })
+      var hash = window.location.hash
+      if (hash) {
+        var active = document.querySelector('.menu a[href="' + hash + '"]')
+        if (active) {
+          iframe.src = active.getAttribute('data-href')
+        }
+      } else {
+        var first = document.querySelector('.menu a')
+        window.location.href = first.href
+        iframe.src = first.getAttribute('data-href')
+      }
+    })()
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>cinderella - demo - XX load</title>
+  <style>
+    .container {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      margin: 0 auto;
+    }
+
+    .block {
+      background-color: #000;
+      height: 50px;
+      margin: 5px;
+      width: 50px;
+      float: left;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+  </div>
+  <script src="https://unpkg.com/cinderella@0.18.0/dist/cinderella.js"></script>
+  <script type="text/javascript">
+    (function () {
+      var blockSize = 60
+
+      function createAnimation() {
+        cinderella.stopAll()
+        var heightCount = Math.floor(window.innerHeight / blockSize)
+        var widthCount = Math.floor(window.innerWidth / blockSize)
+        var items = heightCount * widthCount
+        var container = document.querySelector('.container')
+        container.style.width = (widthCount * blockSize) + 'px'
+        container.innerHTML = ''
+        for (var i = 0; i < items; i++) {
+          var block = document.createElement('div')
+          block.className = 'block'
+          container.appendChild(block)
+        }
+        cinderella({
+          loop: true
+        }).add({
+          targets: '.block',
+          transform: {
+            rotate: {
+              from: 0,
+              to: '360deg',
+              delay: (el, i) => 2.5 * i,
+              duration: 1500,
+              easing: 'easeOutQuart',
+            }
+          }
+        }).play()
+      }
+
+      window.addEventListener('resize', createAnimation)
+
+      createAnimation()
+    })()
+  </script>
+</body>
+
+</html>

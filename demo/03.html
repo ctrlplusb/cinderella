@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>cinderella - examples - 02 Loop</title>
+  <title>cinderella - demo - 03 keyframes</title>
   <style>
     .container {
       height: 100vh;
@@ -26,22 +26,29 @@
   <div class="container">
     <div class="block"></div>
   </div>
-  <script src="https://unpkg.com/cinderella@0.17.0/dist/cinderella.js"></script>
+  <script src="https://unpkg.com/cinderella@0.18.0/dist/cinderella.js"></script>
   <script type="text/javascript">
     (function () {
-      var timeline = Cinderella.timeline
-      timeline({
-        loop: true
-      }).add({
+      const animation = cinderella().add({
         targets: '.block',
         transform: {
-          rotate: {
-            from: 0,
-            to: '180deg',
-            duration: 500
-          }
+          translateY: [{
+              from: 0,
+              to: '-100px',
+              duration: 500,
+              easing: 'easeOutCubic'
+            },
+            {
+              to: '0px',
+              duration: 500,
+              easing: 'easeOutBounce'
+            },
+          ]
         }
-      }).play()
+      })
+      const playAnimation = () => animation.play()
+      playAnimation()
+      window.document.addEventListener('click', playAnimation)
     })()
   </script>
 </body>
