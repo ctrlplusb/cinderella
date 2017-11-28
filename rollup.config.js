@@ -5,7 +5,7 @@ process.env.BABEL_ENV = 'production'
 
 module.exports = {
   input: 'src/index.js',
-  name: 'Cinderella',
+  name: 'cinderella',
   output: {
     file: 'dist/cinderella.js',
     format: 'umd',

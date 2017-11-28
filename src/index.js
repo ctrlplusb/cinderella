@@ -5,16 +5,16 @@ import type { Cinderella } from './types'
 import * as Timelines from './timelines'
 import * as RAF from './raf'
 
-export const addFrameListener = RAF.addFrameListener
+const cinderella: Cinderella = config => {
+  RAF.run()
+  return Timelines.create(config)
+}
 
-export const removeFrameListener = RAF.removeFrameListener
-
-export const stopAll = () => {
+cinderella.addFrameListener = RAF.addFrameListener
+cinderella.removeFrameListener = RAF.removeFrameListener
+cinderella.stopAll = () => {
   RAF.stop()
   Timelines.unqueueAll()
 }
 
-export const timeline: Cinderella = config => {
-  RAF.run()
-  return Timelines.create(config)
-}
+export default cinderella

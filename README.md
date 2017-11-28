@@ -5,9 +5,9 @@
 A tiny transformation library.
 
 ```javascript
-import { timeline } from 'cinderella'
+import cinderella from 'cinderella'
 
-timeline().add({
+cinderella().add({
   targets: '.foo',
   transform: {
     translateY: {
@@ -58,7 +58,7 @@ I created `cinderella` for the following reasons:
 ## API
 
 ```javascript
-timeline({ onStart: () => 'started', onComplete: () => 'completed' })
+cinderella({ onStart: () => 'started', onComplete: () => 'completed' })
   .add({
     targets: '.foo',
     transform: {
