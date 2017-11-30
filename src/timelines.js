@@ -115,6 +115,7 @@ const processTween = (
   return {
     targetId: tween.targetId,
     prop: tween.prop,
+    propOrder: tween.propOrder,
     value: Object.assign({}, tween.to, {
       number: easingResult,
     }),
@@ -125,6 +126,7 @@ const ensureInitialized = timeline => {
   if (timeline.initialized) {
     return
   }
+  let propOrderIdx = 0
   const negOne = Utils.scaleUp(-1)
   const posOne = Utils.scaleUp(1)
   let timelineExecutionTime: number = negOne
@@ -233,6 +235,7 @@ const ensureInitialized = timeline => {
                 ''}, to: "${to.unit || ''}"`,
             )
           }
+          propOrderIdx += 1
           const tween = {
             animationId: animationIdIdx,
             complete: false,
@@ -244,6 +247,7 @@ const ensureInitialized = timeline => {
             executionEnd: executionStart + duration,
             from,
             prop: propName,
+            propOrder: propOrderIdx,
             targetId: targetIdIdx.toString(),
             to,
           }
@@ -328,6 +332,8 @@ const runTimeline = (timeline: Timeline, time: Time = 0) => {
       timeline.seek != null ? timeline.seek : time - timeline.startTime
     const targetsValues = timeline[timeline.reverse ? 'reversed' : 'tweens']
       .map(tween => processTween(timeline, tween, timeline.executionTime))
+      .filter(x => x != null)
+      .sort((a, b) => a.propOrder - b.propOrder)
       .reduce((acc, tweenValue) => {
         if (tweenValue == null) {
           return acc

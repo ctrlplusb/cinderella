@@ -73,6 +73,7 @@ export type AnimationDefinition = {
 export type TweenRunValue = {
   targetId: string,
   prop: string,
+  propOrder: number,
   value: Value,
 }
 
@@ -97,6 +98,7 @@ export type Tween = {
   from: Value,
   name?: string,
   prop: Prop,
+  propOrder: number,
   targetId: string,
   to: Value,
 }

@@ -359,6 +359,41 @@ describe('cinderella', () => {
         waitForFrames(7)
         expect(target.foo).toBe(10)
       })
+
+      it('direction "reverse" maintains transform prop order', () => {
+        const domNode = window.document.createElement('div')
+        cinderella({ direction: 'reverse' })
+          .add({
+            targets: domNode,
+            transform: {
+              width: {
+                from: 100,
+                to: '200px',
+                duration: 5 * frameRate,
+              },
+              height: {
+                from: 50,
+                to: '100px',
+                duration: 5 * frameRate,
+              },
+              translateX: {
+                from: 10,
+                to: '50px',
+                duration: 5 * frameRate,
+              },
+              scale: {
+                from: 1,
+                to: 5,
+                duration: 5 * frameRate,
+              },
+            },
+          })
+          .play()
+        waitForFrames(7)
+        expect(domNode.style.width).toBe('100px')
+        expect(domNode.style.height).toBe('50px')
+        expect(domNode.style.transform).toBe('translateX(10px) scale(1)')
+      })
     })
 
     describe('tweens', () => {
@@ -833,7 +868,38 @@ describe('cinderella', () => {
     })
 
     describe('targets', () => {
-      it('dom targets', () => {
+      it('dom node', () => {
+        const domNode = window.document.createElement('div')
+        cinderella()
+          .add({
+            targets: domNode,
+            transform: {
+              width: {
+                to: '200px',
+                duration: 5 * frameRate,
+              },
+              height: {
+                to: '100px',
+                duration: 5 * frameRate,
+              },
+              translateX: {
+                to: '50px',
+                duration: 5 * frameRate,
+              },
+              scale: {
+                to: 5,
+                duration: 5 * frameRate,
+              },
+            },
+          })
+          .play()
+        waitForFrames(7)
+        expect(domNode.style.width).toBe('200px')
+        expect(domNode.style.height).toBe('100px')
+        expect(domNode.style.transform).toBe('translateX(50px) scale(5)')
+      })
+
+      it('dom selectors', () => {
         const els = [...new Array(5)].map(() => {
           const el = window.document.createElement('div')
           el.className = 'foo'
