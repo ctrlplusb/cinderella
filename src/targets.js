@@ -138,7 +138,11 @@ export const resolveTargets = (
           actual: el,
         })
       })
-    } else if (targets instanceof HTMLElement) {
+    } else if (
+      targets instanceof HTMLElement ||
+      (typeof SVGElement === 'function' && targets instanceof SVGElement) ||
+      (typeof targets === 'object' && typeof targets.nodeType !== 'undefined')
+    ) {
       result.push({
         type: 'dom',
         actual: targets,

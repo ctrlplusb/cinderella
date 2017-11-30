@@ -896,6 +896,23 @@ describe('cinderella', () => {
     })
 
     describe('targets', () => {
+      it('svg', () => {
+        const svg = window.document.createElement('svg')
+        cinderella()
+          .add({
+            targets: svg,
+            transform: {
+              width: {
+                to: '200px',
+                duration: 5 * frameRate,
+              },
+            },
+          })
+          .play()
+        waitForFrames(7)
+        expect(svg.style.width).toBe('200px')
+      })
+
       it('dom node', () => {
         const domNode = window.document.createElement('div')
         cinderella()
