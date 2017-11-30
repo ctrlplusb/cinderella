@@ -179,11 +179,10 @@ const ensureInitialized = timeline => {
           )
           const easingResolver = getResolver(definition, transform, 'easing')
           const delay: number = Utils.scaleUp(
-            typeof delayResolver === 'function'
+            (typeof delayResolver === 'function'
               ? delayResolver(target, targetIdx, targets.length)
-              : typeof delayResolver === 'number'
-                ? delayResolver
-                : 0 + (definition.delay || 0),
+              : typeof delayResolver === 'number' ? delayResolver : 0) +
+              (definition.delay || 0),
           )
           const duration: number =
             Utils.scaleUp(

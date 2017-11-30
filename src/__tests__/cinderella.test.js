@@ -81,15 +81,23 @@ describe('cinderella', () => {
       })
 
       it('delay on animation', () => {
-        const delayTarget = {}
+        const target = {}
         const delayOnStartSpy = jest.fn()
         cinderella()
           .add({
-            targets: delayTarget,
+            targets: target,
             transform: {
               foo: {
+                from: 0,
                 to: 100,
-                duration: 3 * frameRate,
+                delay: (t, i) => i * 100,
+                duration: 5 * frameRate,
+              },
+              bar: {
+                delay: (t, i) => i * 100,
+                from: 0,
+                to: 100,
+                duration: 5 * frameRate,
               },
             },
             delay: 1 * frameRate,
@@ -97,9 +105,29 @@ describe('cinderella', () => {
           })
           .play()
         waitForFrames(1)
-        expect(delayTarget.foo).toBeUndefined()
-        waitForFrames(3)
-        expect(delayTarget.foo).not.toBeUndefined()
+        expect(target.foo).toBeUndefined()
+        expect(target.bar).toBeUndefined()
+        waitForFrames(1)
+        expect(target.foo).toBeCloseTo(0.0)
+        expect(target.bar).toBeCloseTo(0.0)
+        waitForFrames(1)
+        expect(target.foo).toBeCloseTo(20.0)
+        expect(target.bar).toBeCloseTo(20.0)
+        waitForFrames(1)
+        expect(target.foo).toBeCloseTo(40.0)
+        expect(target.bar).toBeCloseTo(40.0)
+        waitForFrames(1)
+        expect(target.foo).toBeCloseTo(60.0)
+        expect(target.bar).toBeCloseTo(60.0)
+        waitForFrames(1)
+        expect(target.foo).toBeCloseTo(80.0)
+        expect(target.bar).toBeCloseTo(80.0)
+        waitForFrames(1)
+        expect(target.foo).toBeCloseTo(100.0)
+        expect(target.bar).toBeCloseTo(100.0)
+        waitForFrames(1)
+        expect(target.foo).toBeCloseTo(100.0)
+        expect(target.bar).toBeCloseTo(100.0)
       })
 
       it('calling play has no effect on an animation that is still executing', () => {
