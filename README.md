@@ -1,4 +1,4 @@
-> __WORK IN PROGRESS - DO NOT USE ME__
+> Work in Progress
 
 # cinderella
 
