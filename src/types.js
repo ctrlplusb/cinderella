@@ -81,7 +81,7 @@ export type TimelineConfig = {
   direction: 'normal' | 'reverse' | 'alternate',
   loop?: boolean,
   onComplete?: Noop,
-  onFrame?: Noop,
+  onUpdate?: Noop,
   onStart?: Noop,
   speed?: number,
 }

@@ -32,18 +32,18 @@ describe('cinderella', () => {
     describe('execution', () => {
       let target
       let onStartSpy
-      let onFrameSpy
+      let onUpdateSpy
       let onCompleteSpy
       let animation
 
       beforeEach(() => {
         target = {}
         onStartSpy = jest.fn()
-        onFrameSpy = jest.fn()
+        onUpdateSpy = jest.fn()
         onCompleteSpy = jest.fn()
         animation = cinderella({
           onStart: onStartSpy,
-          onFrame: onFrameSpy,
+          onUpdate: onUpdateSpy,
           onComplete: onCompleteSpy,
         }).add({
           targets: target,
@@ -68,10 +68,30 @@ describe('cinderella', () => {
         expect(onStartSpy).toHaveBeenCalledTimes(1)
       })
 
-      it('onFrame', () => {
+      it('onUpdate', () => {
         animation.play()
-        waitForFrames(5)
-        expect(onFrameSpy).toHaveBeenCalledTimes(5)
+        waitForFrames(1)
+        expect(onUpdateSpy).toHaveBeenCalledTimes(1)
+        expect(onUpdateSpy).toHaveBeenLastCalledWith({
+          progress: 0,
+        })
+        waitForFrames(1)
+        expect(onUpdateSpy).toHaveBeenCalledTimes(2)
+        expect(onUpdateSpy.mock.calls[1][0].progress).toBeCloseTo(20.0)
+        waitForFrames(1)
+        expect(onUpdateSpy).toHaveBeenCalledTimes(3)
+        expect(onUpdateSpy.mock.calls[2][0].progress).toBeCloseTo(40.0)
+        waitForFrames(1)
+        expect(onUpdateSpy).toHaveBeenCalledTimes(4)
+        expect(onUpdateSpy.mock.calls[3][0].progress).toBeCloseTo(60.0)
+        waitForFrames(1)
+        expect(onUpdateSpy).toHaveBeenCalledTimes(5)
+        expect(onUpdateSpy.mock.calls[4][0].progress).toBeCloseTo(80.0)
+        waitForFrames(1)
+        expect(onUpdateSpy).toHaveBeenCalledTimes(6)
+        expect(onUpdateSpy.mock.calls[5][0].progress).toBeCloseTo(100.0)
+        waitForFrames(1)
+        expect(onUpdateSpy).toHaveBeenCalledTimes(6)
       })
 
       it('onComplete', () => {

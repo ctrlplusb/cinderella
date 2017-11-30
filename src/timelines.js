@@ -350,10 +350,14 @@ const runTimeline = (timeline: Timeline, time: Time = 0) => {
       Targets.setValuesOnTarget(target, values)
     })
   }
+
+  if (timeline.config.onUpdate) {
+    timeline.config.onUpdate({
+      progress: 100 / timeline.endTime * timeline.executionTime,
+    })
+  }
+
   if (timeline.seek == null) {
-    if (timeline.config.onFrame) {
-      timeline.config.onFrame()
-    }
     timeline.complete = timeline.executionTime >= timeline.endTime
     if (timeline.complete) {
       if (timeline.config.onComplete) {
