@@ -188,14 +188,50 @@ describe('cinderella', () => {
       })
 
       it('pause and play', () => {
+        const target = {}
+        const onStartSpy = jest.fn()
+        const onCompleteSpy = jest.fn()
+        const animation = cinderella({
+          onStart: onStartSpy,
+          onComplete: onCompleteSpy,
+        }).add({
+          targets: target,
+          transform: {
+            foo: {
+              from: 0,
+              to: 100,
+              duration: 5 * frameRate,
+            },
+            bar: {
+              from: 0,
+              to: 100,
+              duration: 5 * frameRate,
+            },
+          },
+        })
+
         animation.play()
-        waitForFrames(3)
+        waitForFrames(1)
+        expect(target.foo).toBe(0)
         expect(onStartSpy).toHaveBeenCalledTimes(1)
+        waitForFrames(1)
+        expect(target.foo).toBe(20)
+        expect(target.bar).toBe(20)
+        waitForFrames(1)
+        expect(target.foo).toBeCloseTo(40)
+        expect(target.bar).toBeCloseTo(40)
         animation.pause()
         waitForFrames(5)
         expect(onCompleteSpy).toHaveBeenCalledTimes(0)
         animation.play()
-        waitForFrames(5)
+        waitForFrames(1)
+        expect(onStartSpy).toHaveBeenCalledTimes(1)
+        expect(target.foo).toBe(40)
+        expect(target.bar).toBe(40)
+        waitForFrames(1)
+        expect(target.foo).toBeCloseTo(60)
+        expect(target.bar).toBeCloseTo(60)
+        waitForFrames(2)
         expect(onCompleteSpy).toHaveBeenCalledTimes(1)
       })
 
@@ -1033,5 +1069,54 @@ describe('cinderella', () => {
 
   describe('easing functions', () => {
     // TODO
+  })
+
+  describe('bug fixes', () => {
+    it.only('v0.19.1 play and pause', () => {
+      const target = {}
+      const duration = 10000
+      const opacityDuration = 2000
+      const animation = cinderella({ loop: true })
+        .add({
+          targets: target,
+          transform: {
+            opacity: [
+              {
+                from: 0,
+                to: 1,
+                duration: opacityDuration,
+                easing: 'easeInCubic',
+              },
+              {
+                delay: duration - opacityDuration - opacityDuration,
+                from: 1,
+                to: 0,
+                duration: opacityDuration,
+                easing: 'easeOutCubic',
+              },
+            ],
+            translateY: {
+              from: `500px`,
+              to: `-500px`,
+              duration,
+            },
+          },
+        })
+        .play()
+      waitForFrames(parseInt(opacityDuration / frameRate, 10))
+      expect(target.opacity).toBeCloseTo(0.95)
+      expect(target.translateY).toBe('303.33333px')
+      waitForFrames(parseInt(opacityDuration / frameRate, 10))
+      expect(target.opacity).toBeCloseTo(1)
+      expect(target.translateY).toBe('105px')
+      animation.pause()
+      waitForFrames(parseInt(opacityDuration / frameRate, 10))
+      expect(target.opacity).toBeCloseTo(1)
+      expect(target.translateY).toBe('105px')
+      animation.play()
+      waitForFrames(2)
+      expect(target.opacity).toBeCloseTo(1)
+      expect(target.translateY).toBe('103.33333px')
+    })
   })
 })

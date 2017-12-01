@@ -2,7 +2,9 @@
 
 # cinderella
 
-A tiny transformation library. https://cinderella.now.sh
+A tiny transformation library.
+
+https://cinderella.now.sh
 
 ```javascript
 import cinderella from 'cinderella'
@@ -24,10 +26,6 @@ cinderella().add({
 [![MIT License](https://img.shields.io/npm/l/cinderella.svg?style=flat-square)](http://opensource.org/licenses/MIT)
 [![Travis](https://img.shields.io/travis/ctrlplusb/cinderella.svg?style=flat-square)](https://travis-ci.org/ctrlplusb/cinderella)
 [![Codecov](https://img.shields.io/codecov/c/github/ctrlplusb/cinderella.svg?style=flat-square)](https://codecov.io/github/ctrlplusb/cinderella)
-
-Visit the website for more info:
-
-https://cinderella.now.sh
 
 ## Credits
 

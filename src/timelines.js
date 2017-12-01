@@ -307,6 +307,14 @@ const runTimeline = (timeline: Timeline, time: Time = 0) => {
     return
   }
   ensureInitialized(timeline)
+  if (timeline.unpause) {
+    if (timeline.startTime) {
+      timeline.startTime = time - (timeline.executionTime || 0)
+      console.log(timeline.startTime)
+    }
+    timeline.unpause = false
+    timeline.paused = false
+  }
   if (
     timeline.seek == null &&
     timeline.startTime == null &&
@@ -324,9 +332,7 @@ const runTimeline = (timeline: Timeline, time: Time = 0) => {
   if (timeline.reverse && timeline.reversed == null) {
     timeline.reversed = timeline.tweens.reverse()
   }
-  if (timeline.paused && timeline.startTime != null) {
-    timeline.startTime += time - timeline.startTime
-  } else {
+  if (!timeline.paused) {
     timeline.executionTime =
       timeline.seek != null ? timeline.seek : time - timeline.startTime
     const targetsValues = timeline[timeline.reverse ? 'reversed' : 'tweens']
@@ -414,7 +420,7 @@ export const create = (config?: TimelineConfig): TimelineAPI => {
     },
     play: () => {
       if (timeline.paused) {
-        timeline.paused = false
+        timeline.unpause = true
       } else if (timeline.complete) {
         setDefaultState(timeline)
         setLoopIndex(timeline)
