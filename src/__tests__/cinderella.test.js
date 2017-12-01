@@ -1072,7 +1072,7 @@ describe('cinderella', () => {
   })
 
   describe('bug fixes', () => {
-    it.only('v0.19.1 play and pause', () => {
+    it('v0.19.1 play and pause', () => {
       const target = {}
       const duration = 10000
       const opacityDuration = 2000
