@@ -33,6 +33,7 @@ const timelineDefaultRunState = {
   executionTime: undefined,
   paused: false,
   startTime: undefined,
+  unpause: false,
 }
 
 const queue = t => {
@@ -310,7 +311,6 @@ const runTimeline = (timeline: Timeline, time: Time = 0) => {
   if (timeline.unpause) {
     if (timeline.startTime) {
       timeline.startTime = time - (timeline.executionTime || 0)
-      console.log(timeline.startTime)
     }
     timeline.unpause = false
     timeline.paused = false

@@ -136,6 +136,7 @@ export type Timeline = {
     },
   },
   tweens: Array<Tween>,
+  unpause: boolean,
 }
 
 export type TimelineQueue = {
