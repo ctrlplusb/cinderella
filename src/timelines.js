@@ -340,9 +340,6 @@ const runTimeline = (timeline: Timeline, time: Time = 0) => {
       .filter(x => x != null)
       .sort((a, b) => a.propOrder - b.propOrder)
       .reduce((acc, tweenValue) => {
-        if (tweenValue == null) {
-          return acc
-        }
         const { targetId, prop, value } = tweenValue
         if (acc[targetId] == null) {
           acc[targetId] = {}

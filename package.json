@@ -1,6 +1,6 @@
 {
   "name": "cinderella",
-  "version": "0.19.3",
+  "version": "0.19.4",
   "description": "A tiny transformation library.",
   "license": "MIT",
   "main": "dist/cinderella.js",
