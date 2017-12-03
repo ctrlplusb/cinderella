@@ -74,6 +74,9 @@
     "collectCoverageFrom": [
       "src/**/*.js"
     ],
+    "coveragePathIgnorePatterns": [
+      "src/easings.js"
+    ],
     "testPathIgnorePatterns": [
       "<rootDir>/(coverage|dist|node_modules|tools)/"
     ]
