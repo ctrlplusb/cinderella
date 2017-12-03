@@ -412,6 +412,15 @@ export const create = (config?: TimelineConfig): TimelineAPI => {
       tweens: [],
     }),
   )
+
+  const doSeek = seekResolver => {
+    setDefaultState(timeline)
+    ensureInitialized(timeline)
+    timeline.seek = seekResolver()
+    runTimeline(timeline)
+    timeline.paused = true
+  }
+
   const api = {}
   Object.assign(api, {
     add: animation => {
@@ -433,20 +442,18 @@ export const create = (config?: TimelineConfig): TimelineAPI => {
       return api
     },
     seek: perc => {
-      setDefaultState(timeline)
-      ensureInitialized(timeline)
-      const targetPerc = perc < 0 ? 0 : perc > 100 ? 100 : perc
-      timeline.seek = timeline.endTime / 100 * targetPerc
-      runTimeline(timeline)
+      doSeek(() => {
+        const targetPerc = perc < 0 ? 0 : perc > 100 ? 100 : perc
+        return timeline.endTime / 100 * targetPerc
+      })
       return api
     },
     seekTime: time => {
-      setDefaultState(timeline)
-      ensureInitialized(timeline)
-      const endTime = Utils.scaleUp(timeline.endTime)
-      const scaledTime = Utils.scaleUp(time)
-      timeline.seek = time < 0 ? 0 : scaledTime > endTime ? endTime : scaledTime
-      runTimeline(timeline)
+      doSeek(() => {
+        const endTime = Utils.scaleUp(timeline.endTime)
+        const scaledTime = Utils.scaleUp(time)
+        return time < 0 ? 0 : scaledTime > endTime ? endTime : scaledTime
+      })
       return api
     },
     stop: () => {

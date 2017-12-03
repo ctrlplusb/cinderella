@@ -236,7 +236,12 @@ describe('cinderella', () => {
       })
 
       it('seek', () => {
+        animation.play()
         animation.seek(50)
+        expect(target.foo).toBe(50)
+        waitForFrames(1)
+        expect(target.foo).toBe(50)
+        waitForFrames(1)
         expect(target.foo).toBe(50)
       })
 
