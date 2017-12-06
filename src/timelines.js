@@ -406,7 +406,7 @@ export const create = (config?: TimelineConfig): TimelineAPI => {
       endTime: 0,
       id: timelineIdIdx,
       initialized: false,
-      playOptions: {},
+      playState: {},
       reverse: resolvedConfig.direction === 'reverse',
       reversed: undefined,
       targets: {},
@@ -431,7 +431,8 @@ export const create = (config?: TimelineConfig): TimelineAPI => {
     play: onComplete => {
       if (!timeline.promise) {
         timeline.playState = {}
-        timeline.playState.promise = new Promise(resolve => {
+
+        const promise = new Promise(resolve => {
           const onCompleteWrapper = () => {
             if (onComplete != null) {
               onComplete(api)
@@ -450,10 +451,15 @@ export const create = (config?: TimelineConfig): TimelineAPI => {
           }
           queue(timeline)
         })
+
+        const promiseEnhancedAPI = Object.assign(promise, api)
+
+        timeline.playState.promise = promiseEnhancedAPI
       }
       return timeline.playState.promise
     },
     pause: () => {
+      timeline.playState = {}
       timeline.paused = true
       return api
     },
