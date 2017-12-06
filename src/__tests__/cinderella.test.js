@@ -235,6 +235,25 @@ describe('cinderella', () => {
         expect(onCompleteSpy).toHaveBeenCalledTimes(1)
       })
 
+      it('play onComplete', () => {
+        const playOnCompleteSpy = jest.fn()
+        animation.play(playOnCompleteSpy)
+        waitForFrames(6)
+        expect(playOnCompleteSpy).toHaveBeenCalledTimes(1)
+      })
+
+      it('play Promise', done => {
+        setTimeout(() => {
+          waitForFrames(6)
+        }, 0)
+        const result = animation.play()
+        expect(result.then).not.toBeUndefined()
+        result.then(x => {
+          expect(x.add).not.toBeUndefined()
+          done()
+        })
+      })
+
       it('seek', () => {
         animation.play()
         animation.seek(50)
@@ -311,17 +330,16 @@ describe('cinderella', () => {
         const animation = cinderella({
           loop: 1,
           onStart: loopStartSpy,
-        })
-          .add({
-            targets: {},
-            transform: {
-              foo: {
-                to: 10,
-                duration: 3 * frameRate,
-              },
+        }).add({
+          targets: {},
+          transform: {
+            foo: {
+              to: 10,
+              duration: 3 * frameRate,
             },
-          })
-          .play()
+          },
+        })
+        animation.play()
         waitForFrames(12)
         expect(loopStartSpy).toHaveBeenCalledTimes(2)
         animation.play()
@@ -1081,33 +1099,32 @@ describe('cinderella', () => {
       const target = {}
       const duration = 10000
       const opacityDuration = 2000
-      const animation = cinderella({ loop: true })
-        .add({
-          targets: target,
-          transform: {
-            opacity: [
-              {
-                from: 0,
-                to: 1,
-                duration: opacityDuration,
-                easing: 'easeInCubic',
-              },
-              {
-                delay: duration - opacityDuration - opacityDuration,
-                from: 1,
-                to: 0,
-                duration: opacityDuration,
-                easing: 'easeOutCubic',
-              },
-            ],
-            translateY: {
-              from: `500px`,
-              to: `-500px`,
-              duration,
+      const animation = cinderella({ loop: true }).add({
+        targets: target,
+        transform: {
+          opacity: [
+            {
+              from: 0,
+              to: 1,
+              duration: opacityDuration,
+              easing: 'easeInCubic',
             },
+            {
+              delay: duration - opacityDuration - opacityDuration,
+              from: 1,
+              to: 0,
+              duration: opacityDuration,
+              easing: 'easeOutCubic',
+            },
+          ],
+          translateY: {
+            from: `500px`,
+            to: `-500px`,
+            duration,
           },
-        })
-        .play()
+        },
+      })
+      animation.play()
       waitForFrames(parseInt(opacityDuration / frameRate, 10))
       expect(target.opacity).toBeCloseTo(0.95)
       expect(target.translateY).toBe('303.33333px')

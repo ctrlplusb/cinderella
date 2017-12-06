@@ -366,6 +366,9 @@ const runTimeline = (timeline: Timeline, time: Time = 0) => {
       if (timeline.config.onComplete) {
         timeline.config.onComplete()
       }
+      if (timeline.playState.onComplete) {
+        timeline.playState.onComplete()
+      }
       if (timeline.config.loop) {
         if (typeof timeline.loopIndex === 'number') {
           timeline.loopIndex -= 1
@@ -403,6 +406,7 @@ export const create = (config?: TimelineConfig): TimelineAPI => {
       endTime: 0,
       id: timelineIdIdx,
       initialized: false,
+      playOptions: {},
       reverse: resolvedConfig.direction === 'reverse',
       reversed: undefined,
       targets: {},
@@ -424,15 +428,30 @@ export const create = (config?: TimelineConfig): TimelineAPI => {
       timeline.definitions.push(animation)
       return api
     },
-    play: () => {
-      if (timeline.paused) {
-        timeline.unpause = true
-      } else if (timeline.complete) {
-        setDefaultState(timeline)
-        setLoopIndex(timeline)
+    play: onComplete => {
+      if (!timeline.promise) {
+        timeline.playState = {}
+        timeline.playState.promise = new Promise(resolve => {
+          const onCompleteWrapper = () => {
+            if (onComplete != null) {
+              onComplete(api)
+            }
+            resolve(api)
+            timeline.playState = {}
+          }
+
+          timeline.playState.onComplete = onCompleteWrapper
+
+          if (timeline.paused) {
+            timeline.unpause = true
+          } else if (timeline.complete) {
+            setDefaultState(timeline)
+            setLoopIndex(timeline)
+          }
+          queue(timeline)
+        })
       }
-      queue(timeline)
-      return api
+      return timeline.playState.promise
     },
     pause: () => {
       timeline.paused = true

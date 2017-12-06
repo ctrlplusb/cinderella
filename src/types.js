@@ -111,6 +111,11 @@ export type Animation = {
   onStart?: Noop,
 }
 
+export type PlayState = {
+  onComplete?: Noop,
+  promise?: Promise<TimelineAPI>,
+}
+
 export type Timeline = {
   animations: {
     [id: string]: Animation,
@@ -124,6 +129,7 @@ export type Timeline = {
   initialized: boolean,
   loopIndex?: number,
   paused: boolean,
+  playState: PlayState,
   reverse: boolean,
   reversed?: Array<Tween>,
   seek?: Time,
@@ -145,7 +151,7 @@ export type TimelineQueue = {
 
 export type TimelineAPI = {
   add: AnimationDefinition => TimelineAPI,
-  play: (config?: TimelineConfig) => TimelineAPI,
+  play: (onComplete?: Noop) => Promise<TimelineAPI>,
   pause: () => TimelineAPI,
   seek: number => TimelineAPI,
   seekTime: number => TimelineAPI,
