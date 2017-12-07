@@ -158,6 +158,19 @@ export const resolveTargets = (
   return result
 }
 
+const getCSSTransforms = domNode => {
+  const result = {}
+
+  domNode.style.transform.split(' ').forEach(transform => {
+    const match = /(\w+)\((.*)\)/.exec(transform)
+    if (match) {
+      result[match[1]] = match[2]
+    }
+  })
+
+  return result
+}
+
 export const setValuesOnTarget = (target: Target, values: Values) => {
   Object.keys(values).forEach(propName => {
     const value = values[propName]
@@ -181,13 +194,25 @@ export const setValuesOnTarget = (target: Target, values: Values) => {
 
   // Make sure we set the transform css prop for dom target
   if (target.type === 'dom') {
-    target.actual.style.transform = Object.keys(values)
+    const existingTransforms =
+      target.actual.style.transform != null &&
+      target.actual.style.transform !== ''
+        ? getCSSTransforms(target.actual)
+        : {}
+
+    // We have to ensure that we carry across any existing transforms
+    const cssTransforms = Object.keys(values).reduce((acc, propName) => {
+      const value = values[propName]
+      const scaledDown = Utils.scaleDown(value.number)
+      if (target.type === 'dom' && value.type === 'dom-css-transform') {
+        acc[propName] = `${scaledDown}${value.unit || ''}`
+      }
+      return acc
+    }, existingTransforms)
+
+    target.actual.style.transform = Object.keys(cssTransforms)
       .reduce((acc, propName) => {
-        const value = values[propName]
-        const scaledDown = Utils.scaleDown(value.number)
-        if (target.type === 'dom' && value.type === 'dom-css-transform') {
-          acc.push(`${propName}(${scaledDown}${value.unit || ''})`)
-        }
+        acc.push(`${propName}(${cssTransforms[propName]})`)
         return acc
       }, [])
       .join(' ')

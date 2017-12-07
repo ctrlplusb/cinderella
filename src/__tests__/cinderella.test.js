@@ -1140,5 +1140,36 @@ describe('cinderella', () => {
       expect(target.opacity).toBeCloseTo(1)
       expect(target.translateY).toBe('103.33333px')
     })
+
+    it('v0.21.0 unique duration transforms on domNode', () => {
+      const target = document.createElement('div')
+      cinderella()
+        .add({
+          targets: target,
+          transform: {
+            scale: {
+              from: 1,
+              to: 2,
+              easing: 'easeInOutQuad',
+              duration: 1000,
+            },
+            rotate: {
+              from: 0,
+              to: '180deg',
+              easing: 'easeInOutElastic',
+              duration: 2000,
+            },
+          },
+        })
+        .play()
+      waitForFrames(1000 / frameRate)
+      expect(target.style.transform).toBe('scale(1.99944) rotate(78.01959deg)')
+      waitForFrames(1 / frameRate)
+      expect(target.style.transform).toBe('scale(2) rotate(90deg)')
+      waitForFrames(1 / frameRate)
+      expect(target.style.transform).toBe('scale(2) rotate(101.9804deg)')
+      waitForFrames(1000 / frameRate)
+      expect(target.style.transform).toBe('scale(2) rotate(180deg)')
+    })
   })
 })
