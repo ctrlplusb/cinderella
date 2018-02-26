@@ -469,7 +469,9 @@ describe('cinderella', () => {
 
       it('direction "reverse" maintains transform prop order', () => {
         const domNode = window.document.createElement('div')
-        cinderella({ direction: 'reverse' })
+        cinderella({
+          direction: 'reverse',
+        })
           .add({
             targets: domNode,
             transform: {
@@ -505,7 +507,7 @@ describe('cinderella', () => {
 
     describe('tweens', () => {
       it('units', () => {
-        const validUnits = '%,px,pt,em,rem,in,cm,mm,ex,ch,pc,vw,vh,vmin,vmax,deg,rad,turn'.split(
+        const validUnits = '%,px,pt,em,rem,in,cm,mm,ex,ch,pc,vw,vh,vmin,vmax,deg,rad,turn,'.split(
           ',',
         )
         const target = {}
@@ -1057,7 +1059,7 @@ describe('cinderella', () => {
           .play()
         waitForFrames(7)
         els.forEach(el => {
-          expect(el.width).toBe('200px')
+          expect(el.getAttribute('width')).toBe('200px')
           expect(el.style.height).toBe('100px')
           expect(el.style.transform).toBe('translateX(50px) scale(5)')
         })
@@ -1099,7 +1101,9 @@ describe('cinderella', () => {
       const target = {}
       const duration = 10000
       const opacityDuration = 2000
-      const animation = cinderella({ loop: true }).add({
+      const animation = cinderella({
+        loop: true,
+      }).add({
         targets: target,
         transform: {
           opacity: [
@@ -1170,6 +1174,96 @@ describe('cinderella', () => {
       expect(target.style.transform).toBe('scale(2) rotate(101.9804deg)')
       waitForFrames(1000 / frameRate)
       expect(target.style.transform).toBe('scale(2) rotate(180deg)')
+    })
+
+    it('v0.21.1 resolved targets should be passed to value resolvers', () => {
+      const target1 = document.createElement('div')
+      const target2 = document.createElement('div')
+      const fromResolverStub = jest.fn(() => 0.1)
+      const toResolverStub = jest.fn(() => 1)
+      const easingResolverStub = jest.fn(() => 'easeInOutQuad')
+      const durationResolverStub = jest.fn(() => 5 * frameRate)
+      cinderella()
+        .add({
+          targets: [target1, target2],
+          transform: {
+            opacity: {
+              from: fromResolverStub,
+              to: toResolverStub,
+              easing: easingResolverStub,
+              duration: durationResolverStub,
+            },
+          },
+        })
+        .play()
+      waitForFrames(6 * frameRate)
+      expect(toResolverStub).toHaveBeenCalledTimes(2)
+      expect(toResolverStub.mock.calls[0]).toEqual([target1, 0, 2])
+      expect(toResolverStub.mock.calls[1]).toEqual([target2, 1, 2])
+      expect(fromResolverStub).toHaveBeenCalledTimes(2)
+      expect(fromResolverStub.mock.calls[0]).toEqual([target1, 0, 2])
+      expect(fromResolverStub.mock.calls[1]).toEqual([target2, 1, 2])
+      expect(easingResolverStub).toHaveBeenCalledTimes(2)
+      expect(easingResolverStub.mock.calls[0]).toEqual([target1, 0, 2])
+      expect(easingResolverStub.mock.calls[1]).toEqual([target2, 1, 2])
+      expect(durationResolverStub).toHaveBeenCalledTimes(2)
+      expect(durationResolverStub.mock.calls[0]).toEqual([target1, 0, 2])
+      expect(durationResolverStub.mock.calls[1]).toEqual([target2, 1, 2])
+      expect(target1.style.opacity).toBe('1')
+    })
+
+    it('v0.21.2 sets default unit on dom elements', () => {
+      const target = document.createElement('div')
+      const transformations = [
+        'bottom',
+        'height',
+        'left',
+        'perspective',
+        'right',
+        'rotate',
+        'rotateX',
+        'rotateY',
+        'rotateZ',
+        'scale',
+        'scaleX',
+        'scaleY',
+        'scaleZ',
+        'skewX',
+        'skewY',
+        'top',
+        'translateX',
+        'translateY',
+        'translateZ',
+        'value',
+        'width',
+      ].reduce(
+        (acc, cur) => ({
+          ...acc,
+          [cur]: {
+            from: 1,
+            to: 100,
+            duration: 5 * frameRate,
+          },
+        }),
+        {},
+      )
+      cinderella()
+        .add({
+          targets: target,
+          transform: transformations,
+        })
+        .play()
+      waitForFrames(8 * frameRate)
+      expect(target.style.bottom).toBe('100px')
+      expect(target.style.height).toBe('100px')
+      expect(target.style.left).toBe('100px')
+      expect(target.style.right).toBe('100px')
+      expect(target.style.top).toBe('100px')
+      expect(target.getAttribute('value')).toBe('100')
+      expect(target.style.width).toBe('100px')
+      expect(target.style.transform).toBe(
+        'perspective(100px) rotate(100deg) rotateX(100deg) rotateY(100deg) rotateZ(100deg) scale(100) scaleX(100) scaleY(100) scaleZ(100) skewX(100deg) skewY(100deg) translateX(100px) translateY(100px) translateZ(100px)',
+      )
     })
   })
 })

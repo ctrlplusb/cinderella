@@ -5,10 +5,11 @@ process.env.BABEL_ENV = 'production'
 
 module.exports = {
   input: 'src/index.js',
-  name: 'cinderella',
   output: {
     file: 'dist/cinderella.js',
     format: 'umd',
+    sourcemap: true,
+    name: 'cinderella',
   },
   plugins: [
     flow({ all: true }),
@@ -19,5 +20,4 @@ module.exports = {
       plugins: ['external-helpers'],
     }),
   ],
-  sourcemap: true,
 }

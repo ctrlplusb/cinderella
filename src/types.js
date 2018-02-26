@@ -33,19 +33,19 @@ export type TargetResolver = RawTarget | Array<RawTarget>
 export type Target = DOMTarget | ObjectTarget
 
 export type TimeResolver = (
-  target?: Target,
+  target?: HTMLElement | Object,
   index?: number,
   targetCount?: number,
 ) => Time
 
 export type RawValueResolver = (
-  target?: Target,
+  target?: HTMLElement | Object,
   index?: number,
   targetCount?: number,
 ) => RawValue
 
 export type EasingResolver = (
-  target?: Target,
+  target?: HTMLElement | Object,
   index?: number,
   targetCount?: number,
 ) => string

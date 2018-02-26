@@ -171,6 +171,15 @@ const getCSSTransforms = domNode => {
   return result
 }
 
+const toAssignment = (propName, value, applyDefaultUnit = false) =>
+  value.originType === 'string' || value.unit != null
+    ? `${Utils.scaleDown(value.number)}${
+        value.unit != null
+          ? value.unit
+          : applyDefaultUnit ? defaultUnitForDOMValue(propName) || '' : ''
+      }`
+    : Utils.scaleDown(value.number)
+
 export const setValuesOnTarget = (target: Target, values: Values) => {
   Object.keys(values).forEach(propName => {
     const value = values[propName]
@@ -178,17 +187,15 @@ export const setValuesOnTarget = (target: Target, values: Values) => {
       return
     }
 
-    const scaledDownNumber = Utils.scaleDown(value.number)
-
-    const resolvedValue =
-      value.originType === 'number'
-        ? scaledDownNumber
-        : `${scaledDownNumber}${value.unit || ''}`
-
-    if (target.type === 'dom' && value.type === 'dom-css') {
-      target.actual.style[propName] = resolvedValue
+    if (target.type === 'dom') {
+      const assignment = toAssignment(propName, value, true)
+      if (value.type === 'dom-css') {
+        target.actual.style[propName] = assignment
+      } else {
+        target.actual.setAttribute(propName, assignment)
+      }
     } else {
-      target.actual[propName] = resolvedValue
+      target.actual[propName] = toAssignment(propName, value, true)
     }
   })
 
@@ -203,18 +210,21 @@ export const setValuesOnTarget = (target: Target, values: Values) => {
     // We have to ensure that we carry across any existing transforms
     const cssTransforms = Object.keys(values).reduce((acc, propName) => {
       const value = values[propName]
-      const scaledDown = Utils.scaleDown(value.number)
       if (target.type === 'dom' && value.type === 'dom-css-transform') {
-        acc[propName] = `${scaledDown}${value.unit || ''}`
+        acc[propName] = toAssignment(propName, value, true)
       }
       return acc
     }, existingTransforms)
 
-    target.actual.style.transform = Object.keys(cssTransforms)
-      .reduce((acc, propName) => {
-        acc.push(`${propName}(${cssTransforms[propName]})`)
-        return acc
-      }, [])
-      .join(' ')
+    const cssTransformsPropNames = Object.keys(cssTransforms)
+
+    if (cssTransformsPropNames.length > 0) {
+      target.actual.style.transform = cssTransformsPropNames
+        .reduce((acc, propName) => {
+          acc.push(`${propName}(${cssTransforms[propName]})`)
+          return acc
+        }, [])
+        .join(' ')
+    }
   }
 }

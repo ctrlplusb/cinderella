@@ -181,20 +181,20 @@ const ensureInitialized = timeline => {
           const easingResolver = getResolver(definition, transform, 'easing')
           const delay: number = Utils.scaleUp(
             (typeof delayResolver === 'function'
-              ? delayResolver(target, targetIdx, targets.length)
+              ? delayResolver(target.actual, targetIdx, targets.length)
               : typeof delayResolver === 'number' ? delayResolver : 0) +
               (definition.delay || 0),
           )
           const duration: number =
             Utils.scaleUp(
               typeof durationResolver === 'function'
-                ? durationResolver(target, targetIdx, targets.length)
+                ? durationResolver(target.actual, targetIdx, targets.length)
                 : typeof durationResolver === 'number' ? durationResolver : 0,
             ) / timeline.config.speed
           const executionStart: number = propExecutionOffset + delay + posOne
           const easing: string =
             typeof easingResolver === 'function'
-              ? easingResolver(target, targetIdx, targets.length)
+              ? easingResolver(target.actual, targetIdx, targets.length)
               : typeof easingResolver === 'string' ? easingResolver : 'linear'
           const fromResolver =
             transform.from != null
@@ -211,7 +211,7 @@ const ensureInitialized = timeline => {
                 ? Targets.extractValue(
                     target,
                     propName,
-                    fromResolver(target, targetIdx, targets.length),
+                    fromResolver(target.actual, targetIdx, targets.length),
                   )
                 : Targets.extractValue(target, propName, fromResolver)
           const to =
@@ -219,7 +219,7 @@ const ensureInitialized = timeline => {
               ? Targets.extractValue(
                   target,
                   propName,
-                  toResolver(target, targetIdx, targets.length),
+                  toResolver(target.actual, targetIdx, targets.length),
                 )
               : Targets.extractValue(target, propName, toResolver)
           if (to == null || from == null) {
