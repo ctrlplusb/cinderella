@@ -36,11 +36,11 @@ const timelineDefaultRunState = {
   unpause: false,
 }
 
-const queue = t => {
+const queue = (t: Timeline) => {
   queuedTimelines[t.id.toString()] = t
 }
 
-const unqueue = t => {
+const unqueue = (t: Timeline) => {
   delete queuedTimelines[t.id.toString()]
 }
 
@@ -51,7 +51,7 @@ export const unqueueAll = () => {
   queuedTimelines = {}
 }
 
-const setDefaultState = t => {
+const setDefaultState = (t: Object): Timeline => {
   t = Object.assign(t, timelineDefaultRunState)
   t.tweens.forEach(tween => {
     tween.complete = false
@@ -59,7 +59,7 @@ const setDefaultState = t => {
   return t
 }
 
-const setLoopIndex = t => {
+const setLoopIndex = (t: Timeline): Timeline => {
   t.loopIndex = typeof t.config.loop === 'number' ? t.config.loop : undefined
   return t
 }
@@ -77,13 +77,6 @@ const resolveRelativeOffset = (offset: string): number | void => {
     return offsetValue * -1
   }
   return offsetValue
-}
-
-const getResolver = (animation, transform, type) => {
-  const { defaults } = animation
-  return transform[type] != null
-    ? transform[type]
-    : defaults && defaults[type] != null ? defaults[type] : undefined
 }
 
 const processTween = (
@@ -165,33 +158,30 @@ const ensureInitialized = timeline => {
       }
       Object.keys(definition.transform).forEach(propName => {
         let propExecutionOffset = animationExecutionTime
-        const createTween = (
-          propName,
-          transform,
-          transformIdx = 0,
-          prev,
-        ): Tween => {
-          const delayResolver = getResolver(definition, transform, 'delay')
-          const durationResolver = getResolver(
-            definition,
-            transform,
-            'duration',
-          )
-          const easingResolver = getResolver(definition, transform, 'easing')
-          const delay: number = Utils.scaleUp(
+        const createTween = (transform, prev): Tween => {
+          const delayResolver =
+            transform.delay ||
+            (definition.defaults && definition.defaults.delay)
+          const durationResolver =
+            transform.duration ||
+            (definition.defaults && definition.defaults.duration)
+          const easingResolver =
+            transform.easing ||
+            (definition.defaults && definition.defaults.easing)
+          const delay = Utils.scaleUp(
             (typeof delayResolver === 'function'
               ? delayResolver(target.actual, targetIdx, targets.length)
               : typeof delayResolver === 'number' ? delayResolver : 0) +
               (definition.delay || 0),
           )
-          const duration: number =
+          const duration =
             Utils.scaleUp(
               typeof durationResolver === 'function'
                 ? durationResolver(target.actual, targetIdx, targets.length)
                 : typeof durationResolver === 'number' ? durationResolver : 0,
             ) / timeline.config.speed
-          const executionStart: number = propExecutionOffset + delay + posOne
-          const easing: string =
+          const executionStart = propExecutionOffset + delay + posOne
+          const easing =
             typeof easingResolver === 'function'
               ? easingResolver(target.actual, targetIdx, targets.length)
               : typeof easingResolver === 'string' ? easingResolver : 'linear'
@@ -222,17 +212,13 @@ const ensureInitialized = timeline => {
                 )
               : Targets.extractValue(target, propName, toResolver)
           if (to == null || from == null) {
-            throw new Error('Invalid/missing from/to data on transform')
+            throw new Error('Invalid state: from/to')
           }
           if (from.unit == null) {
             from.unit = to.unit
           }
           if (from.unit !== to.unit) {
-            // eslint-disable-next-line no-console
-            console.warn(
-              `Mixed units from from/to of ${propName}. from: ${from.unit ||
-                ''}, to: "${to.unit || ''}"`,
-            )
+            from.unit = to.unit
           }
           propOrderIdx += 1
           const tween = {
@@ -268,26 +254,23 @@ const ensureInitialized = timeline => {
           return tween
         }
         const propTransform = definition.transform[propName]
+        type ReducerState = {
+          tweens: Array<Tween>,
+          prev: Tween | null,
+        }
+        const reducerState: ReducerState = {
+          tweens: [],
+          prev: null,
+        }
         const tweens = Array.isArray(propTransform)
-          ? propTransform.reduce(
-              (acc, transform, transformIdx) => {
-                const tween = createTween(
-                  propName,
-                  transform,
-                  transformIdx,
-                  acc.prev,
-                )
-                acc.tweens.push(tween)
-                acc.prev = tween
-                return acc
-              },
-              {
-                tweens: [],
-                prev: null,
-              },
-            ).tweens
+          ? propTransform.reduce((acc, transform) => {
+              const tween = createTween(transform, acc.prev)
+              acc.tweens.push(tween)
+              acc.prev = tween
+              return acc
+            }, reducerState).tweens
           : typeof propTransform === 'object'
-            ? [createTween(propName, propTransform)]
+            ? [createTween(propTransform)]
             : []
         tweens.forEach(tween => {
           timeline.tweens.push(tween)
@@ -332,11 +315,27 @@ const runTimeline = (timeline: Timeline, time: Time = 0) => {
     timeline.reversed = timeline.tweens.reverse()
   }
   if (!timeline.paused) {
-    timeline.executionTime =
-      timeline.seek != null ? timeline.seek : time - timeline.startTime
-    const targetsValues = timeline[timeline.reverse ? 'reversed' : 'tweens']
-      .map(tween => processTween(timeline, tween, timeline.executionTime))
-      .filter(x => x != null)
+    if (timeline.seek == null && timeline.startTime == null) {
+      throw new Error('Invalid state: seek/start time')
+    }
+    const startTime = timeline.startTime || 0
+    const executionTime =
+      timeline.seek != null ? timeline.seek : time - startTime
+    timeline.executionTime = executionTime
+    const tweens = timeline[timeline.reverse ? 'reversed' : 'tweens']
+    if (tweens == null) {
+      throw new Error('Invalid state: no tweens')
+    }
+    const targetsValues = tweens
+      .map(tween => processTween(timeline, tween, executionTime))
+      // Using a reduce rather than a filter as flow's inference engine works
+      // better with it
+      .reduce((acc: Array<TweenRunValue>, cur) => {
+        if (cur != null) {
+          acc.push(cur)
+        }
+        return acc
+      }, [])
       .sort((a, b) => a.propOrder - b.propOrder)
       .reduce((acc, tweenValue) => {
         const { targetId, prop, value } = tweenValue
@@ -352,13 +351,14 @@ const runTimeline = (timeline: Timeline, time: Time = 0) => {
       Targets.setValuesOnTarget(target, values)
     })
   }
-
+  if (timeline.executionTime == null) {
+    throw new Error('Invalid state: no executionTime')
+  }
   if (timeline.config.onUpdate) {
     timeline.config.onUpdate({
       progress: 100 / timeline.endTime * timeline.executionTime,
     })
   }
-
   if (timeline.seek == null) {
     timeline.complete = timeline.executionTime >= timeline.endTime
     if (timeline.complete) {
@@ -397,7 +397,7 @@ export const run = (t: number) => {
 export const create = (config?: TimelineConfig): TimelineAPI => {
   timelineIdIdx += 1
   const resolvedConfig = Object.assign({}, defaultConfig, config || {})
-  const timeline: Timeline = setLoopIndex(
+  const timeline = setLoopIndex(
     setDefaultState({
       animations: {},
       config: resolvedConfig,
@@ -434,7 +434,7 @@ export const create = (config?: TimelineConfig): TimelineAPI => {
         const promise = new Promise(resolve => {
           const onCompleteWrapper = () => {
             if (onComplete != null) {
-              onComplete(api)
+              onComplete()
             }
             resolve(api)
             timeline.playState = {}
@@ -453,6 +453,7 @@ export const create = (config?: TimelineConfig): TimelineAPI => {
 
         const promiseEnhancedAPI = Object.assign(promise, api)
 
+        // $FlowFixMe
         timeline.playState.promise = promiseEnhancedAPI
       }
       return timeline.playState.promise

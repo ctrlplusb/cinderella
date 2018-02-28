@@ -110,10 +110,12 @@ describe('cinderella', () => {
               foo: {
                 from: 0,
                 to: 100,
+                // $FlowFixMe
                 delay: (t, i) => i * 100,
                 duration: 5 * frameRate,
               },
               bar: {
+                // $FlowFixMe
                 delay: (t, i) => i * 100,
                 from: 0,
                 to: 100,
@@ -188,14 +190,14 @@ describe('cinderella', () => {
       })
 
       it('pause and play', () => {
-        const target = {}
-        const onStartSpy = jest.fn()
-        const onCompleteSpy = jest.fn()
-        const animation = cinderella({
-          onStart: onStartSpy,
-          onComplete: onCompleteSpy,
+        const localTarget = {}
+        const localOnStartSpy = jest.fn()
+        const localOnCompleteSpy = jest.fn()
+        const localAnimation = cinderella({
+          onStart: localOnStartSpy,
+          onComplete: localOnCompleteSpy,
         }).add({
-          targets: target,
+          targets: localTarget,
           transform: {
             foo: {
               from: 0,
@@ -210,29 +212,29 @@ describe('cinderella', () => {
           },
         })
 
-        animation.play()
+        localAnimation.play()
         waitForFrames(1)
-        expect(target.foo).toBe(0)
-        expect(onStartSpy).toHaveBeenCalledTimes(1)
+        expect(localTarget.foo).toBe(0)
+        expect(localOnStartSpy).toHaveBeenCalledTimes(1)
         waitForFrames(1)
-        expect(target.foo).toBe(20)
-        expect(target.bar).toBe(20)
+        expect(localTarget.foo).toBe(20)
+        expect(localTarget.bar).toBe(20)
         waitForFrames(1)
-        expect(target.foo).toBeCloseTo(40)
-        expect(target.bar).toBeCloseTo(40)
-        animation.pause()
+        expect(localTarget.foo).toBeCloseTo(40)
+        expect(localTarget.bar).toBeCloseTo(40)
+        localAnimation.pause()
         waitForFrames(5)
-        expect(onCompleteSpy).toHaveBeenCalledTimes(0)
-        animation.play()
+        expect(localOnCompleteSpy).toHaveBeenCalledTimes(0)
+        localAnimation.play()
         waitForFrames(1)
-        expect(onStartSpy).toHaveBeenCalledTimes(1)
-        expect(target.foo).toBe(40)
-        expect(target.bar).toBe(40)
+        expect(localOnStartSpy).toHaveBeenCalledTimes(1)
+        expect(localTarget.foo).toBe(40)
+        expect(localTarget.bar).toBe(40)
         waitForFrames(1)
-        expect(target.foo).toBeCloseTo(60)
-        expect(target.bar).toBeCloseTo(60)
+        expect(localTarget.foo).toBeCloseTo(60)
+        expect(localTarget.bar).toBeCloseTo(60)
         waitForFrames(2)
-        expect(onCompleteSpy).toHaveBeenCalledTimes(1)
+        expect(localOnCompleteSpy).toHaveBeenCalledTimes(1)
       })
 
       it('play onComplete', () => {

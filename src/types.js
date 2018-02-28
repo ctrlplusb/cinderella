@@ -1,4 +1,5 @@
 /* @flow */
+/* eslint-disable no-use-before-define */
 
 export type DOMTarget = {
   type: 'dom',
@@ -77,13 +78,28 @@ export type TweenRunValue = {
   value: Value,
 }
 
+export type Update = {
+  progress: number,
+}
+
+export type OnUpdate = Update => void
+
 export type TimelineConfig = {
   direction?: 'normal' | 'reverse' | 'alternate',
   loop?: boolean | number,
   onComplete?: Noop,
-  onUpdate?: Noop,
+  onUpdate?: OnUpdate,
   onStart?: Noop,
   speed?: number,
+}
+
+export type ResolvedTimelineConfig = {
+  direction: 'normal' | 'reverse' | 'alternate',
+  loop: boolean | number,
+  onComplete?: Noop,
+  onUpdate?: OnUpdate,
+  onStart?: Noop,
+  speed: number,
 }
 
 export type Tween = {
@@ -121,7 +137,7 @@ export type Timeline = {
     [id: string]: Animation,
   },
   complete: boolean,
-  config: TimelineConfig,
+  config: ResolvedTimelineConfig,
   definitions: Array<AnimationDefinition>,
   endTime: number,
   executionTime?: Time,

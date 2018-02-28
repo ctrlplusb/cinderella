@@ -9,11 +9,11 @@ let currentFrame = null
 // Maintains a list of frame listeners
 let frameListeners = []
 
-export const addFrameListener = fn => {
+export const addFrameListener = (fn: number => void) => {
   frameListeners = [...frameListeners, fn]
 }
 
-export const removeFrameListener = fn => {
+export const removeFrameListener = (fn: number => void) => {
   frameListeners = frameListeners.filter(x => x !== fn)
 }
 
@@ -22,7 +22,7 @@ export const run = () => {
     return
   }
   const frame = time => {
-    Timelines.run(time) /*?.*/
+    Timelines.run(time)
     frameListeners.forEach(listener => {
       listener(time)
     })

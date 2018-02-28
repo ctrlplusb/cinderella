@@ -83,6 +83,7 @@ const getDOMPropType = (el: HTMLElement, prop: Prop): DOMValueType => {
   if (el.getAttribute(prop) != null) {
     return 'dom-attribute'
   }
+  // $FlowFixMe
   if (el.style[prop] != null) {
     return 'dom-css'
   }
@@ -95,7 +96,7 @@ const getValueType = (target: Target, prop: Prop): ValueType =>
 export const extractValue = (
   target: Target,
   prop: Prop,
-  raw: RawValue,
+  raw: ?RawValue,
 ): Value => {
   if (raw == null || typeof raw === 'number') {
     return {
@@ -140,6 +141,7 @@ export const resolveTargets = (
       })
     } else if (
       targets instanceof HTMLElement ||
+      // $FlowFixMe
       (typeof SVGElement === 'function' && targets instanceof SVGElement) ||
       (typeof targets === 'object' && typeof targets.nodeType !== 'undefined')
     ) {
@@ -160,14 +162,13 @@ export const resolveTargets = (
 
 const getCSSTransforms = domNode => {
   const result = {}
-
   domNode.style.transform.split(' ').forEach(transform => {
     const match = /(\w+)\((.*)\)/.exec(transform)
     if (match) {
+      // eslint-disable-next-line prefer-destructuring
       result[match[1]] = match[2]
     }
   })
-
   return result
 }
 
@@ -190,6 +191,7 @@ export const setValuesOnTarget = (target: Target, values: Values) => {
     if (target.type === 'dom') {
       const assignment = toAssignment(propName, value, true)
       if (value.type === 'dom-css') {
+        // $FlowFixMe
         target.actual.style[propName] = assignment
       } else {
         target.actual.setAttribute(propName, assignment)
