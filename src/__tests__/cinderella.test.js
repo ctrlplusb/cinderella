@@ -6,6 +6,8 @@ const { stopAll, addFrameListener, removeFrameListener } = cinderella
 
 const frameRate = 1000 / 60
 
+const { animate } = cinderella
+
 describe('cinderella', () => {
   let waitForFrames
 
@@ -26,6 +28,27 @@ describe('cinderella', () => {
         }
       }
     }
+  })
+
+  describe('animate', () => {
+    it('works as expected', () => {
+      const target = {}
+      animate({
+        targets: target,
+        transform: {
+          foo: {
+            from: 0,
+            to: 100,
+            duration: 5 * frameRate,
+          },
+        },
+      })
+      expect(target.foo).toBe(undefined)
+      waitForFrames(1)
+      expect(target.foo).toBe(0)
+      waitForFrames(5)
+      expect(target.foo).toBe(100)
+    })
   })
 
   describe('timelines', () => {

@@ -10,6 +10,10 @@ const cinderella: Cinderella = config => {
   return Timelines.create(config)
 }
 
+cinderella.animate = (definition, config) =>
+  cinderella(config)
+    .add(definition)
+    .play()
 cinderella.addFrameListener = RAF.addFrameListener
 cinderella.removeFrameListener = RAF.removeFrameListener
 cinderella.stopAll = () => {
