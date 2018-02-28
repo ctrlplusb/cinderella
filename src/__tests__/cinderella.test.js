@@ -101,11 +101,11 @@ describe('cinderella', () => {
       })
 
       it('delay on animation', () => {
-        const target = {}
+        const localTarget = {}
         const delayOnStartSpy = jest.fn()
         cinderella()
           .add({
-            targets: target,
+            targets: localTarget,
             transform: {
               foo: {
                 from: 0,
@@ -125,29 +125,29 @@ describe('cinderella', () => {
           })
           .play()
         waitForFrames(1)
-        expect(target.foo).toBeUndefined()
-        expect(target.bar).toBeUndefined()
+        expect(localTarget.foo).toBeUndefined()
+        expect(localTarget.bar).toBeUndefined()
         waitForFrames(1)
-        expect(target.foo).toBeCloseTo(0.0)
-        expect(target.bar).toBeCloseTo(0.0)
+        expect(localTarget.foo).toBeCloseTo(0.0)
+        expect(localTarget.bar).toBeCloseTo(0.0)
         waitForFrames(1)
-        expect(target.foo).toBeCloseTo(20.0)
-        expect(target.bar).toBeCloseTo(20.0)
+        expect(localTarget.foo).toBeCloseTo(20.0)
+        expect(localTarget.bar).toBeCloseTo(20.0)
         waitForFrames(1)
-        expect(target.foo).toBeCloseTo(40.0)
-        expect(target.bar).toBeCloseTo(40.0)
+        expect(localTarget.foo).toBeCloseTo(40.0)
+        expect(localTarget.bar).toBeCloseTo(40.0)
         waitForFrames(1)
-        expect(target.foo).toBeCloseTo(60.0)
-        expect(target.bar).toBeCloseTo(60.0)
+        expect(localTarget.foo).toBeCloseTo(60.0)
+        expect(localTarget.bar).toBeCloseTo(60.0)
         waitForFrames(1)
-        expect(target.foo).toBeCloseTo(80.0)
-        expect(target.bar).toBeCloseTo(80.0)
+        expect(localTarget.foo).toBeCloseTo(80.0)
+        expect(localTarget.bar).toBeCloseTo(80.0)
         waitForFrames(1)
-        expect(target.foo).toBeCloseTo(100.0)
-        expect(target.bar).toBeCloseTo(100.0)
+        expect(localTarget.foo).toBeCloseTo(100.0)
+        expect(localTarget.bar).toBeCloseTo(100.0)
         waitForFrames(1)
-        expect(target.foo).toBeCloseTo(100.0)
-        expect(target.bar).toBeCloseTo(100.0)
+        expect(localTarget.foo).toBeCloseTo(100.0)
+        expect(localTarget.bar).toBeCloseTo(100.0)
       })
 
       it('calling play has no effect on an animation that is still executing', () => {
@@ -307,12 +307,13 @@ describe('cinderella', () => {
 
       it('loop count', () => {
         const loopStartSpy = jest.fn()
+        const localTarget = {}
         cinderella({
           loop: 1,
           onStart: loopStartSpy,
         })
           .add({
-            targets: {},
+            targets: localTarget,
             transform: {
               foo: {
                 to: 10,
@@ -321,13 +322,45 @@ describe('cinderella', () => {
             },
           })
           .play()
-        waitForFrames(12)
+        waitForFrames(5)
         expect(loopStartSpy).toHaveBeenCalledTimes(2)
+        expect(localTarget.foo).toBe(0)
+        waitForFrames(1)
+        expect(localTarget.foo).toBe(3.33333)
+        waitForFrames(1)
+        expect(localTarget.foo).toBe(6.66666)
       })
 
-      it('loop count play again', () => {
+      it('loop + alternate direction', () => {
         const loopStartSpy = jest.fn()
-        const animation = cinderella({
+        const localTarget = {}
+        cinderella({
+          loop: 1,
+          direction: 'alternate',
+          onStart: loopStartSpy,
+        })
+          .add({
+            targets: localTarget,
+            transform: {
+              foo: {
+                to: 10,
+                duration: 3 * frameRate,
+              },
+            },
+          })
+          .play()
+        waitForFrames(6)
+        expect(loopStartSpy).toHaveBeenCalledTimes(2)
+        expect(localTarget.foo).toBe(6.66666)
+        waitForFrames(1)
+        expect(localTarget.foo).toBe(3.33333)
+        waitForFrames(1)
+        expect(localTarget.foo).toBe(0)
+      })
+
+      it('loop + play again', () => {
+        const loopStartSpy = jest.fn()
+        const localAnimation = cinderella({
           loop: 1,
           onStart: loopStartSpy,
         }).add({
@@ -339,21 +372,21 @@ describe('cinderella', () => {
             },
           },
         })
-        animation.play()
+        localAnimation.play()
         waitForFrames(12)
         expect(loopStartSpy).toHaveBeenCalledTimes(2)
-        animation.play()
+        localAnimation.play()
         waitForFrames(12)
         expect(loopStartSpy).toHaveBeenCalledTimes(4)
       })
 
       it('speed faster', () => {
-        const target = {}
+        const localTarget = {}
         cinderella({
           speed: 2,
         })
           .add({
-            targets: target,
+            targets: localTarget,
             transform: {
               foo: {
                 to: 10,
@@ -363,16 +396,16 @@ describe('cinderella', () => {
           })
           .play()
         waitForFrames(6)
-        expect(target.foo).toBe(10)
+        expect(localTarget.foo).toBe(10)
       })
 
       it('speed slower', () => {
-        const target = {}
+        const localTarget = {}
         cinderella({
           speed: 0.5,
         })
           .add({
-            targets: target,
+            targets: localTarget,
             transform: {
               foo: {
                 to: 10,
@@ -382,16 +415,16 @@ describe('cinderella', () => {
           })
           .play()
         waitForFrames(21)
-        expect(target.foo).toBe(10)
+        expect(localTarget.foo).toBe(10)
       })
 
       it('direction "reverse"', () => {
-        const target = {}
+        const localTarget = {}
         cinderella({
           direction: 'reverse',
         })
           .add({
-            targets: target,
+            targets: localTarget,
             transform: {
               foo: {
                 from: 0,
@@ -402,23 +435,23 @@ describe('cinderella', () => {
           })
           .play()
         waitForFrames(3)
-        expect(target.foo).toBeCloseTo(8)
+        expect(localTarget.foo).toBeCloseTo(8)
         waitForFrames(1)
-        expect(target.foo).toBeCloseTo(7)
+        expect(localTarget.foo).toBeCloseTo(7)
         waitForFrames(1)
-        expect(target.foo).toBeCloseTo(6)
+        expect(localTarget.foo).toBeCloseTo(6)
         waitForFrames(6)
-        expect(target.foo).toBe(0)
+        expect(localTarget.foo).toBe(0)
       })
 
       it('direction "alternate"', () => {
-        const target = {}
+        const localTarget = {}
         cinderella({
           direction: 'alternate',
           loop: true,
         })
           .add({
-            targets: target,
+            targets: localTarget,
             transform: {
               foo: {
                 from: 0,
@@ -429,27 +462,27 @@ describe('cinderella', () => {
           })
           .play()
         waitForFrames(3)
-        expect(target.foo).toBeCloseTo(2)
+        expect(localTarget.foo).toBeCloseTo(2)
         waitForFrames(1)
-        expect(target.foo).toBeCloseTo(3)
+        expect(localTarget.foo).toBeCloseTo(3)
         waitForFrames(7)
-        expect(target.foo).toBe(10)
+        expect(localTarget.foo).toBe(10)
         waitForFrames(3)
-        expect(target.foo).toBeCloseTo(8)
+        expect(localTarget.foo).toBeCloseTo(8)
         waitForFrames(1)
-        expect(target.foo).toBeCloseTo(7)
+        expect(localTarget.foo).toBeCloseTo(7)
         waitForFrames(1)
-        expect(target.foo).toBeCloseTo(6)
+        expect(localTarget.foo).toBeCloseTo(6)
         waitForFrames(6)
       })
 
       it('direction "normal"', () => {
-        const target = {}
+        const localTarget = {}
         cinderella({
           direction: 'normal',
         })
           .add({
-            targets: target,
+            targets: localTarget,
             transform: {
               foo: {
                 from: 0,
@@ -460,11 +493,11 @@ describe('cinderella', () => {
           })
           .play()
         waitForFrames(3)
-        expect(target.foo).toBeCloseTo(2)
+        expect(localTarget.foo).toBeCloseTo(2)
         waitForFrames(1)
-        expect(target.foo).toBeCloseTo(3)
+        expect(localTarget.foo).toBeCloseTo(3)
         waitForFrames(7)
-        expect(target.foo).toBe(10)
+        expect(localTarget.foo).toBe(10)
       })
 
       it('direction "reverse" maintains transform prop order', () => {
@@ -616,10 +649,15 @@ describe('cinderella', () => {
           },
         }
 
+        // $FlowFixMe
         const delayMock = jest.fn((target, i) => values[i].delay)
+        // $FlowFixMe
         const durationMock = jest.fn((target, i) => values[i].duration)
+        // $FlowFixMe
         const easingMock = jest.fn((target, i) => values[i].easing)
+        // $FlowFixMe
         const fromMock = jest.fn((target, i) => values[i].from)
+        // $FlowFixMe
         const toMock = jest.fn((target, i) => values[i].to)
         const target1 = {}
         const target2 = {}
@@ -882,7 +920,7 @@ describe('cinderella', () => {
       })
 
       it('absolute offset', () => {
-        const target = {
+        const localTarget = {
           foo: 0,
           bar: 0,
         }
@@ -891,7 +929,7 @@ describe('cinderella', () => {
           onComplete: onCompleteSpy,
         })
           .add({
-            targets: target,
+            targets: localTarget,
             transform: {
               foo: {
                 to: 100,
@@ -901,7 +939,7 @@ describe('cinderella', () => {
             onUpdate: jest.fn(),
           })
           .add({
-            targets: target,
+            targets: localTarget,
             transform: {
               bar: {
                 to: 100,
@@ -912,27 +950,27 @@ describe('cinderella', () => {
           })
           .play()
         waitForFrames(1)
-        expect(target.foo).toBe(0)
-        expect(target.bar).toBe(0)
+        expect(localTarget.foo).toBe(0)
+        expect(localTarget.bar).toBe(0)
         waitForFrames(1)
-        expect(target.foo).toBeCloseTo(33.333)
-        expect(target.bar).toBeCloseTo(31.333)
+        expect(localTarget.foo).toBeCloseTo(33.333)
+        expect(localTarget.bar).toBeCloseTo(31.333)
         waitForFrames(1)
-        expect(target.foo).toBeCloseTo(66.666)
-        expect(target.bar).toBeCloseTo(64.666)
+        expect(localTarget.foo).toBeCloseTo(66.666)
+        expect(localTarget.bar).toBeCloseTo(64.666)
         waitForFrames(1)
-        expect(target.foo).toBeCloseTo(99.999)
-        expect(target.bar).toBeCloseTo(98)
+        expect(localTarget.foo).toBeCloseTo(99.999)
+        expect(localTarget.bar).toBeCloseTo(98)
         waitForFrames(1)
-        expect(target.foo).toBe(100)
-        expect(target.bar).toBe(100)
+        expect(localTarget.foo).toBe(100)
+        expect(localTarget.bar).toBe(100)
         waitForFrames(1)
         expect(onCompleteSpy).toHaveBeenCalledTimes(1)
       })
 
       it('relative offset', () => {
         const onCompleteSpy = jest.fn()
-        const target = {
+        const localTarget = {
           foo: 0,
           bar: 0,
         }
@@ -940,7 +978,7 @@ describe('cinderella', () => {
           onComplete: onCompleteSpy,
         })
           .add({
-            targets: target,
+            targets: localTarget,
             transform: {
               foo: {
                 to: 100,
@@ -949,7 +987,7 @@ describe('cinderella', () => {
             },
           })
           .add({
-            targets: target,
+            targets: localTarget,
             transform: {
               bar: {
                 to: 100,
@@ -960,17 +998,17 @@ describe('cinderella', () => {
           })
           .play()
         waitForFrames(1)
-        expect(target.foo).toBe(0)
-        expect(target.bar).toBe(0)
+        expect(localTarget.foo).toBe(0)
+        expect(localTarget.bar).toBe(0)
         waitForFrames(3)
-        expect(target.foo).toBeCloseTo(50)
-        expect(target.bar).toBeCloseTo(0)
+        expect(localTarget.foo).toBeCloseTo(50)
+        expect(localTarget.bar).toBeCloseTo(0)
         waitForFrames(1)
-        expect(target.foo).toBeCloseTo(66.666)
-        expect(target.bar).toBeCloseTo(31.333)
+        expect(localTarget.foo).toBeCloseTo(66.666)
+        expect(localTarget.bar).toBeCloseTo(31.333)
         waitForFrames(3)
-        expect(target.foo).toBe(100)
-        expect(target.bar).toBeCloseTo(100)
+        expect(localTarget.foo).toBe(100)
+        expect(localTarget.bar).toBeCloseTo(100)
         waitForFrames(1)
         expect(onCompleteSpy).toHaveBeenCalledTimes(1)
       })

@@ -104,7 +104,6 @@ const processTween = (
   const tweenRunTime = timeline.reverse
     ? tween.duration - baseRunTime
     : baseRunTime
-
   const easingResult = Utils.toInt(
     Easings[tween.easing](
       tweenRunTime,

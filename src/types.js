@@ -78,8 +78,8 @@ export type TweenRunValue = {
 }
 
 export type TimelineConfig = {
-  direction: 'normal' | 'reverse' | 'alternate',
-  loop?: boolean,
+  direction?: 'normal' | 'reverse' | 'alternate',
+  loop?: boolean | number,
   onComplete?: Noop,
   onUpdate?: Noop,
   onStart?: Noop,
