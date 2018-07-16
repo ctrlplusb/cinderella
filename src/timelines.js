@@ -160,14 +160,26 @@ const ensureInitialized = timeline => {
         let propExecutionOffset = animationExecutionTime
         const createTween = (transform, prev): Tween => {
           const delayResolver =
-            transform.delay ||
-            (definition.defaults && definition.defaults.delay)
+            typeof transform.delay !== 'undefined'
+              ? transform.delay
+              : definition.defaults &&
+                typeof definition.defaults.delay !== 'undefined'
+                ? definition.defaults.delay
+                : undefined
           const durationResolver =
-            transform.duration ||
-            (definition.defaults && definition.defaults.duration)
+            typeof transform.duration !== 'undefined'
+              ? transform.duration
+              : definition.defaults &&
+                typeof definition.defaults.duration !== 'undefined'
+                ? definition.defaults.duration
+                : undefined
           const easingResolver =
-            transform.easing ||
-            (definition.defaults && definition.defaults.easing)
+            typeof transform.easing !== 'undefined'
+              ? transform.easing
+              : definition.defaults &&
+                typeof definition.defaults.easing !== 'undefined'
+                ? definition.defaults.easing
+                : undefined
           const delay = Utils.scaleUp(
             (typeof delayResolver === 'function'
               ? delayResolver(target.actual, targetIdx, targets.length)

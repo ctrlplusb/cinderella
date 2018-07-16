@@ -754,20 +754,59 @@ describe('cinderella', () => {
             transform: {
               foo: {},
               bar: {},
+              baz: [
+                {},
+                {
+                  from: 100,
+                  to: 0,
+                  delay: 0,
+                  duration: 1 * frameRate,
+                },
+              ],
             },
             defaults: {
-              delay: 2 * frameRate,
-              duration: 5 * frameRate,
+              delay: 10 * frameRate,
+              duration: 20 * frameRate,
               easing: 'linear',
               from: 0,
               to: 100,
             },
           })
           .play()
-        waitForFrames(10)
+        waitForFrames(33)
         expect(defaultsTarget).toMatchObject({
           foo: 100,
           bar: 100,
+          baz: 0,
+        })
+      })
+
+      it('defaults are overridden', () => {
+        const defaultsTarget = {}
+        cinderella()
+          .add({
+            targets: defaultsTarget,
+            transform: {
+              foo: {
+                delay: 0,
+                duration: 10 * frameRate,
+                easing: 'linear',
+                from: 200,
+                to: 0,
+              },
+            },
+            defaults: {
+              delay: 10 * frameRate,
+              duration: 20 * frameRate,
+              easing: 'easeOutCubic',
+              from: 0,
+              to: 100,
+            },
+          })
+          .play()
+        waitForFrames(6)
+        expect(defaultsTarget).toMatchObject({
+          foo: 100,
         })
       })
 
