@@ -290,7 +290,7 @@ describe('cinderella', () => {
       })
 
       it('seek time', () => {
-        animation.seekTime(5 * frameRate / 2)
+        animation.seekTime((5 * frameRate) / 2)
         expect(target.foo).toBeCloseTo(50)
       })
 
@@ -910,8 +910,6 @@ describe('cinderella', () => {
         expect(target.bar).toBeCloseTo(100)
       })
     })
-
-    it.skip('mixed from/to units')
 
     describe('multiple animations', () => {
       let target
